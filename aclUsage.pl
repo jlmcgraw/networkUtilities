@@ -34,8 +34,8 @@ sub main {
     while (<>) {
 
         #Find the current ACL name/number
-        if ( $_ =~
-            /
+        if (
+            $_ =~ /
             ^
                 \s*
                     (?:Extended | Standard )?       #
@@ -54,9 +54,10 @@ sub main {
         {
             $aclName = $+{aclName};
         }
+
         #Find the current ACL name/number from Nexus
-        elsif ( $_ =~
-            /
+        elsif (
+            $_ =~ /
             \s* 
             IPV4
             \s+ 
@@ -75,8 +76,7 @@ sub main {
         #
         #Find ACL lines
         elsif (
-            $_ =~
-            /
+            $_ =~ /
             ^                                                   #beginning of line
             \s+                                                 #some whitespace
                 (?<aclLine> \d+)                                #ACL entry number
@@ -100,18 +100,18 @@ sub main {
             $aclEntry =~ s/\R//;
             $aclLine          = $+{aclLine};
             $aclEntryHitCount = $+{aclEntryHitCount};
-           
+
             #             say $aclEntry;
             #             say $aclEntryHitCount;
-            
+
             #Add aclEntryHitCount to a hash of ACLs where "aclEntry" is a key
-            
+
             #If there is a aclEntryHitCount, add it to the running total
             #otherwise just add 0
             if ($aclEntryHitCount) {
                 $acls{$aclName}{$aclEntry} += $aclEntryHitCount;
             }
-            else { 
+            else {
                 $acls{$aclName}{$aclEntry} += 0;
             }
 
@@ -120,14 +120,15 @@ sub main {
             #$acls{$aclName}{$aclEntry}{"Lines"}{$aclLine} += $aclEntryHitCount;
 
         }
-        #Clear variables between devices or commands 
+
+        #Clear variables between devices or commands
         elsif ( $_ =~ /(--------------|______________)/ix ) {
             $aclName = $aclLine = $aclEntry = $aclEntryHitCount = "";
 
         }
         else {
-        #Any lines that don't match fall through to here, just so we can check that we're covering all desirable inputs
-        #say $_;
+            #Any lines that don't match fall through to here, just so we can check that we're covering all desirable inputs
+            #say $_;
         }
 
     }
