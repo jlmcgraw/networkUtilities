@@ -3,8 +3,7 @@
 #Which lines from an ACL are being hit
 #Valid input is only text from Solarwinds Network Configuration Manager job output of "show IP access-lists" on Cisco IOS/Nexus devices
 
-use warnings;
-use strict;
+use Modern::Perl '2014';
 use autodie;
 
 # use NetAddr::IP;
@@ -16,7 +15,6 @@ use Data::Dumper;
 $Data::Dumper::Indent   = 2;
 $Data::Dumper::Sortkeys = 1;
 $Data::Dumper::Purity   = 1;
-use v5.18;
 
 # #don't buffer stdout
 # $| = 1;
@@ -24,6 +22,18 @@ use v5.18;
 exit main(@ARGV);
 
 sub main {
+    #Check that we're redirecting stdin from a file
+    if (-t) {
+        say "You must redirect input from a valid NCM output file";
+        say "Usage: $0 < fileWithOutputFromNcm";
+        exit 1;
+    }
+    
+    #Check that the first line looks like it's from NCM
+    my $firstLine = <>;
+    die "Not a valid Solarwinds NCM output file"
+      unless ( $firstLine =~ /SolarWinds Network Configuration Manager/ );
+      
     my %acls;
     my $aclName;
     my $aclLine;

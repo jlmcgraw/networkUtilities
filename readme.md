@@ -6,3 +6,9 @@
 
 ##tcpStatistics.sh
 	Use tshark to print some statistics about a given capture file.
+	
+##aclUsage.pl
+        Tally up ACL hits from Solarwinds Network Configuration manager output of Cisco IOS "show ip access-lists"
+
+##splitNcmOutputIntoFilePerDevice.pl
+        Split an input Solarwinds Network Configuration manager output log into a separate file for each device
