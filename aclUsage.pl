@@ -22,21 +22,22 @@ $Data::Dumper::Purity   = 1;
 exit main(@ARGV);
 
 sub main {
+
     #Check that we're redirecting stdin from a file
     if (-t) {
         say "You must redirect input from a valid NCM output file";
         say "Usage: $0 < fileWithOutputFromNcm";
         exit 1;
     }
-    
+
     #Check that the first line looks like it's from NCM
     my $firstLine = <>;
     die "Not a valid Solarwinds NCM output file"
       unless ( $firstLine =~ /SolarWinds Network Configuration Manager/ );
-      
-    my %acls;
+
+    my %aclHash = ();
     my $aclName;
-    my $aclLine;
+    my $aclLineNumber;
     my $aclEntry;
     my $aclEntryHitCount;
 
@@ -89,7 +90,7 @@ sub main {
             $_ =~ /
             ^                                                   #beginning of line
             \s+                                                 #some whitespace
-                (?<aclLine> \d+)                                #ACL entry number
+                (?<aclLineNumber> \d+)                                #ACL entry number
                 \s+                                             #followed by whitespace
                 (?<aclEntry> (?:permit | deny) .*? )            #The ACL up to the possible  "matches" portion
                 (?:
@@ -107,33 +108,40 @@ sub main {
           )
         {
             $aclEntry = $+{aclEntry};
-            $aclEntry =~ s/\R//;
-            $aclLine          = $+{aclLine};
-            $aclEntryHitCount = $+{aclEntryHitCount};
 
-            #             say $aclEntry;
-            #             say $aclEntryHitCount;
+            #remove linefeeds etc
+            $aclEntry =~ s/\R//g;
+
+            $aclLineNumber    = $+{aclLineNumber};
+            $aclEntryHitCount = $+{aclEntryHitCount};
 
             #Add aclEntryHitCount to a hash of ACLs where "aclEntry" is a key
 
             #If there is a aclEntryHitCount, add it to the running total
             #otherwise just add 0
+            $aclHash{"$aclName"}{"$aclEntry"}{"devicesUsedOn"} += 1;
             if ($aclEntryHitCount) {
-                $acls{$aclName}{$aclEntry} += $aclEntryHitCount;
+
+                #Use this version for less detail per entry
+                #                 $aclHash{"$aclName"}{"$aclEntry"} += $aclEntryHitCount;
+
+                #Use this version instead if you want to see line numbers and hits per line #
+                $aclHash{"$aclName"}{"$aclEntry"}{"totalHits"} +=
+                  $aclEntryHitCount;
+
+                #                 $aclHash{ "$aclName" }{ "$aclEntry" }{ "lineNumbersUsed" }{ "$aclLineNumber" } += $aclEntryHitCount;
+                $aclHash{"$aclName"}{"$aclEntry"}{"devicesWithHits"} += 1;
             }
             else {
-                $acls{$aclName}{$aclEntry} += 0;
+                #Uncomment this to add a hash entry for lines with 0 hits
+                $aclHash{"$aclName"}{"$aclEntry"}{"totalHits"} += 0;
             }
-
-            #Uncomment if you want to see line numbers and hits per line #
-            #$acls{$aclName}{$aclEntry}{"totalHits"} += $aclEntryHitCount;
-            #$acls{$aclName}{$aclEntry}{"Lines"}{$aclLine} += $aclEntryHitCount;
 
         }
 
         #Clear variables between devices or commands
         elsif ( $_ =~ /(--------------|______________)/ix ) {
-            $aclName = $aclLine = $aclEntry = $aclEntryHitCount = "";
+            $aclName = $aclLineNumber = $aclEntry = $aclEntryHitCount = undef;
 
         }
         else {
@@ -142,5 +150,5 @@ sub main {
         }
 
     }
-    say Dumper \%acls;
+    say Dumper \%aclHash;
 }
