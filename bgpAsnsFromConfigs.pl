@@ -35,12 +35,13 @@ sub main {
     }
 
     my %asnHash;
-    my $asnNumber;
+    my $asNumber;
     my $bgpNeighbor;
     my $remoteAsn;
     my $remoteAsnHitCount;
     my $bgpNetwork;
     my $bgpNetworkMask;
+    my $hostName;
 
     my $octetRegex = qr/(?:[0-9]{1,2} | 1[0-9]{2} | 2[0-4][0-9] | 25[0-5])/mx;
 
@@ -54,7 +55,8 @@ sub main {
 			      (?:25[0-5] | 2[0-4]\d | [01]?\d\d? )\.
 			      (?:25[0-5] | 2[0-4]\d | [01]?\d\d? )/x;
 
-    my $asnGraph = GraphViz->new( directed => 0, layout => 'neato' );
+    my $asnGraph =
+      GraphViz->new( directed => 0, layout => 'neato', overlap => 'scalexy' );
 
     open( out_file,     ">./twAsn.dot" );
     open( out_file_png, ">./twAsn.png" );
@@ -71,14 +73,35 @@ sub main {
                 \s+
                     bgp
                 \s+
-                    (?<asnNumber>\d+)
+                    (?<asNumber>\d+)
                 \s*
             $
             /ix
           )
         {
-            $asnNumber = $bgpNeighbor = $remoteAsn = undef;
-            $asnNumber = $+{asnNumber};
+            $asNumber = $bgpNeighbor = $remoteAsn = undef;
+            $asNumber = $+{asNumber};
+
+            if ( $asNumber && $hostName ) {
+                $asnHash{$asNumber}{"hosts"}{$hostName} = 1;
+            }
+        }
+        elsif (
+            $_ =~ /
+            ^
+                \s*
+                    hostname
+                \s+ 
+                    (?<hostName> [\w-]+ )
+            /ix
+          )
+        {
+            $hostName = $+{hostName};
+
+            #If we have an active ASN add this hostname to it
+            if ( $asNumber && $hostName ) {
+                $asnHash{$asNumber}{"hosts"}{$hostName} = 1;
+            }
         }
         elsif (
             $_ =~ /
@@ -89,8 +112,9 @@ sub main {
           )
         {
             #Clear variables on a new section of cisco config
-            $asnNumber = $bgpNeighbor = $remoteAsn = undef;
+            $asNumber = $bgpNeighbor = $remoteAsn = undef;
         }
+
         elsif (
             $_ =~ /
             ^
@@ -100,7 +124,7 @@ sub main {
           )
         {
             #Clear variables between config files in a long stream
-            $asnNumber = $bgpNeighbor = $remoteAsn = undef;
+            $asNumber = $bgpNeighbor = $remoteAsn = undef;
         }
         #
         elsif (
@@ -109,8 +133,8 @@ sub main {
             /ix
           )
         {
-            #Clear variables on any other routing process type
-            $asnNumber = $bgpNeighbor = $remoteAsn = undef;
+            #Clear variables between files
+            $asNumber = $bgpNeighbor = $remoteAsn = $hostName = undef;
         }
 
         #find neigbors
@@ -130,14 +154,14 @@ sub main {
             /ix
           )
         {
-            if ($asnNumber) {
+            if ($asNumber) {
                 $remoteAsn         = $+{remoteAsn};
                 $bgpNeighbor       = $+{bgpNeighbor};
                 $remoteAsnHitCount = $+{remoteAsnHitCount};
 
                 #How many different times have we seen this ASN
-                $asnHash{$asnNumber}{"devicesUsedOn"} += 1;
-                $asnHash{$asnNumber}{"neighbors"}{$bgpNeighbor}{"remoteAsn"} =
+                $asnHash{$asNumber}{"devicesUsedOn"} += 1;
+                $asnHash{$asNumber}{"neighbors"}{$bgpNeighbor}{"remoteAsn"} =
                   $remoteAsn;
 
                 #Add an entry for the remote asn
@@ -166,8 +190,9 @@ sub main {
         {
             $bgpNetwork     = $+{bgpNetwork};
             $bgpNetworkMask = $+{bgpNetworkMask};
-            if ($asnNumber) {
-                $asnHash{$asnNumber}{"networks"}
+
+            if ($asNumber) {
+                $asnHash{$asNumber}{"networks"}
                   { $bgpNetwork . " " . $bgpNetworkMask } = 1;
             }
 
@@ -181,93 +206,46 @@ sub main {
 
     #     say Dumper \%asnHash;
 
+    #For every ASN we found
     while ( my ( $bgpAsn, $bgpAsnHashRef ) = each %asnHash ) {
 
-        if ( 'HASH' eq ref $bgpAsnHashRef ) {
+        #Create a node for this ASN
+        #Make it bigger relative to how often it was mentioned
+        $asnGraph->add_node(
+            $bgpAsn,
+            label    => "$bgpAsn",
+            shape    => 'ellipse',
+            style    => 'filled',
+            fontsize => $asnHash{$bgpAsn}{"devicesUsedOn"} * 1.5 + 10,
+            color    => 'red'
+        );
 
-            #             say "key: $bgpAsn, value:  $bgpAsnHashRef";
+        #             say "key: $bgpAsn, value:  $bgpAsnHashRef";
 
-            #             print Dumper $bgpAsnHashRef;
+        #             print Dumper $bgpAsnHashRef;
 
-            while ( my ( $neighborKey, $neighborHashReference ) =
-                each %{ $bgpAsnHashRef->{"neighbors"} } )
+        #Add edges for all neighbor ASNs
+        while ( my ( $neighborKey, $neighborHashReference ) =
+            each %{ $bgpAsnHashRef->{"neighbors"} } )
 
-            {
-                #                 say "key: $neighborKey, value:  $neighborHashReference";
-                #                 print Dumper $neighborHashReference;
+        {
 
-                my $remoteAsn = $neighborHashReference->{"remoteAsn"};
+            #                 say "key: $neighborKey, value:  $neighborHashReference";
+            #                 print Dumper $neighborHashReference;
 
-                #                 say $remoteAsn;
+            my $remoteAsn = $neighborHashReference->{"remoteAsn"};
 
+            #                 say $remoteAsn;
+
+            #For now don't include iBGP peers
+            if ( ( $bgpAsn && $remoteAsn ) && ( $bgpAsn != $remoteAsn ) ) {
                 $asnGraph->add_edge( $bgpAsn => $remoteAsn );
-
             }
         }
 
-        #
-        #             #         foreach my $neighborKey ( sort keys %{ $bgpAsnHashRef {"neighbors"} } ) {
-        #             #
-        #
-        #                               say "key: $neighborKey value:  $remoteAsnHashRef";
-        #             #
-        #             #             # #             say ref $neighborHashReference;
-        #             #             # #
-        #             #             #             say "key: $neighborKey, value: " . %{$neighborHashReference{"remoteAsn"};
-        #             #             # #             $asnGraph->add_node(
-        #             #             # #                 $bgpAsn,
-        #             #             # #                 label    => "$bgpAsn",
-        #             #             # #                 shape    => 'ellipse',
-        #             #             # #                 style    => 'filled',
-        #             #             # #                 fontsize => $asnHash{$bgpAsn}{"devicesUsedOn"} * 1.5 + 10,
-        #             #             # #                 color    => 'red',
-        #             #             # #             );
-        #         }
     }
 
-    #     while ( $line = <peer_file> ) {
-    #         if ( $line =~ m/^#/i ) {
-    #             next;
-    #         }
-    #         @split_line = split( /\|/, $line );
-    #         $as_relation = $split_line[2];
-    #         if (
-    #             !(
-    #                    exists $as_hash{ $split_line[0] }
-    #                 || exists $as_hash{ $split_line[1] }
-    #             )
-    #           )
-    #         {
-    #             next;
-    #         }
-    #
-    #         for ( $i = 0 ; $i < 2 ; ++$i ) {
-    #             if ( exists $as_hash{ $split_line[$i] } ) {
-    #                 $g->add_node(
-    #                     $split_line[$i],
-    #                     label => "$as_hash{$split_line[$i]}",
-    #                     shape => 'box',
-    #                     style => 'filled',
-    #                     color => 'green',
-    #                     URL   => "http://bgp.he.net/AS$split_line[$i]"
-    #                 );
-    #             }
-    #             else {
-    #                 $as_name = &as_to_n( $split_line[$i] );
-    #                 $g->add_node(
-    #                     $split_line[$i],
-    #                     label => "$as_name",
-    #                     shape => 'ellipse',
-    #                     style => 'filled',
-    #                     color => 'red',
-    #                     URL   => "http://bgp.he.net/AS$split_line[$i]"
-    #                 );
-    #             }
-    #         }
-    #         if ( $as_relation == -1 ) {
-    #             $g->add_edge( $split_line[0] => $split_line[1] );
-    #         }
-    #     }
+    #Save the graphiz objects
     print out_file $asnGraph->as_text;
     print out_file_png $asnGraph->as_png;
 }
