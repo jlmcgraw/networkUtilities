@@ -119,7 +119,10 @@ sub main {
 
             #If there is a aclEntryHitCount, add it to the running total
             #otherwise just add 0
+            
+            #How many different times have we seen this ACL line
             $aclHash{"$aclName"}{"$aclEntry"}{"devicesUsedOn"} += 1;
+            
             if ($aclEntryHitCount) {
 
                 #Use this version for less detail per entry
