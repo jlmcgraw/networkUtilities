@@ -12,3 +12,6 @@
 
 ##splitNcmOutputIntoFilePerDevice.pl
         Split an input Solarwinds Network Configuration manager output log into a separate file for each device
+        
+##bgpAsnsFromConfigs.pl
+        Make a graphviz diagram of BGP ASNs interconnect from a bunch of config files
