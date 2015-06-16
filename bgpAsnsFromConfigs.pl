@@ -43,23 +43,26 @@ sub main {
     my $bgpNetworkMask;
     my $hostName;
 
-    my $octetRegex = qr/(?:[0-9]{1,2} | 1[0-9]{2} | 2[0-4][0-9] | 25[0-5])/mx;
+    #an octet is a number between 0 and 255
+    my $octetRegex = qr/(?:
+                            [0-9]{1,2}      #0-99
+                        |  1[0-9]{2}        #100-199
+                        |  2[0-4][0-9]      #200-249
+                        | 25[0-5])          #250-255
+                        /mx;
 
+    #An IP address consists of 4 octets
     my $ipv4SubnetRegex = qr/(?:$octetRegex)\.
 			     (?:$octetRegex)\.
 			     (?:$octetRegex)\.
 			     (?:$octetRegex)/x;
 
-    my $ipv4NetmaskRegex = qr/(?:25[0-5] | 2[0-4]\d | [01]?\d\d? )\.
-			      (?:25[0-5] | 2[0-4]\d | [01]?\d\d? )\.
-			      (?:25[0-5] | 2[0-4]\d | [01]?\d\d? )\.
-			      (?:25[0-5] | 2[0-4]\d | [01]?\d\d? )/x;
-
     my $asnGraph =
-      GraphViz->new( directed => 0, layout => 'neato', overlap => 'scalexy' );
+      GraphViz->new( directed => 0, layout => 'sfdp', overlap => 'scalexy' );
 
     open( out_file,     ">./twAsn.dot" );
     open( out_file_png, ">./twAsn.png" );
+    open( out_file_svg, ">./twAsn.svg" );
 
     #read from STDIN
     while (<>) {
@@ -107,7 +110,9 @@ sub main {
             $_ =~ /
             ^
                 \s*
-                    router 
+                    router
+                \s+
+                    (?:rip | eigrp | ospf | isis)
             /ix
           )
         {
@@ -204,38 +209,54 @@ sub main {
 
     }
 
-    #     say Dumper \%asnHash;
-
+    #Debuggery
+    #say Dumper \%asnHash;
+    
     #For every ASN we found
     while ( my ( $bgpAsn, $bgpAsnHashRef ) = each %asnHash ) {
 
+        #Add all hosts in the AS to the label
+        my $label = $bgpAsn . "\n";
+        
+        
+        #Make a list of all hosts in this AS
+        while ( my ( $hostKey, $hostValue ) =
+            each %{ $bgpAsnHashRef->{"hosts"} } )
+
+        {
+            $label = $label . $hostKey . "\n";
+        }
+     
+        #In case you're curious
+        #say $label;
+        
         #Create a node for this ASN
         #Make it bigger relative to how often it was mentioned
         $asnGraph->add_node(
             $bgpAsn,
-            label    => "$bgpAsn",
+            label    => "$label",
             shape    => 'ellipse',
             style    => 'filled',
             fontsize => $asnHash{$bgpAsn}{"devicesUsedOn"} * 1.5 + 10,
             color    => 'red'
         );
 
-        #             say "key: $bgpAsn, value:  $bgpAsnHashRef";
-
-        #             print Dumper $bgpAsnHashRef;
+        #Debuggery
+        #say "key: $bgpAsn, value:  $bgpAsnHashRef";
+        #print Dumper $bgpAsnHashRef;
 
         #Add edges for all neighbor ASNs
         while ( my ( $neighborKey, $neighborHashReference ) =
             each %{ $bgpAsnHashRef->{"neighbors"} } )
 
         {
-
-            #                 say "key: $neighborKey, value:  $neighborHashReference";
-            #                 print Dumper $neighborHashReference;
+            #Debuggery
+            #say "key: $neighborKey, value:  $neighborHashReference";
+            #print Dumper $neighborHashReference;
 
             my $remoteAsn = $neighborHashReference->{"remoteAsn"};
 
-            #                 say $remoteAsn;
+            #say $remoteAsn;
 
             #For now don't include iBGP peers
             if ( ( $bgpAsn && $remoteAsn ) && ( $bgpAsn != $remoteAsn ) ) {
@@ -248,4 +269,5 @@ sub main {
     #Save the graphiz objects
     print out_file $asnGraph->as_text;
     print out_file_png $asnGraph->as_png;
+    print out_file_svg $asnGraph->as_svg;
 }
