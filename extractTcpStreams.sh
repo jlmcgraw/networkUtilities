@@ -1,6 +1,6 @@
 #!/bin/bash
 set -eu                # Always put this in Bourne shell scripts
-IFS="`printf '\n\t'`"  # Always put this in Bourne shell scripts
+IFS=$(printf '\n\t')  # Always put this in Bourne shell scripts
 
 #Split an input capture file into a separate file for each stream
 
@@ -8,7 +8,7 @@ IFS="`printf '\n\t'`"  # Always put this in Bourne shell scripts
 
 #To-do
 #   Compress each new capture file?
-#   Do something about the fact that we re-read the capture file 1 + (2 * flows) times
+#
 #Done
 #   Removed one read from each loop
 
@@ -24,26 +24,33 @@ fi
 IN_PCAP_FILE=$1
 
 #Does that capture file exist?
-if [ ! -f $IN_PCAP_FILE ]; then
+if [ ! -f "$IN_PCAP_FILE" ]; then
     echo "$IN_PCAP_FILE doesn't exist"
     exit 1
 fi
 
+#All TCP traffic
+ALL_TCP_FILTER="tcp";
+
 #tshark filter for SYN-only packets (beginning of new stream)
+#Note that these won't include flows started outside of the capture!
 SYN_ONLY_FILTER="(tcp.flags.syn == 1 && tcp.flags.ack == 0)"
 
 #SYN and ACK packets (response from server to client for new stream)
+#Note that these won't include flows started outside of the capture!
 SYN_ACK_FILTER="(tcp.flags.syn == 1 && tcp.flags.ack == 1)"
 
 #tshark filter for fully established tcp streams (bidirectional flows)
+#Note that these won't include flows started outside of the capture!
 FLOW_ESTABLISHED_FILTER="( $SYN_ONLY_FILTER) || ( $SYN_ACK_FILTER )"
 
 # Obtain the list of unique TCP stream IDs
 #Filter on SYN_ACK_FILTER to get only streams that have response from server
 #that means that (for example) ip.src below is the IP of the server
+#Note that these won't include flows started outside of the capture!
 TCP_STREAMS=$(
             tshark \
-                -r $IN_PCAP_FILE \
+                -r "$IN_PCAP_FILE" \
                 -Y "$SYN_ACK_FILTER" \
                 -T fields \
                 -e tcp.stream \
@@ -90,30 +97,23 @@ for (( i=0; i<=$(( $numberOfStreams-1 )); i++ ))
 
     #The filter for only this stream
     STREAM_FILTER="tcp.stream==$streamId"
-    
-    #I thought I'd try an experiment to filter this way but it's about the same speed as using the streamId
-    PORT_FILTER="(ip.src==$clientIp && tcp.srcport==$clientPort && ip.dst==$serverIp && tcp.dstport==$serverPort) \
-               ||(ip.src==$serverIp && tcp.srcport==$serverPort && ip.dst==$clientIp && tcp.dstport==$clientPort)"
 
     #Check that all our variables are set before going any further
     if [[ "$clientIp" && "$clientPort" && "$serverIp" && "$serverPort" ]]; then
         #Set the output file name based on our variables
         OUT_PCAP_FILE="./$streamId-$clientIp-$clientPort-$serverIp-$serverPort.pcapng"
         
-        # Apply the stream ID filter and write out the filtered capture file
+#         # Apply the stream ID filter and write out the filtered capture file
 #         tshark \
-#             -r $IN_PCAP_FILE \
-#             -Y "${STREAM_FILTER}" \
+#             -r "$IN_PCAP_FILE" \
+#             -Y "$STREAM_FILTER" \
 #             -w $OUT_PCAP_FILE
-#         #Alternate filter option
-#         tshark \
-#             -r $IN_PCAP_FILE \
-#             -Y "${PORT_FILTER}" 
-#             -w $OUT_PCAP_FILE
+
+#         #tcpdump seems to be about 10x faster than tshark so let's use it instead
         tcpdump \
             -n \
-            -r $IN_PCAP_FILE \
-            -w $OUT_PCAP_FILE \
+            -r "$IN_PCAP_FILE" \
+            -w "$OUT_PCAP_FILE" \
             "tcp and host $clientIp and host $serverIp and port $clientPort and port $serverPort"
     fi
 

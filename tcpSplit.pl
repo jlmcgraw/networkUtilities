@@ -20,6 +20,8 @@
 #-------------------------------------------------------------------------------
 
 #todo
+#
+#done
 # switch to decide whether to pick up only streams started during the capture or pre-existing ones
 
 use Modern::Perl '2014';
@@ -33,7 +35,7 @@ use vars qw/ %opt /;
 my $opt_string = 's';
 my $arg_num    = scalar @ARGV;
 
-#We need at least one argument (the directory of dtpp files)
+#We need at least one argument
 if ( $arg_num < 1 ) {
     usage();
     exit(1);
@@ -50,10 +52,10 @@ exit main(@ARGV);
 sub main {
 
     #Get command line parameters
-    my $pcapfn = $ARGV[0] || usage();
+    my $inputCaptureFilename = $ARGV[0] || usage();
 
     #Find conversations in the supplied capture file
-    my $flowHashReference = identifyTcpConversations($pcapfn);
+    my $flowHashReference = identifyTcpConversations($inputCaptureFilename);
 
     #In case you're curious what was found
     #     say Dumper $flowHashReference;
@@ -70,8 +72,8 @@ sub main {
         my $tcpDumpCommand = "
         tcpdump 
             -n 
-            -r $pcapfn 
-            -w $filename.pcap 
+            -r \"$inputCaptureFilename\"
+            -w \"$filename.pcap\" 
             \"
             tcp 
             and host $flowHashReference->{$conversationDataKey}{src_ip} 
@@ -90,7 +92,7 @@ sub main {
 sub identifyTcpConversations {
 
     #Find unique streams in the capture file
-    my ($pcapfn) = validate_pos( @_, { type => SCALAR } );
+    my ($inputCaptureFilename) = validate_pos( @_, { type => SCALAR } );
 
     #Hash of bidirectional streams from this capture
     my %streams;
@@ -128,7 +130,7 @@ sub identifyTcpConversations {
     #Construct the tcpdump command
     my $tcpDumpCommand = "tcpdump 
                             -n 
-                            -r ${pcapfn} 
+                            -r \"$inputCaptureFilename\"
                             $chosenFilter
                             ";
 
@@ -169,9 +171,10 @@ sub identifyTcpConversations {
                         "$+{src_ip}:$+{src_port}-$+{dst_ip}:$+{dst_port}"} )
               )
             {
-                #A new stream
+                #Found a new stream so increment counter
                 $streamCounter++;
 
+                #Add a hash for it
                 $streams{"$+{src_ip}:$+{src_port}-$+{dst_ip}:$+{dst_port}"} = {
                     id       => $streamCounter,
                     src_ip   => $+{src_ip},
@@ -186,8 +189,6 @@ sub identifyTcpConversations {
             #say "Unmatched output: $_";
         }
     }
-
-    #say Dumper \%streams;
 
     #Return a reference to this hash
     return \%streams;
@@ -207,7 +208,8 @@ sub mySystem {
 
     my $retval = $? >> 8;
 
-    croak "External command $myExternalCommand code was $retval"
+    croak "External command:
+        $myExternalCommand \n Return code was $retval"
       if ( $retval != 0 );
 
     return $externalCommandOutput;
