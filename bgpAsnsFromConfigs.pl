@@ -15,10 +15,14 @@ use autodie;
 # use vars qw/ %opt /;
 # use Params::Validate qw(:all);
 use Data::Dumper;
+use GraphViz;
+use IO::Interactive qw( is_interactive );
+
+# and later...
+
 $Data::Dumper::Indent   = 2;
 $Data::Dumper::Sortkeys = 1;
 $Data::Dumper::Purity   = 1;
-use GraphViz;
 
 # #don't buffer stdout
 # $| = 1;
@@ -28,20 +32,13 @@ exit main(@ARGV);
 sub main {
 
     #Check that we're redirecting stdin from a file
-    if (-t) {
+    if ( is_interactive() ) {
         say "You must redirect input from one or more configs ";
         say "Usage: $0 < configFile";
         exit 1;
     }
 
     my %asnHash;
-    my $asNumber;
-    my $bgpNeighbor;
-    my $remoteAsn;
-    my $remoteAsnHitCount;
-    my $bgpNetwork;
-    my $bgpNetworkMask;
-    my $hostName;
 
     #an octet is a number between 0 and 255
     my $octetRegex = qr/(?:
@@ -57,15 +54,12 @@ sub main {
 			     (?:$octetRegex)\.
 			     (?:$octetRegex)/x;
 
-    my $asnGraph =
-      GraphViz->new( directed => 0, layout => 'sfdp', overlap => 'scalexy' );
-
-    open( out_file,     ">./twAsn.dot" );
-    open( out_file_png, ">./twAsn.png" );
-    open( out_file_svg, ">./twAsn.svg" );
-
     #read from STDIN
     while (<>) {
+
+        #Local variables that shouldn't be reinitialized each loop
+        state( $asNumber, $bgpNeighbor, $remoteAsn, $remoteAsnHitCount,
+            $bgpNetwork, $bgpNetworkMask, $hostName );
 
         #Find bgp config section
         if (
@@ -147,13 +141,13 @@ sub main {
             $_ =~ /
             ^                                                   #beginning of line
                 \s*                                             #maybe some whitespace
-                neighbor
+                    neighbor
                 \s+
-                (?<bgpNeighbor> $ipv4SubnetRegex)                                #ACL entry number
+                    (?<bgpNeighbor> $ipv4SubnetRegex)                                #ACL entry number
                 \s+ 
-                remote-as                                            #followed by whitespace
+                    remote-as                                            #followed by whitespace
                 \s+
-                (?<remoteAsn> \d+ )                          #The ACL up to the possible  "matches" portion
+                    (?<remoteAsn> \d+ )                          #The ACL up to the possible  "matches" portion
                 \s*                                         # zero or more whitespace
             $
             /ix
@@ -181,13 +175,13 @@ sub main {
             $_ =~ /
             ^                                                   #beginning of line
                 \s*                                             #maybe some whitespace
-                network
+                    network
                 \s+
-                (?<bgpNetwork> $ipv4SubnetRegex)                                #ACL entry number
+                    (?<bgpNetwork> $ipv4SubnetRegex)                                #ACL entry number
                 \s+ 
-                mask                                        #followed by whitespace
+                    mask                                        #followed by whitespace
                 \s+
-                (?<bgpNetworkMask> $ipv4SubnetRegex )         #The ACL up to the possible  "matches" portion
+                    (?<bgpNetworkMask> $ipv4SubnetRegex )         #The ACL up to the possible  "matches" portion
                 \s*                                         # zero or more whitespace
             $
             /ix
@@ -211,25 +205,34 @@ sub main {
 
     #Debuggery
     #say Dumper \%asnHash;
-    
-    #For every ASN we found
+
+    #Our GraphViz object
+    my $asnGraph =
+      GraphViz->new(    directed => 1, 
+                        layout => 'sfdp', 
+                        overlap => 'scalexy' );
+
+    #For every ASN we found...
     while ( my ( $bgpAsn, $bgpAsnHashRef ) = each %asnHash ) {
 
-        #Add all hosts in the AS to the label
+        #Add all hosts in the AS to the AS node label
         my $label = $bgpAsn . "\n";
-        
-        
-        #Make a list of all hosts in this AS
-        while ( my ( $hostKey, $hostValue ) =
-            each %{ $bgpAsnHashRef->{"hosts"} } )
 
-        {
+        #Make a sorted list of all hosts in this AS
+        foreach my $hostKey ( sort keys %{ $bgpAsnHashRef->{"hosts"} } ) {
             $label = $label . $hostKey . "\n";
         }
-     
+
+        #         while ( my ( $hostKey, $hostValue ) =
+        #             each %{ $bgpAsnHashRef->{"hosts"} } )
+        #
+        #         {
+        #             $label = $label . $hostKey . "\n";
+        #         }
+
         #In case you're curious
         #say $label;
-        
+
         #Create a node for this ASN
         #Make it bigger relative to how often it was mentioned
         $asnGraph->add_node(
@@ -238,6 +241,7 @@ sub main {
             shape    => 'ellipse',
             style    => 'filled',
             fontsize => $asnHash{$bgpAsn}{"devicesUsedOn"} * 1.5 + 10,
+            rank     => $asnHash{$bgpAsn}{"devicesUsedOn"} * 1.5 + 10,
             color    => 'red'
         );
 
@@ -245,7 +249,7 @@ sub main {
         #say "key: $bgpAsn, value:  $bgpAsnHashRef";
         #print Dumper $bgpAsnHashRef;
 
-        #Add edges for all neighbor ASNs
+        #Add edges for all neighbor ASNs of this AS
         while ( my ( $neighborKey, $neighborHashReference ) =
             each %{ $bgpAsnHashRef->{"neighbors"} } )
 
@@ -258,16 +262,26 @@ sub main {
 
             #say $remoteAsn;
 
-            #For now don't include iBGP peers
-            if ( ( $bgpAsn && $remoteAsn ) && ( $bgpAsn != $remoteAsn ) ) {
+            #Uncomment to not include iBGP peers
+            #if ( ( $bgpAsn && $remoteAsn ) && ( $bgpAsn != $remoteAsn ) ) {
                 $asnGraph->add_edge( $bgpAsn => $remoteAsn );
-            }
+            #}
         }
 
     }
 
-    #Save the graphiz objects
-    print out_file $asnGraph->as_text;
-    print out_file_png $asnGraph->as_png;
-    print out_file_svg $asnGraph->as_svg;
+#     #Save the graphiz objects
+#     open my $out_file_txt, '>', "twAsn.dot" or croak $!;
+#     print $out_file_txt $asnGraph->as_text;
+#     close $out_file_txt;
+
+    open my $out_file_png, '>', "twAsn.png" or croak $!;
+    print $out_file_png $asnGraph->as_png;
+    close $out_file_png;
+
+    open my $out_file_svg, '>', "twAsn.svg" or croak $!;
+    print $out_file_svg $asnGraph->as_svg;
+    close $out_file_svg;
+
+    return 0;
 }
