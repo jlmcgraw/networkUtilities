@@ -16,4 +16,5 @@ sudo apt-get \
         install \
             libmodern-perl-perl \
             libgraphviz-perl \
-            libio-interactive-perl
+            libio-interactive-perl \
+			libparams-validate-perl
