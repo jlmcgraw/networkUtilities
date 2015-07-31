@@ -352,7 +352,6 @@ sub determineDesiredSorting {
         #Provide a routine for Data::dumper to sort by hash VALUES
         $Data::Dumper::Sortkeys = sub {
             my $data = join '', values %{ $_[0] };
-            say $data;
 
             #Is it only numbers?
             if ( $data =~ /^[[:alnum:]]+$/ ) {
@@ -370,7 +369,6 @@ sub determineDesiredSorting {
         #Provide a routine for Data::dumper to sort by hash KEYS
         $Data::Dumper::Sortkeys = sub {
             my $data = join '', values %{ $_[0] };
-            say $data;
 
             #Is it only numbers?
             if ( $data =~ /^[[:alnum:]]+$/ ) {
