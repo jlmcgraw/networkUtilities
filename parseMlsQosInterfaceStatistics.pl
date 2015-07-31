@@ -93,20 +93,22 @@ sub main {
                 $queueAction = $2;
             }
 
-            #The DSCP/COS lines with 5 entries
+            #The DSCP/COS lines with 3-5 entries
             when (
                 /^ \s+
-                     (?<lower>\d+) \s+
-                     \-
-                     \s+
-                     (?<upper>\d+) \s+ 
-                     \: 
-                     \s+ (?<first>\d+)
-                     \s+ (?<second>\d+) 
-                     \s+ (?<third>\d+) 
-                     \s+ (?<fourth>\d+) 
-                     \s+ (?<fifth>\d+)
-                     \s*
+                    (?<lower>\d+)
+                    \s+
+                    \-
+                    \s+
+                    (?<upper>\d+)
+                    \s+
+                    \:
+                    \s+ (?<first> \d+)
+                    \s+ (?<second>\d+)
+                    \s+ (?<third> \d+)
+                    \s+ (?<fourth>\d+)?             #This value is optional
+                    \s+ (?<fifth> \d+)?             #This value is optional
+                    \s*
                      $/ix
               )
             {
@@ -133,89 +135,12 @@ sub main {
                       . " ( Tag -> Packets )" }{$third} += $+{third};
                 $data{  $markingType . ":"
                       . $markingDirection
-                      . " ( Tag -> Packets )" }{$fourth} += $+{fourth};
+                      . " ( Tag -> Packets )" }{$fourth} += $+{fourth}
+                  if $+{fourth};
                 $data{  $markingType . ":"
                       . $markingDirection
-                      . " ( Tag -> Packets )" }{$fifth} += $+{fifth};
-            }
-
-            #The DSCP/COS lines with 4 entries
-            when (
-                /^ \s+
-                     (?<lower>\d+) \s+
-                     \-
-                     \s+
-                     (?<upper>\d+) \s+ 
-                     \: 
-                     \s+ (?<first>\d+)
-                     \s+ (?<second>\d+) 
-                     \s+ (?<third>\d+) 
-                     \s+ (?<fourth>\d+) 
-                     \s*
-                     $/ix
-              )
-            {
-                #Get the lower and upper bounds of the COS/DSCP for this line
-                my $lower = $+{lower};
-                my $upper = $+{upper};
-
-                #Calculate the COS/DSCP represented by the columns of data
-                my $first  = $+{lower};
-                my $second = $+{lower} + 1;
-                my $third  = $+{lower} + 2;
-                my $fourth = $+{lower} + 3;
-
-                #Save it into the hash
-                $data{  $markingType . ":"
-                      . $markingDirection
-                      . " ( Tag -> Packets )" }{$first} += $+{first};
-                $data{  $markingType . ":"
-                      . $markingDirection
-                      . " ( Tag -> Packets )" }{$second} += $+{second};
-                $data{  $markingType . ":"
-                      . $markingDirection
-                      . " ( Tag -> Packets )" }{$third} += $+{third};
-                $data{  $markingType . ":"
-                      . $markingDirection
-                      . " ( Tag -> Packets )" }{$fourth} += $+{fourth};
-
-            }
-
-            #The DSCP/COS lines with 3 entries
-            when (
-                /^ \s+
-                     (?<lower>\d+) \s+
-                     \-
-                     \s+
-                     (?<upper>\d+) \s+ 
-                     \: 
-                     \s+ (?<first>\d+)
-                     \s+ (?<second>\d+) 
-                     \s+ (?<third>\d+) 
-                     \s*
-                     $/ix
-              )
-            {
-                #Get the lower and upper bounds of the COS/DSCP for this line
-                my $lower = $+{lower};
-                my $upper = $+{upper};
-
-                #Calculate the COS/DSCP represented by the columns of data
-                my $first  = $+{lower};
-                my $second = $+{lower} + 1;
-                my $third  = $+{lower} + 2;
-
-                #Save into the hash
-                $data{  $markingType . ":"
-                      . $markingDirection
-                      . " ( Tag -> Packets )" }{$first} += $+{first};
-                $data{  $markingType . ":"
-                      . $markingDirection
-                      . " ( Tag -> Packets )" }{$second} += $+{second};
-                $data{  $markingType . ":"
-                      . $markingDirection
-                      . " ( Tag -> Packets )" }{$third} += $+{third};
-
+                      . " ( Tag -> Packets )" }{$fifth} += $+{fifth}
+                  if $+{fifth};
             }
 
             #Queue entries
@@ -358,6 +283,7 @@ sub determineDesiredSorting {
 
             #Get all the values for this hash
             my $values = join '', values %{ $_[0] };
+            my $keys   = join '', keys %{ $_[0] };
 
             #Are they only numbers?
             if ( $values =~ /^[[:alnum:]]+$/ ) {
@@ -378,9 +304,10 @@ sub determineDesiredSorting {
 
             #Get all the values for this hash
             my $values = join '', values %{ $_[0] };
+            my $keys   = join '', keys %{ $_[0] };
 
             #Are they only numbers?
-            if ( $values =~ /^[[:alnum:]]+$/ ) {
+            if ( $keys =~ /^[[:alnum:]]+$/ ) {
 
                 #Sort keys numerically
                 return [ sort { $a <=> $b or $a cmp $b } keys %{ $_[0] } ];
