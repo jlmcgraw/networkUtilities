@@ -123,6 +123,16 @@ sub main {
                 my $fourth = $+{lower} + 3;
                 my $fifth  = $+{lower} + 4;
 
+                #Quick hack to pad DSCP to 2 digits to make numbers line up
+                #in output
+                if ( $markingType eq "dscp" ) {
+                    $first  = sprintf( "%02d", $first );
+                    $second = sprintf( "%02d", $second );
+                    $third  = sprintf( "%02d", $third );
+                    $fourth = sprintf( "%02d", $fourth ) if $fourth;
+                    $fifth  = sprintf( "%02d", $fifth ) if $fifth;
+                }
+
                 #Save it into the hash
                 $data{  $markingType . ":"
                       . $markingDirection
@@ -274,9 +284,9 @@ sub usage {
 sub determineDesiredSorting {
 
     #How does the user want to sort the display?
-    my $shouldSortByvalue = $opt{s};
+    my $shouldSortByValue = $opt{s};
 
-    if ($shouldSortByvalue) {
+    if ($shouldSortByValue) {
 
         #Provide a routine for Data::dumper to sort by hash VALUES
         $Data::Dumper::Sortkeys = sub {

@@ -1,6 +1,6 @@
 #!/bin/bash
 set -eu                # Always put this in Bourne shell scripts
-IFS="`printf '\n\t'`"  # Always put this in Bourne shell scripts
+IFS=$(printf '\n\t')  # Always put this in Bourne shell scripts
 
 #Install wireshark and tshark
 sudo apt-get \
@@ -17,4 +17,4 @@ sudo apt-get \
             libmodern-perl-perl \
             libgraphviz-perl \
             libio-interactive-perl \
-			libparams-validate-perl
+            libparams-validate-perl
