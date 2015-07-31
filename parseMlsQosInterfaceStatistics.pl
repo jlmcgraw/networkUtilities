@@ -133,15 +133,15 @@ sub main {
                 my $fifth  = $+{lower} + 4;
 
                 #Save it into the hash
-                $data{ $markingType . ":" . $markingDirection }{$first} +=
+                $data{ $markingType . ":" . $markingDirection . " ( Tag -> Packets )" }{$first} +=
                   $+{first};
-                $data{ $markingType . ":" . $markingDirection }{$second} +=
+                $data{ $markingType . ":" . $markingDirection . " ( Tag -> Packets )" }{$second} +=
                   $+{second};
-                $data{ $markingType . ":" . $markingDirection }{$third} +=
+                $data{ $markingType . ":" . $markingDirection . " ( Tag -> Packets )" }{$third} +=
                   $+{third};
-                $data{ $markingType . ":" . $markingDirection }{$fourth} +=
+                $data{ $markingType . ":" . $markingDirection . " ( Tag -> Packets )" }{$fourth} +=
                   $+{fourth};
-                $data{ $markingType . ":" . $markingDirection }{$fifth} +=
+                $data{ $markingType . ":" . $markingDirection . " ( Tag -> Packets )" }{$fifth} +=
                   $+{fifth};
             }
 
@@ -179,13 +179,13 @@ sub main {
                 my $fourth = $+{lower} + 3;
 
                 #Save it into the hash
-                $data{ $markingType . ":" . $markingDirection }{$first} +=
+                $data{ $markingType . ":" . $markingDirection . " ( Tag -> Packets )" }{$first} +=
                   $+{first};
-                $data{ $markingType . ":" . $markingDirection }{$second} +=
+                $data{ $markingType . ":" . $markingDirection . " ( Tag -> Packets )" }{$second} +=
                   $+{second};
-                $data{ $markingType . ":" . $markingDirection }{$third} +=
+                $data{ $markingType . ":" . $markingDirection . " ( Tag -> Packets )" }{$third} +=
                   $+{third};
-                $data{ $markingType . ":" . $markingDirection }{$fourth} +=
+                $data{ $markingType . ":" . $markingDirection . " ( Tag -> Packets )" }{$fourth} +=
                   $+{fourth};
 
             }
@@ -222,11 +222,11 @@ sub main {
                 my $third  = $+{lower} + 2;
 
                 #Save into the hash
-                $data{ $markingType . ":" . $markingDirection }{$first} +=
+                $data{ $markingType . ":" . $markingDirection . " ( Tag -> Packets )" }{$first} +=
                   $+{first};
-                $data{ $markingType . ":" . $markingDirection }{$second} +=
+                $data{ $markingType . ":" . $markingDirection . " ( Tag -> Packets )" }{$second} +=
                   $+{second};
-                $data{ $markingType . ":" . $markingDirection }{$third} +=
+                $data{ $markingType . ":" . $markingDirection . " ( Tag -> Packets )" }{$third} +=
                   $+{third};
 
             }
@@ -261,12 +261,16 @@ sub main {
                 my $threshold2 = $+{threshold2};
                 my $threshold3 = $+{threshold3};
 
-                $data{ $queueType . ":" . $queueAction }{$queueNumber}
-                  {"threshold1"} += $threshold1;
-                $data{ $queueType . ":" . $queueAction }{$queueNumber}
-                  {"threshold2"} += $threshold2;
-                $data{ $queueType . ":" . $queueAction }{$queueNumber}
-                  {"threshold3"} += $threshold3;
+#                 $data{ $queueType . ":" . $queueAction . " (queue - threshold)" }{$queueNumber}
+#                   {"threshold1"} += $threshold1;
+#                 $data{ $queueType . ":" . $queueAction . " (queue - threshold)" }{$queueNumber}
+#                   {"threshold2"} += $threshold2;
+#                 $data{ $queueType . ":" . $queueAction . " (queue - threshold)" }{$queueNumber}
+#                   {"threshold3"} += $threshold3;
+                  
+                $data{ $queueType . ":" . $queueAction . " (queue - threshold)" }{$queueNumber . "-1"} += $threshold1;
+                $data{ $queueType . ":" . $queueAction . " (queue - threshold)" }{$queueNumber . "-2"} += $threshold2;
+                $data{ $queueType . ":" . $queueAction . " (queue - threshold)" }{$queueNumber . "-3"} += $threshold3;
 
             }
             when (/FastEthernet|GigabitEthernet/ix) {
@@ -326,6 +330,7 @@ sub deleteKeysWithValueZero {
             unless ($value) {
                 delete $collection->{$_};
             }
+
             #Recursively search if the item is a hash or an array
             if ( ref($value) eq 'HASH' || ref($value) eq 'ARRAY' ) {
                 deleteKeysWithValueZero($value);
@@ -354,10 +359,14 @@ sub determineDesiredSorting {
         #Provide a routine for Data::dumper to sort by hash values
         $Data::Dumper::Sortkeys = sub {
             my $data = join '', values %{ $_[0] };
-
-            #Sort numerically
-            return [ sort { $_[0]->{$b} <=> $_[0]->{$a} } keys %{ $_[0] } ];
-
+            if ( $data =~ /[A-Za-z\: ]/ ) {    # for example
+                    #Input is not numeric so sort Asciibetically
+                return [ sort keys %{ $_[0] } ];
+            }
+            else {
+                #Sort numerically
+                return [ sort { $_[0]->{$b} <=> $_[0]->{$a} } keys %{ $_[0] } ];
+            }
         };
     }
     else {
@@ -365,7 +374,7 @@ sub determineDesiredSorting {
         $Data::Dumper::Sortkeys = sub {
             my $data = join '', keys %{ $_[0] };
 
-            if ( $data =~ /[A-Za-z]/ ) {    # for example
+            if ( $data =~ /[A-Za-z\: ]/ ) {    # for example
                     #Input is not numeric so sort Asciibetically
                 return [ sort keys %{ $_[0] } ];
             }
