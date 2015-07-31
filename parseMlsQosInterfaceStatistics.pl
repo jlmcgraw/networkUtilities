@@ -27,6 +27,8 @@
 # switches)
 # Print numbers human-style
 # More gracefully handle the variable counts of data in COS/DSCP listings
+#  instead of multiple "when"s
+# output to CSV or spreadsheet
 
 #DONE
 # Allow user to select the sorting
@@ -306,29 +308,29 @@ sub deleteKeysWithValueZero {
 
         #For each item in the array, Recursively search if the item is
         #a HASHREF or an ARRAYREF
-        for ( @{$collection} ) {
-            if ( ref($_) eq 'HASH' || ref($_) eq 'ARRAY' ) {
-                deleteKeysWithValueZero($_);
+        for my $arrayValue ( @{$collection} ) {
+            if ( ref($arrayValue) eq 'HASH' || ref($arrayValue) eq 'ARRAY' ) {
+                deleteKeysWithValueZero($arrayValue);
             }
         }
     }
 
     #Is collection referencing a hash?
-    if ( ref $collection eq "HASH" ) {
+    elsif ( ref $collection eq "HASH" ) {
 
-        for ( keys %{$collection} ) {
-            my $value = $collection->{$_};
+        for my $key ( keys %{$collection} ) {
+            my $hashValue = $collection->{$key};
 
-            #Unless the value is defined (not zero) delete it
-            unless ($value) {
-                delete $collection->{$_};
+            #Recursively search if the item is a reference to hash or array
+            if ( ref($hashValue) eq 'HASH' || ref($hashValue) eq 'ARRAY' ) {
+                deleteKeysWithValueZero($hashValue);
             }
-
-            #Recursively search if the item is a hash or an array
-            if ( ref($value) eq 'HASH' || ref($value) eq 'ARRAY' ) {
-                deleteKeysWithValueZero($value);
+            else {
+                #Unless the value is defined (not zero) delete it
+                unless ($hashValue) {
+                    delete $collection->{$key};
+                }
             }
-
         }
     }
 }
@@ -347,37 +349,45 @@ sub usage {
 sub determineDesiredSorting {
 
     #How does the user want to sort the display?
-    if ( $opt{s} ) {
+    my $shouldSortByvalue = $opt{s};
+
+    if ($shouldSortByvalue) {
 
         #Provide a routine for Data::dumper to sort by hash VALUES
         $Data::Dumper::Sortkeys = sub {
-            my $data = join '', values %{ $_[0] };
 
-            #Is it only numbers?
-            if ( $data =~ /^[[:alnum:]]+$/ ) {
-                #Sort numerically
+            #Get all the values for this hash
+            my $values = join '', values %{ $_[0] };
+
+            #Are they only numbers?
+            if ( $values =~ /^[[:alnum:]]+$/ ) {
+
+                #Sort by values numerically
                 return [ sort { $_[0]->{$b} <=> $_[0]->{$a} } keys %{ $_[0] } ];
             }
             else {
-                #Input is not all numeric so sort alphabetically
+                #Values is not all numeric so sort by keys alphabetically
                 #BUG TODO Should be values?
-                return [ sort {lc $a cmp lc $b} keys %{ $_[0] } ];
+                return [ sort { lc $a cmp lc $b } keys %{ $_[0] } ];
             }
         };
     }
     else {
         #Provide a routine for Data::dumper to sort by hash KEYS
         $Data::Dumper::Sortkeys = sub {
-            my $data = join '', values %{ $_[0] };
 
-            #Is it only numbers?
-            if ( $data =~ /^[[:alnum:]]+$/ ) {
-                #Sort numerically
+            #Get all the values for this hash
+            my $values = join '', values %{ $_[0] };
+
+            #Are they only numbers?
+            if ( $values =~ /^[[:alnum:]]+$/ ) {
+
+                #Sort keys numerically
                 return [ sort { $a <=> $b or $a cmp $b } keys %{ $_[0] } ];
             }
             else {
-                #Input is not all numeric so sort alphabetically
-                return [ sort {lc $a cmp lc $b} keys %{ $_[0] } ];
+                #Values is not all numeric so sort by keys alphabetically
+                return [ sort { lc $a cmp lc $b } keys %{ $_[0] } ];
             }
         };
     }
