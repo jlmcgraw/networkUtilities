@@ -33,7 +33,8 @@
 
 use Modern::Perl '2014';
 use autodie;
-use Number::Bytes::Human qw(format_bytes);
+
+#use Number::Bytes::Human qw(format_bytes);
 use Data::Dumper;
 use Params::Validate qw(:all);
 use Getopt::Std;
@@ -75,15 +76,12 @@ sub main {
             $queueType,        $queueAction
         );
 
-        #         say $line;
         given ($line) {
             when (/(dscp|cos) \s* : \s* (incoming|outgoing)/ix) {
 
                 #Save the type of mark and its direction
                 $markingType      = $1;
                 $markingDirection = $2;
-
-                #                 say "\tFound: $markingType $markingDirection";
             }
 
             when (/(output \s+ queues) \s* (enqueued|dropped)/ix) {
@@ -91,8 +89,6 @@ sub main {
                 #Save whether we're queuing or dropping
                 $queueType   = $1;
                 $queueAction = $2;
-
-                #                 say "\tFound: $queueType with action $queueAction";
             }
 
             #The DSCP/COS lines with 5 entries
@@ -112,15 +108,6 @@ sub main {
                      $/ix
               )
             {
-                #                 say "\t$markingType with 5 entries!";
-                #                 say "\t\t"
-                #                   . $+{lower} . "/"
-                #                   . $+{upper} . ":"
-                #                   . $+{first} . ":"
-                #                   . $+{second} . ":"
-                #                   . $+{third} . ":"
-                #                   . $+{fourth} . ":"
-                #                   . $+{fifth};
                 #Get the lower and upper bounds of the COS/DSCP for this line
                 my $lower = $+{lower};
                 my $upper = $+{upper};
@@ -133,16 +120,21 @@ sub main {
                 my $fifth  = $+{lower} + 4;
 
                 #Save it into the hash
-                $data{ $markingType . ":" . $markingDirection . " ( Tag -> Packets )" }{$first} +=
-                  $+{first};
-                $data{ $markingType . ":" . $markingDirection . " ( Tag -> Packets )" }{$second} +=
-                  $+{second};
-                $data{ $markingType . ":" . $markingDirection . " ( Tag -> Packets )" }{$third} +=
-                  $+{third};
-                $data{ $markingType . ":" . $markingDirection . " ( Tag -> Packets )" }{$fourth} +=
-                  $+{fourth};
-                $data{ $markingType . ":" . $markingDirection . " ( Tag -> Packets )" }{$fifth} +=
-                  $+{fifth};
+                $data{  $markingType . ":"
+                      . $markingDirection
+                      . " ( Tag -> Packets )" }{$first} += $+{first};
+                $data{  $markingType . ":"
+                      . $markingDirection
+                      . " ( Tag -> Packets )" }{$second} += $+{second};
+                $data{  $markingType . ":"
+                      . $markingDirection
+                      . " ( Tag -> Packets )" }{$third} += $+{third};
+                $data{  $markingType . ":"
+                      . $markingDirection
+                      . " ( Tag -> Packets )" }{$fourth} += $+{fourth};
+                $data{  $markingType . ":"
+                      . $markingDirection
+                      . " ( Tag -> Packets )" }{$fifth} += $+{fifth};
             }
 
             #The DSCP/COS lines with 4 entries
@@ -161,13 +153,6 @@ sub main {
                      $/ix
               )
             {
-                #                 say "\t$markingType with 3 entries!";
-                #                 say "\t\t"
-                #                   . $+{lower} . "/"
-                #                   . $+{upper} . ":"
-                #                   . $+{first} . ":"
-                #                   . $+{second} . ":"
-                #                   . $+{third};
                 #Get the lower and upper bounds of the COS/DSCP for this line
                 my $lower = $+{lower};
                 my $upper = $+{upper};
@@ -179,14 +164,18 @@ sub main {
                 my $fourth = $+{lower} + 3;
 
                 #Save it into the hash
-                $data{ $markingType . ":" . $markingDirection . " ( Tag -> Packets )" }{$first} +=
-                  $+{first};
-                $data{ $markingType . ":" . $markingDirection . " ( Tag -> Packets )" }{$second} +=
-                  $+{second};
-                $data{ $markingType . ":" . $markingDirection . " ( Tag -> Packets )" }{$third} +=
-                  $+{third};
-                $data{ $markingType . ":" . $markingDirection . " ( Tag -> Packets )" }{$fourth} +=
-                  $+{fourth};
+                $data{  $markingType . ":"
+                      . $markingDirection
+                      . " ( Tag -> Packets )" }{$first} += $+{first};
+                $data{  $markingType . ":"
+                      . $markingDirection
+                      . " ( Tag -> Packets )" }{$second} += $+{second};
+                $data{  $markingType . ":"
+                      . $markingDirection
+                      . " ( Tag -> Packets )" }{$third} += $+{third};
+                $data{  $markingType . ":"
+                      . $markingDirection
+                      . " ( Tag -> Packets )" }{$fourth} += $+{fourth};
 
             }
 
@@ -205,13 +194,6 @@ sub main {
                      $/ix
               )
             {
-                #                 say "\t$markingType with 3 entries!";
-                #                 say "\t\t"
-                #                   . $+{lower} . "/"
-                #                   . $+{upper} . ":"
-                #                   . $+{first} . ":"
-                #                   . $+{second} . ":"
-                #                   . $+{third};
                 #Get the lower and upper bounds of the COS/DSCP for this line
                 my $lower = $+{lower};
                 my $upper = $+{upper};
@@ -222,12 +204,15 @@ sub main {
                 my $third  = $+{lower} + 2;
 
                 #Save into the hash
-                $data{ $markingType . ":" . $markingDirection . " ( Tag -> Packets )" }{$first} +=
-                  $+{first};
-                $data{ $markingType . ":" . $markingDirection . " ( Tag -> Packets )" }{$second} +=
-                  $+{second};
-                $data{ $markingType . ":" . $markingDirection . " ( Tag -> Packets )" }{$third} +=
-                  $+{third};
+                $data{  $markingType . ":"
+                      . $markingDirection
+                      . " ( Tag -> Packets )" }{$first} += $+{first};
+                $data{  $markingType . ":"
+                      . $markingDirection
+                      . " ( Tag -> Packets )" }{$second} += $+{second};
+                $data{  $markingType . ":"
+                      . $markingDirection
+                      . " ( Tag -> Packets )" }{$third} += $+{third};
 
             }
 
@@ -245,15 +230,10 @@ sub main {
                      $/ix
               )
             {
-                #                 say "\t$queueType with action $queueAction with 3 entries!";
-                #                 say "\t\t"
-                #                   . $+{queueNumber} . ":"
-                #                   . $+{threshold1} . ":"
-                #                   . $+{threshold2} . ":"
-                #                   . $+{threshold3};
                 #The queue number
                 #For whatever dumb reason, this output starts queue numbering at 0
-                #where the config starts at 1.  So +1 here to make them consistent
+                #where the configuration commands starts it at 1.  So +1 here to
+                #make them consistent
                 my $queueNumber = $+{queueNumber} + 1;
 
                 #The thresholds for that queue
@@ -261,25 +241,37 @@ sub main {
                 my $threshold2 = $+{threshold2};
                 my $threshold3 = $+{threshold3};
 
-#                 $data{ $queueType . ":" . $queueAction . " (queue - threshold)" }{$queueNumber}
-#                   {"threshold1"} += $threshold1;
-#                 $data{ $queueType . ":" . $queueAction . " (queue - threshold)" }{$queueNumber}
-#                   {"threshold2"} += $threshold2;
-#                 $data{ $queueType . ":" . $queueAction . " (queue - threshold)" }{$queueNumber}
-#                   {"threshold3"} += $threshold3;
-                  
-                $data{ $queueType . ":" . $queueAction . " (queue - threshold)" }{$queueNumber . "-1"} += $threshold1;
-                $data{ $queueType . ":" . $queueAction . " (queue - threshold)" }{$queueNumber . "-2"} += $threshold2;
-                $data{ $queueType . ":" . $queueAction . " (queue - threshold)" }{$queueNumber . "-3"} += $threshold3;
+                #An alternative way to format this output
+                #                 $data{ $queueType . ":" . $queueAction . " (queue - threshold)" }{$queueNumber}
+                #                   {"threshold1"} += $threshold1;
+                #                 $data{ $queueType . ":" . $queueAction . " (queue - threshold)" }{$queueNumber}
+                #                   {"threshold2"} += $threshold2;
+                #                 $data{ $queueType . ":" . $queueAction . " (queue - threshold)" }{$queueNumber}
+                #                   {"threshold3"} += $threshold3;
+
+                $data{  $queueType . ":"
+                      . $queueAction
+                      . " (queue - threshold)" }{ $queueNumber . "-1" } +=
+                  $threshold1;
+                $data{  $queueType . ":"
+                      . $queueAction
+                      . " (queue - threshold)" }{ $queueNumber . "-2" } +=
+                  $threshold2;
+                $data{  $queueType . ":"
+                      . $queueAction
+                      . " (queue - threshold)" }{ $queueNumber . "-3" } +=
+                  $threshold3;
 
             }
-            when (/FastEthernet|GigabitEthernet/ix) {
+            when (/FastEthernet|GigabitEthernet|Ethernet/ix) {
+
+                #We've begun processing output for another interface
                 $interfaceCount++;
 
-                #Add in other types of interfaces here
+                #TODO: Add in other types of interfaces here
                 #eg 10Mb, 10Gig, etc etc etc
+
                 #Clear information for every new interface
-                #                 say "Clearing data!";
                 $currentInterface = $markingType = $markingDirection =
                   $queueType      = $queueAction = undef;
             }
@@ -292,6 +284,7 @@ sub main {
 
     }
 
+    #Delete keys with value 0 if user requested
     if ( $opt{z} ) { deleteKeysWithValueZero( \%data ); }
 
     #Dump the hash
@@ -345,7 +338,7 @@ sub usage {
     say "Usage:";
     say "   $0 [-s] <log file1> <log file2> etc";
     say "       -s     Sort by count values instead of keys";
-    say "       -z     Delete keys with value of 0";
+    say "       -z     Delete keys with value of 0 to unclutter display";
     say "       -u     Save unrecognized lines for diagnosing parsing issues";
     say "";
     exit 1;
@@ -356,31 +349,37 @@ sub determineDesiredSorting {
     #How does the user want to sort the display?
     if ( $opt{s} ) {
 
-        #Provide a routine for Data::dumper to sort by hash values
+        #Provide a routine for Data::dumper to sort by hash VALUES
         $Data::Dumper::Sortkeys = sub {
             my $data = join '', values %{ $_[0] };
-            if ( $data =~ /[A-Za-z\: ]/ ) {    # for example
-                    #Input is not numeric so sort Asciibetically
-                return [ sort keys %{ $_[0] } ];
-            }
-            else {
+            say $data;
+
+            #Is it only numbers?
+            if ( $data =~ /^[[:alnum:]]+$/ ) {
                 #Sort numerically
                 return [ sort { $_[0]->{$b} <=> $_[0]->{$a} } keys %{ $_[0] } ];
+            }
+            else {
+                #Input is not all numeric so sort alphabetically
+                #BUG TODO Should be values?
+                return [ sort {lc $a cmp lc $b} keys %{ $_[0] } ];
             }
         };
     }
     else {
-        #Provide a routine for Data::dumper to sort by hash keys
+        #Provide a routine for Data::dumper to sort by hash KEYS
         $Data::Dumper::Sortkeys = sub {
-            my $data = join '', keys %{ $_[0] };
+            my $data = join '', values %{ $_[0] };
+            say $data;
 
-            if ( $data =~ /[A-Za-z\: ]/ ) {    # for example
-                    #Input is not numeric so sort Asciibetically
-                return [ sort keys %{ $_[0] } ];
+            #Is it only numbers?
+            if ( $data =~ /^[[:alnum:]]+$/ ) {
+                #Sort numerically
+                return [ sort { $a <=> $b or $a cmp $b } keys %{ $_[0] } ];
             }
             else {
-                #Sort numerically
-                return [ sort { $a <=> $b } keys %{ $_[0] } ];
+                #Input is not all numeric so sort alphabetically
+                return [ sort {lc $a cmp lc $b} keys %{ $_[0] } ];
             }
         };
     }
