@@ -35,6 +35,7 @@ use Modern::Perl '2014';
 use autodie;
 use Number::Bytes::Human qw(format_bytes);
 use Data::Dumper;
+use Params::Validate qw(:all);
 use Getopt::Std;
 use vars qw/ %opt /;
 
@@ -42,7 +43,7 @@ use vars qw/ %opt /;
 no if $] >= 5.018, warnings => "experimental";
 
 #Define the valid command line options
-my $opt_string = 's';
+my $opt_string = 'szu';
 my $arg_num    = scalar @ARGV;
 
 #This will fail if we receive an invalid option
@@ -280,12 +281,14 @@ sub main {
             }
 
             default {
-                #Save the Unrecognized line in the hash for user review
-                $data{"Unrecognized Lines"}{$line} = 1;
+                #If requested, save the unrecognized line in the hash for user review
+                if ( $opt{u} ) { $data{"Unrecognized Lines"}{$line} = 1; }
             }
         }
 
     }
+
+    if ( $opt{z} ) { deleteKeysWithValueZero( \%data ); }
 
     #Dump the hash
     print Dumper \%data;
@@ -295,11 +298,50 @@ sub main {
 
 }
 
+sub deleteKeysWithValueZero {
+
+    #Recursively search through a hash and delete keys with value 0
+
+    my ($collection) = validate_pos( @_, { type => HASHREF | ARRAYREF }, );
+
+    #Is collection referencing an array?
+    if ( ref $collection eq "ARRAY" ) {
+
+        #For each item in the array, Recursively search if the item is
+        #a HASHREF or an ARRAYREF
+        for ( @{$collection} ) {
+            if ( ref($_) eq 'HASH' || ref($_) eq 'ARRAY' ) {
+                deleteKeysWithValueZero($_);
+            }
+        }
+    }
+
+    #Is collection referencing a hash?
+    if ( ref $collection eq "HASH" ) {
+
+        for ( keys %{$collection} ) {
+            my $value = $collection->{$_};
+
+            #Unless the value is defined (not zero) delete it
+            unless ($value) {
+                delete $collection->{$_};
+            }
+            #Recursively search if the item is a hash or an array
+            if ( ref($value) eq 'HASH' || ref($value) eq 'ARRAY' ) {
+                deleteKeysWithValueZero($value);
+            }
+
+        }
+    }
+}
+
 sub usage {
     say "";
     say "Usage:";
     say "   $0 [-s] <log file1> <log file2> etc";
     say "       -s     Sort by count values instead of keys";
+    say "       -z     Delete keys with value of 0";
+    say "       -u     Save unrecognized lines for diagnosing parsing issues";
     say "";
     exit 1;
 }
