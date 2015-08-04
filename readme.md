@@ -27,3 +27,6 @@
 	Combines the counts of all of the interfaces to get an idea of the overall
 	 mix of incoming/outgoing COS/DSCP values and which queues are queuing and dropping
 	 the most packets
+
+##parseRiverbedInterceptorRules.pl
+        Parse some rules from Riverbed Interceptor configurations into an Excel spreadsheet to reading/organizing them easier

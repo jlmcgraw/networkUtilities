@@ -35,9 +35,24 @@
 
 use Modern::Perl '2014';
 use autodie;
-
+use Smart::Comments;
 #use Number::Bytes::Human qw(format_bytes);
 use Data::Dumper;
+        $Data::Dumper::Sortkeys = sub {
+
+            #Get all the keys for this hash
+            my $keys   = join '', keys %{ $_[0] };
+
+            #Are they only numbers?
+            if ( $keys =~ /^[[:alnum:]]+$/ ) {
+                #Sort keys numerically
+                return [ sort { $a <=> $b or $a cmp $b } keys %{ $_[0] } ];
+            }
+            else {
+                #Values is not all numeric so sort by keys alphabetically
+                return [ sort { lc $a cmp lc $b } keys %{ $_[0] } ];
+            }
+        };
 use Params::Validate qw(:all);
 use Getopt::Std;
 use vars qw/ %opt /;
@@ -69,7 +84,7 @@ sub main {
     determineDesiredSorting();
 
     #Read each line, one at a time, of all files specified on command line or stdin
-    while (<>) {
+    while (<>) {                            ### Evaluating [===|    ] % done
         my $line = $_;
 
         #Don't reinitialize these variables each time through the loop
@@ -79,8 +94,8 @@ sub main {
         );
 
         given ($line) {
-            when (/(dscp|cos) \s* : \s* (incoming|outgoing)/ix) {
-
+            when (/(cos|dscp) \s* : \s* (incoming|outgoing)/ix) {
+                ### Found new COS/DSCP line...
                 #Save the type of mark and its direction
                 $markingType      = $1;
                 $markingDirection = $2;
@@ -112,6 +127,7 @@ sub main {
                      $/ix
               )
             {
+                ### Found new COS/DSCP markings line...
                 #Get the lower and upper bounds of the COS/DSCP for this line
                 my $lower = $+{lower};
                 my $upper = $+{upper};
@@ -167,6 +183,7 @@ sub main {
                      $/ix
               )
             {
+                ### Found new queue and its thresholds...
                 #The queue number
                 #For whatever dumb reason, this output starts queue numbering at 0
                 #where the configuration commands starts it at 1.  So +1 here to
@@ -200,8 +217,8 @@ sub main {
                   $threshold3;
 
             }
-            when (/FastEthernet|GigabitEthernet|Ethernet/ix) {
-
+            when (/^(?<interfaceType>FastEthernet|GigabitEthernet|Ethernet) \s* (?<interfaceNumber> [ \d \/ ]+)$/ix) {
+                ### Found new interface...
                 #We've begun processing output for another interface
                 $interfaceCount++;
 
@@ -211,6 +228,7 @@ sub main {
                 #Clear information for every new interface
                 $currentInterface = $markingType = $markingDirection =
                   $queueType      = $queueAction = undef;
+#                 say $line;
             }
 
             default {
@@ -273,7 +291,7 @@ sub deleteKeysWithValueZero {
 sub usage {
     say "";
     say "Usage:";
-    say "   $0 [-s] <log file1> <log file2> etc";
+    say "   $0 [-s -z -u] <log file1> <log file2> etc";
     say "       -s     Sort by count values instead of keys";
     say "       -z     Delete keys with value of 0 to unclutter display";
     say "       -u     Save unrecognized lines for diagnosing parsing issues";
@@ -284,8 +302,7 @@ sub usage {
 sub determineDesiredSorting {
 
     #How does the user want to sort the display?
-    my $shouldSortByValue = $opt{s};
-
+    my $shouldSortByValue = $opt{s};                ### $shouldSortByValue is: $shouldSortByValue
     if ($shouldSortByValue) {
 
         #Provide a routine for Data::dumper to sort by hash VALUES
