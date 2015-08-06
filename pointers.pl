@@ -3,6 +3,8 @@
 #Note that the keys/categories in pointers and pointees match (acl, route_map etc)
 #This is so we can linkify properly
 #You must keep pointers/pointees categories in sync
+#
+#Each first level key/category is the type of item referenced in the command
 
 #Named capture "points_to" is what to match with %pointees{$pointed_at} hash
 
@@ -21,6 +23,10 @@
         qr /^ \s* snmp-server \s+ tftp-server-list \s+ (?<points_to> $validPointeeNameRegex)/ixsm,
     7 =>
         qr /^ \s* ip \s+ directed-broadcast \s+ (?<points_to> $validPointeeNameRegex) $/ixsm,
+    8 =>
+        qr /^ \s* ntp \s+ access-group \s+ (?: peer | serve | serve-only | query-only) (?<points_to> $validPointeeNameRegex) $/ixsm,
+    9 =>
+        qr /^ \s* match \s+ access-group \s+ (?<points_to> $validPointeeNameRegex) $/ixsm,
 
     },
 'service_policy' => {
@@ -40,6 +46,7 @@
 'prefix_list' => {
     1 =>
         qr/^ \s* neighbor \s+ $RE{net}{IPv4} \s+ prefix-list \s+ (?<points_to> $valid_cisco_name) \s+ (?:in|out)$/ixsm,
+    #BUG TODO This command can have a list of prefix lists, how to capture and linkify them all?
     2 =>
         qr/^ \s* match \s+ ip \s+ address \s+ prefix-list \s+ (?<points_to> $valid_cisco_name) $/ixsm,
     },
@@ -60,6 +67,8 @@
         qr/snmp-server \s+ trap-source \s+ (?<points_to> $valid_cisco_name) /ixsm,
     5 =>
         qr/^ \s* ip \s+ flow-export \s+ source \s+ (?<points_to> $valid_cisco_name) /ixsm,
+    6 =>
+        qr/^ \s* neighbor \s+ $RE{net}{IPv4} \s+ update-source \s+ (?<points_to> $valid_cisco_name) $/ixsm,
 
     },
     
@@ -132,6 +141,16 @@
         class \s+
         (?<points_to> (?: $valid_cisco_name) )
         $
+        /ixsm,
+
+    },
+'aaa_group' => {
+    1 => qr/ ^ \s*
+        aaa \s+
+        (?: authentication | authorization | accounting ) \s+
+        .*?
+        group \s+
+        (?<points_to> (?: $valid_cisco_name) )
         /ixsm,
 
     },

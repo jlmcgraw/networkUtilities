@@ -3,7 +3,9 @@
 #Note that the keys/categories in pointers and pointees match (acl, route_map etc)
 #This is so we can linkify properly
 #You must keep pointers/pointees categories in sync
-
+#
+#Each first level key/category is the type of item its regexes match
+#
 #Named capture "unique_id" is the unique beginning of the pointed to thingy
 #Named capture "pointed_at" is what to match with %pointers{$points_to} hash
 
@@ -116,6 +118,18 @@
                         ^ \s*
                         class-map \s+
                         (?: match-all | match-any) \s+
+                        (?<pointed_at> $valid_cisco_name)
+                    )
+                    $
+                    /ixsm,
+    },
+'aaa_group' => {
+    1 => qr/(?<unique_id>
+                        ^ \s*
+                        aaa \s+
+                        group \s+
+                        server \s+
+                        (?: tacacs\+ ) \s+
                         (?<pointed_at> $valid_cisco_name)
                     )
                     $
