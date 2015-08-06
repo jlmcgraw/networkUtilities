@@ -20,4 +20,5 @@ sudo apt-get \
             libparams-validate-perl \
             libsmart-comments-perl \
             libnumber-format-perl \
+            libnumber-bytes-human-perl \
             libregexp-common-perl

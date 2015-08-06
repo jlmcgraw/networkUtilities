@@ -31,6 +31,7 @@ use Modern::Perl '2014';
 use autodie;
 use Regexp::Common;
 
+# Uncomment to see debugging comments
 # use Smart::Comments;
 
 use Number::Bytes::Human qw(format_bytes);
@@ -68,6 +69,12 @@ no if $] >= 5.018, warnings => "experimental";
 my $opt_string = 'hv';
 my $arg_num    = scalar @ARGV;
 
+#We need at least one argument
+if ( $arg_num < 1 ) {
+    usage();
+    exit(1);
+}
+
 #This will fail if we receive an invalid option
 unless ( getopts( "$opt_string", \%opt ) ) {
     usage();
@@ -91,15 +98,17 @@ sub main {
     #
     #Note that we're using the path of the script to load the files ($Bin), in case
     #you run it from some other directory
-
+    #Add a trailing /
+    $Bin .= '/';
+    
     #regexes for numbers we want to reformat
-    my %humanReadable = do $Bin . '/human_readable.pl';
+    my %humanReadable = do $Bin . 'human_readable.pl';
 
     #regexes for commands that refer to other lists of some sort
-    my %pointers = do $Bin . '/pointers.pl';
+    my %pointers = do $Bin . 'pointers.pl';
 
     #regexes for the lists that are referred to
-    my %pointees = do $Bin . '/pointees.pl';
+    my %pointees = do $Bin . 'pointees.pl';
 
     #Loop through every file provided on command line
     foreach my $filename (@ARGV) {
@@ -246,7 +255,7 @@ END
 sub usage {
     say "";
     say "Usage:";
-    say "   $0 -h <config file1> <config file2> or redirect from stdin";
+    say "   $0 -h <config file1> <config file2> <*.cfg> etc";
     say "       -h Make some numbers human readable";
     say "";
     exit 1;
