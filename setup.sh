@@ -19,4 +19,5 @@ sudo apt-get \
             libio-interactive-perl \
             libparams-validate-perl \
             libsmart-comments-perl \
-            libnumber-format-perl
+            libnumber-format-perl \
+            libregexp-common-perl

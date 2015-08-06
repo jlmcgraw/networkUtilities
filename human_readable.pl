@@ -1,13 +1,13 @@
 #Numbers we'd like to format to make more readable
 #TODO: I'd like to stick a unit on there too, somehow
 #Renders the config invalid, though
-   1 => qr/^ \s* 
+    1 => qr/^ \s* 
                 shape \s+ 
                 average \s+
                 (\d+) \s+ 
                 (\d+) \s+ 
                 (\d+)
-                /ixsm,
+                /ixsm, 
     2 => qr/^ \s* 
                 bandwidth \s+
                 (\d+)
@@ -29,5 +29,4 @@
                 (\d+)
                 $
                 /ixsm,
-
 

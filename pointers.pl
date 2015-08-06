@@ -15,13 +15,13 @@
         qr /^ \s* ip \s+ directed-broadcast \s+ (?<points_to> $validPointeeNameRegex) $/ixsm,
 
     },
-    'service_policy' => {
+'service_policy' => {
     1 =>
         qr/^ \s* service-policy \s+ (?: input|output) \s+ (?<points_to> $validPointeeNameRegex)/ixsm,
     2 =>
         qr/^ \s* service-policy \s+ (?<points_to> $validPointeeNameRegex)$/ixsm,
     },
-    'route_map' => {
+'route_map' => {
     1 =>
         qr/^ \s* neighbor \s+ $RE{net}{IPv4} \s+ route-map \s+ (?<points_to> $valid_cisco_name)/ixsm,
     2 =>
@@ -29,21 +29,21 @@
     3 =>
         qr/^ \s* neighbor \s+ $RE{net}{IPv4} \s+ default-originate \s+ route-map \s+ (?<points_to> $valid_cisco_name)/ixsm,
     },
-    'prefix_list' => {
+'prefix_list' => {
     1 =>
         qr/^ \s* neighbor \s+ $RE{net}{IPv4} \s+ prefix-list \s+ (?<points_to> $valid_cisco_name) \s+ (?:in|out)$/ixsm,
     2 =>
         qr/^ \s* match \s+ ip \s+ address \s+ prefix-list \s+ (?<points_to> $valid_cisco_name) $/ixsm,
     },
-    'community_list'      => {},
-    'as_path_access_list' => {
+'community_list'      => {},
+'as_path_access_list' => {
     1 =>
         qr/^ \s* neighbor \s+ $RE{net}{IPv4} \s+ filter-list \s+ (?<points_to> $valid_cisco_name) \s+ (?:in|out)$/ixsm,
     2 =>
         qr/^ \s* match \s+ as-path \s+ (?<points_to> $valid_cisco_name) $/ixsm,
 
     },
-    'interface' => {
+'interface' => {
     1 => qr/source-interface \s+ (?<points_to> $valid_cisco_name) /ixsm,
     2 => qr/ntp \s+ source \s+ (?<points_to> $valid_cisco_name) /ixsm,
     3 =>
@@ -54,7 +54,7 @@
         qr/^ \s* ip \s+ flow-export \s+ source \s+ (?<points_to> $valid_cisco_name) /ixsm,
 
     },
-    'track' => {
+'track' => {
     1 => qr/^ \s*
                     standby \s+
                     \d+ \s+                                
@@ -72,7 +72,7 @@
         
         /ixsm,
     },
-    'vrf' => {
+'vrf' => {
     1 => qr/^ \s*
                     ip \s+
                     vrf \s+
@@ -94,7 +94,7 @@
                     (\s+|$)
         /ixsm,
     },
-    'key_chain' => {
+'key_chain' => {
 
     #Make this guy have to have some alphanumeric in front of him
     1 => qr/ \w+ \s+
@@ -104,7 +104,7 @@
         /ixsm,
 
     },
-    'ip_sla' => {
+'ip_sla' => {
     1 => qr/ ^ \s*
         ip \s+
         sla \s+
@@ -113,7 +113,7 @@
         /ixsm,
 
     },
-    'class' => {
+'class' => {
     1 => qr/ ^ \s*
         class \s+
         (?<points_to> (?: $valid_cisco_name) )

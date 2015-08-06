@@ -20,7 +20,7 @@
                                 )
                     )/ixsm,
     },
-    'service_policy' => {
+'service_policy' => {
     1 => qr/ (?<unique_id> 
                                 ^ \s* 
                                 policy-map \s+ 
@@ -30,7 +30,7 @@
                     )
                     /ixsm
     },
-    'route_map' => {
+'route_map' => {
     1 => qr/ (?<unique_id> 
                                 ^ \s*
                                 route-map \s+ 
@@ -40,32 +40,32 @@
                     )
                     /ixsm
     },
-    'prefix_list' => {
+'prefix_list' => {
     1 =>
         qr/(?<unique_id> ^ \s* ip \s+ prefix-list \s+ (?<pointed_at> $valid_cisco_name) )/ixsm,
 
     },
-    'community_list' => { 1 =>
+'community_list' => { 1 =>
         qr/(?<unique_id> ^ \s* ip \s+ community-list \s+ (?:standard|extended) (?<pointed_at> $valid_cisco_name) )/ixsm,
     },
-    'as_path_access_list' => {
+'as_path_access_list' => {
     1 =>
         qr/(?<unique_id> ^ \s* ip \s+ as-path \s+ access-list \s (?<pointed_at> $valid_cisco_name) )/ixsm,
 
     },
-    'interface' => {
+'interface' => {
     1 =>
         qr/(?<unique_id> ^ \s* interface \s+ (?<pointed_at> $valid_cisco_name) )/ixsm,
 
     },
 
-    'track' => {
+'track' => {
     1 =>
         qr/(?<unique_id>^ \s* track \s+ (?<pointed_at> $valid_cisco_name))/ixsm,
 
     },
 
-    'vrf' => {
+'vrf' => {
     1 => qr/(?<unique_id>
                         ^ \s*
                         ip \s+
@@ -84,7 +84,7 @@
                     /ixsm,
 
     },
-    'key_chain' => {
+'key_chain' => {
     1 => qr/(?<unique_id>
                         ^ \s*
                         key \s+ 
@@ -95,7 +95,7 @@
                     /ixsm,
 
     },
-    'ip_sla' => {
+'ip_sla' => {
     1 => qr/(?<unique_id>
                         ^ \s*
                         ip \s+
@@ -105,7 +105,7 @@
                     $
                     /ixsm,
     },
-    'class' => {
+'class' => {
     1 => qr/(?<unique_id>
                         ^ \s*
                         class-map \s+

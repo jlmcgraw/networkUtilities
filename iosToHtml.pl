@@ -1,7 +1,9 @@
 #!/usr/bin/perl
 # Copyright (C) 2015  Jesse McGraw (jlmcgraw@gmail.com)
 #
-#Parse Riverbed Interceptor configuration
+# Convert a Cisco IOS file to a very basic HTML representation that creates
+# links between commands that use lists and those lists, hopefully making it easier
+# to follow deeply nested QoS or routing policies
 
 #-------------------------------------------------------------------------------
 # This program is free software: you can redistribute it and/or modify
@@ -28,22 +30,23 @@
 use Modern::Perl '2014';
 use autodie;
 use Regexp::Common;
+
 # use Smart::Comments;
 
 use Number::Bytes::Human qw(format_bytes);
 use Number::Format qw(:subs :vars);
 
 # use Data::Dumper;
-# 
+#
 # # The sort routine for Data::Dumper
 # $Data::Dumper::Sortkeys = sub {
-# 
+#
 #     #Get all the keys for this hash
 #     my $keys = join '', keys %{ $_[0] };
-# 
+#
 #     #Are they only numbers?
 #     if ( $keys =~ /^ [[:alnum:]]+ $/x ) {
-# 
+#
 #         #Sort keys numerically
 #         return [ sort { $a <=> $b or $a cmp $b } keys %{ $_[0] } ];
 #     }
@@ -71,8 +74,6 @@ unless ( getopts( "$opt_string", \%opt ) ) {
     exit(1);
 }
 
-
-
 #Call main routine
 exit main(@ARGV);
 
@@ -94,13 +95,11 @@ sub main {
     #regexes for numbers we want to reformat
     my %humanReadable = do $Bin . '/human_readable.pl';
 
-    
     #regexes for commands that refer to other lists of some sort
-    my %pointers = do $Bin. '/pointers.pl';
+    my %pointers = do $Bin . '/pointers.pl';
 
     #regexes for the lists that are referred to
-    my %pointees = do $Bin. '/pointees.pl';
-
+    my %pointees = do $Bin . '/pointees.pl';
 
     #Loop through every file provided on command line
     foreach my $filename (@ARGV) {
@@ -212,11 +211,10 @@ END
                             #Different ways to format the number
                             #my $number_formatted = format_number($number);
                             my $number_formatted = format_bytes($number);
-                            
+
                             #Replace the non-formatted number with the formmated one
                             $line =~ s/$number/$number_formatted/;
                         }
-
 
                     }
                 }
