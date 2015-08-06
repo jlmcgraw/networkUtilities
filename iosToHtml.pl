@@ -94,7 +94,7 @@ sub main {
     #These hashes of regexes have been moved to an external file to reduce clutter here
     #Note that the keys/categories in pointers and pointees match (acl, route_map etc)
     #This is so we can linkify properly
-    #You must keep them in sync
+    #You must keep pointers/pointees categories in sync
     #
     #Note that we're using the path of the script to load the files ($Bin), in case
     #you run it from some other directory

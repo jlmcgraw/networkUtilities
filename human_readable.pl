@@ -1,6 +1,6 @@
-#Numbers we'd like to format to make more readable
-#TODO: I'd like to stick a unit on there too, somehow
-#Renders the config invalid, though
+#Numbers we'd like to format to make more readable (renders the config invalid, though)
+#TODO: I'd like to stick a unit (bits, bytes) on there too, somehow
+
     1 => qr/^ \s* 
                 shape \s+ 
                 average \s+
@@ -8,6 +8,7 @@
                 (\d+) \s+ 
                 (\d+)
                 /ixsm, 
+                
     2 => qr/^ \s* 
                 bandwidth \s+
                 (\d+)

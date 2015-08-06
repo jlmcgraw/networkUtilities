@@ -1,3 +1,11 @@
+#regexes for commands that refer to other lists of some sort
+#
+#Note that the keys/categories in pointers and pointees match (acl, route_map etc)
+#This is so we can linkify properly
+#You must keep pointers/pointees categories in sync
+
+#Named capture "points_to" is what to match with %pointees{$pointed_at} hash
+
 'acl' => {
     1 =>
         qr /^ \s* match \s+ access-group \s+ name \s+ (?<points_to> $validPointeeNameRegex)/ixsm,
@@ -54,6 +62,7 @@
         qr/^ \s* ip \s+ flow-export \s+ source \s+ (?<points_to> $valid_cisco_name) /ixsm,
 
     },
+    
 'track' => {
     1 => qr/^ \s*
                     standby \s+
@@ -72,6 +81,7 @@
         
         /ixsm,
     },
+    
 'vrf' => {
     1 => qr/^ \s*
                     ip \s+
@@ -80,12 +90,14 @@
                     (?<points_to> (?: $valid_cisco_name) )
                     (\s+|$)
         /ixsm,
+        
     2 => qr/^ \s*
                     vrf \s+
                     forwarding \s+
                     (?<points_to> (?: $valid_cisco_name) )
                     (\s+|$)
         /ixsm,
+        
     3 => qr/^ \s*
                     ip \s+
                     route \s+
@@ -94,8 +106,8 @@
                     (\s+|$)
         /ixsm,
     },
+    
 'key_chain' => {
-
     #Make this guy have to have some alphanumeric in front of him
     1 => qr/ \w+ \s+
         key-chain \s+
@@ -104,6 +116,7 @@
         /ixsm,
 
     },
+
 'ip_sla' => {
     1 => qr/ ^ \s*
         ip \s+
@@ -113,6 +126,7 @@
         /ixsm,
 
     },
+
 'class' => {
     1 => qr/ ^ \s*
         class \s+

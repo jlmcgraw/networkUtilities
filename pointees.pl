@@ -1,7 +1,13 @@
-'acl' => {
+#regexes for the lists that are referred to
+#
+#Note that the keys/categories in pointers and pointees match (acl, route_map etc)
+#This is so we can linkify properly
+#You must keep pointers/pointees categories in sync
 
-    #Named capture "unique_id" is the unique beginning of the pointed to thingy
-    #Named capture "pointed_at" is what to match with %pointers hash
+#Named capture "unique_id" is the unique beginning of the pointed to thingy
+#Named capture "pointed_at" is what to match with %pointers{$points_to} hash
+
+'acl' => {
     1 => qr/(?<unique_id>
                                 ^ \s*
                                 ip \s+
