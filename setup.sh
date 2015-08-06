@@ -18,4 +18,5 @@ sudo apt-get \
             libgraphviz-perl \
             libio-interactive-perl \
             libparams-validate-perl \
-            libsmart-comments-perl
+            libsmart-comments-perl \
+            libnumber-format-perl

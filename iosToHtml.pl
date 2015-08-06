@@ -19,45 +19,50 @@
 #-------------------------------------------------------------------------------
 
 #TODO
+#   Add a unit to numbers we make human readable?
+#BUG wrong link location when pointed_to occurs twice in string
+#   eg: standby 1 track 1 decrement 10
 
 #DONE
 
 use Modern::Perl '2014';
 use autodie;
 use Regexp::Common;
-use Smart::Comments;
+# use Smart::Comments;
 
-#use Number::Bytes::Human qw(format_bytes);
-use Data::Dumper;
+use Number::Bytes::Human qw(format_bytes);
+use Number::Format qw(:subs :vars);
 
-# The sort routine for Data::Dumper
-$Data::Dumper::Sortkeys = sub {
-
-    #Get all the keys for this hash
-    my $keys = join '', keys %{ $_[0] };
-
-    #Are they only numbers?
-    if ( $keys =~ /^ [[:alnum:]]+ $/x ) {
-
-        #Sort keys numerically
-        return [ sort { $a <=> $b or $a cmp $b } keys %{ $_[0] } ];
-    }
-    else {
-        #Keys are not all numeric so sort by alphabetically
-        return [ sort { lc $a cmp lc $b } keys %{ $_[0] } ];
-    }
-};
+# use Data::Dumper;
+# 
+# # The sort routine for Data::Dumper
+# $Data::Dumper::Sortkeys = sub {
+# 
+#     #Get all the keys for this hash
+#     my $keys = join '', keys %{ $_[0] };
+# 
+#     #Are they only numbers?
+#     if ( $keys =~ /^ [[:alnum:]]+ $/x ) {
+# 
+#         #Sort keys numerically
+#         return [ sort { $a <=> $b or $a cmp $b } keys %{ $_[0] } ];
+#     }
+#     else {
+#         #Keys are not all numeric so sort by alphabetically
+#         return [ sort { lc $a cmp lc $b } keys %{ $_[0] } ];
+#     }
+# };
 
 use Params::Validate qw(:all);
 use Getopt::Std;
+use FindBin '$Bin';
 use vars qw/ %opt /;
-use Spreadsheet::WriteExcel;
 
 #Use this to not print warnings
 no if $] >= 5.018, warnings => "experimental";
 
 #Define the valid command line options
-my $opt_string = 'szu';
+my $opt_string = 'hv';
 my $arg_num    = scalar @ARGV;
 
 #This will fail if we receive an invalid option
@@ -66,75 +71,50 @@ unless ( getopts( "$opt_string", \%opt ) ) {
     exit(1);
 }
 
+
+
 #Call main routine
 exit main(@ARGV);
 
 sub main {
-    my $valid_cisco_name      = qr/ [\S]+ /isxm;
-    my $validPointeeNameRegex = qr/ [\S]+ /isxm;
-    my %data;
-    my %pointers = (
 
-        #named capture "points_to" is the pointer to the pointee
-        'uses_acl' => {
-            1 =>
-                qr /^ \s* match \s+ access-group \s+ name \s+ (?<points_to> $validPointeeNameRegex)/ixsm,
-            2 =>
-                qr /^ \s* snmp-server \s+ community \s+ (?: $valid_cisco_name) \s+ view \s+ (?: $valid_cisco_name) \s+ (?: RO|RW) \s+ (?<points_to> $validPointeeNameRegex)ixsm/,
-            3 =>
-                qr /^ \s* snmp-server \s+ community \s+ (?: $valid_cisco_name) \s+ (?: RO|RW) \s+ (?<points_to> $validPointeeNameRegex)/ixsm,
-            4 =>
-                qr /^ \s* snmp-server \s+ file-transfer \s+ access-group \s+ (?<points_to> $validPointeeNameRegex) \s+ protocol/ixsm,
-            5 =>
-                qr /^ \s* access-class \s+ (?<points_to> $validPointeeNameRegex) \s+ (?: in|out)/ixsm,
-        },
-        'uses_service_policy' => {
-            \1 =>
-                qr/^ \s* service-policy \s+ (?: input|output) \s+ (?<points_to> $validPointeeNameRegex)/ixsm,
-        },
-        'uses_route_map' => {
-            1 =>
-                qr/^ \s* neighbor \s+ $RE{net}{IPv4} \s+ route-map \s+ (?<points_to> $valid_cisco_name)/ixsm,
-        },
+    #What constitutes a valid name in IOS
+    #OUR because of using in external files
+    our $valid_cisco_name      = qr/ [\S]+ /isxm;
+    our $validPointeeNameRegex = qr/ [\S]+ /isxm;
 
-    );
+    #These hashes of regexes have been moved to an external file to reduce clutter here
+    #Note that the keys/categories in pointers and pointees match (acl, route_map etc)
+    #This is so we can linkify properly
+    #You must keep them in sync
+    #
+    #Note that we're using the path of the script to load the files ($Bin), in case
+    #you run it from some other directory
 
-    my %pointees = (
-        'is_an_acl' => {
+    #regexes for numbers we want to reformat
+    my %humanReadable = do $Bin . '/human_readable.pl';
 
-            #Named capture "unique_id" is the beginning of the pointed to thingy
-            #Named capture "pointed_at" is what to match with %pointers hash
-            1 => qr/(?<unique_id> 
-                                ^ \s* 
-                                ip \s+ 
-                                access-list \s+ 
-                                extended \s+ 
-                                (?<pointed_at> 
-                                    (?: $valid_cisco_name)
-                                ) 
-                    )
-                    /ixsm,
-            2 =>
-                qr/(?<unique_id> ^ \s* access-list \s+ (?<pointed_at> (?: $valid_cisco_name) ) )/ixsm,
-        },
-        'is_an_service_policy' => {
-            1 =>
-                qr/ (?<unique_id> ^ \s* policy-map \s+ (?<pointed_at> (?: $valid_cisco_name) ) )/ixsm
-        },
-        'is_a_route_map' => {
-            1 =>
-                qr/ (?<unique_id> ^ \s* route-map \s+ (?<pointed_at> (?: $valid_cisco_name) ) )/ixsm
-        },
+    
+    #regexes for commands that refer to other lists of some sort
+    my %pointers = do $Bin. '/pointers.pl';
 
-    );
+    #regexes for the lists that are referred to
+    my %pointees = do $Bin. '/pointees.pl';
 
-    my %foundPointers = ();
-    my %foundPointees = ();
 
+    #Loop through every file provided on command line
     foreach my $filename (@ARGV) {
+
+        #reset these for each file
+        my %foundPointers = ();
+        my %foundPointees = ();
+        my %pointeeSeen   = ();
+
+        #Open the input and output files
         open my $filehandle,     '<', $filename           or die $!;
         open my $filehandleHtml, '>', $filename . '.html' or die $!;
 
+        #Print a simple html beginning to output
         print $filehandleHtml <<"END";
 <html>
   <head>
@@ -143,8 +123,11 @@ sub main {
    </title>
   </head>
 
-  <body>
+    <body>
+        <pre>
 END
+
+        #Say the current filename just for a progress indicator
         say $filename;
 
         #Read each line, one at a time, of all files specified on command line or stdin
@@ -156,35 +139,97 @@ END
             $line =~ s/\R//g;
 
             #Match it against our hash of pointers regexes
-            foreach my $pointerKey1 ( keys %pointers ) {
-                foreach my $pointerKey2 ( keys $pointers{"$pointerKey1"} ) {
-                    if ( $line =~ $pointers{"$pointerKey1"}{"$pointerKey2"} )
+            foreach my $pointerType ( sort keys %pointers ) {
+                foreach my $pointerKey2 ( keys $pointers{"$pointerType"} ) {
+                    if ( $line =~ $pointers{"$pointerType"}{"$pointerKey2"} )
                     {
-                        $foundPointers{"$line"} = $+{points_to};
+                        #Save what we captures
+                        my $unique_id = $+{unique_id};
+                        my $points_to = $+{points_to};
 
-                        #<a name="top"></a>
-                        say {$filehandleHtml} $line;
+                        #Save what we found for debugging
+                        $foundPointers{"$line"} = $points_to;
+
+                        #Construct the text of the link
+                        my $linkText
+                            = '<a href="#'
+                            . $pointerType . '_'
+                            . $points_to
+                            . "\">$points_to</a>";
+
+                        #Insert the link back into the line
+                        #Link point needs to be surrounded by whitespace or end of line
+                        $line =~ s/(\s+) $points_to (\s+|$)/$1$linkText$2/x;
 
                     }
                 }
             }
 
             #Match it against our hash of pointees regexes
-            foreach my $pointeeKey1 ( keys %pointees ) {
-                foreach my $pointeeKey2 ( keys $pointees{"$pointeeKey1"} ) {
-                    if ( $line =~ $pointees{"$pointeeKey1"}{"$pointeeKey2"} )
+            foreach my $pointeeType ( sort keys %pointees ) {
+                foreach my $pointeeKey2 ( keys $pointees{"$pointeeType"} ) {
+                    if ( $line =~ $pointees{"$pointeeType"}{"$pointeeKey2"} )
                     {
-                        $foundPointees{"$+{unique_id}"} = $+{pointed_at};
+                        my $unique_id  = $+{unique_id};
+                        my $pointed_at = $+{pointed_at};
 
-                        # <a href="#top">link to top</a>
-                        say {$filehandleHtml} $line;
+                        #Save what we found for debugging
+                        $foundPointees{$unique_id} = $pointed_at;
+
+                        #Have we seen this pointee already?
+                        #We only want to make a link pointer for the first occurrence
+                        if ( !$pointeeSeen{$pointeeType}{$unique_id} ) {
+                            $pointeeSeen{$pointeeType}{$unique_id} = 1;
+
+                            #Add a break <br> to make this stand out from text above it
+                            #Add underline/italic to hold destination line
+                            #along with the anchor for links to refer to
+                            $line
+                                = '<br>' . '<b>'
+                                . '<a name="'
+                                . $pointeeType . '_'
+                                . $pointed_at . '">'
+                                . $line . '</a>' . '</b>';
+
+                        }
+                    }
+                }
+            }
+
+            #Did user request to reformat some numbers?
+            if ( $opt{h} ) {
+
+                #Match it against our hash of number regexes
+                foreach my $human_readable_key ( sort keys %humanReadable ) {
+
+                    #Did we find any matches? (number varies between the regexes)
+                    if ( my @matches
+                        = ( $line =~ $humanReadable{"$human_readable_key"} ) )
+                    {
+                        #For each match, reformat the number
+                        foreach my $number (@matches) {
+
+                            #Different ways to format the number
+                            #my $number_formatted = format_number($number);
+                            my $number_formatted = format_bytes($number);
+                            
+                            #Replace the non-formatted number with the formmated one
+                            $line =~ s/$number/$number_formatted/;
+                        }
+
 
                     }
                 }
             }
+
+            #Print the (possibly) modified line to html file
+            say {$filehandleHtml} $line;
         }
+
+        #Close out the file with very basic html ending
         print $filehandleHtml <<"END";
-  </body>
+        </pre>
+    </body>
 </html>
 END
         close $filehandle;
@@ -192,6 +237,7 @@ END
 
         ### %foundPointers
         ### %foundPointees
+        ### %pointeeSeen
 
     }
 
@@ -202,7 +248,8 @@ END
 sub usage {
     say "";
     say "Usage:";
-    say "   $0 <config file1> <config file2> or redirect from stdin";
+    say "   $0 -h <config file1> <config file2> or redirect from stdin";
+    say "       -h Make some numbers human readable";
     say "";
     exit 1;
 }
