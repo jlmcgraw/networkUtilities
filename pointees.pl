@@ -69,7 +69,10 @@
 
 'track' => {
     1 =>
-        qr/(?<unique_id>^ \s* track \s+ (?<pointed_at> $valid_cisco_name))/ixsm,
+        qr/(?<unique_id>^ \s*
+                         track \s+
+                        (?<pointed_at> $valid_cisco_name )
+            )/ixsm,
 
     },
 
@@ -131,7 +134,7 @@
                         server \s+
                         (?: tacacs\+ ) \s+
                         (?<pointed_at> $valid_cisco_name)
-                    )
-                    $
-                    /ixsm,
+            )
+            $
+            /ixsm,
     },

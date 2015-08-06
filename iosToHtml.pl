@@ -22,10 +22,14 @@
 
 #TODO
 #   Add a unit to numbers we make human readable?
-#BUG wrong link location when pointed_to occurs twice in string
-#   eg: standby 1 track 1 decrement 10
+
+#BUGS
+#   wrong link location (first match) when pointed_to occurs twice in string
+#       eg: standby 1 track 1 decrement 10
 
 #DONE
+#   Match a list of referenced items
+#        match ip address prefix-list LIST1 LIST3 LIST3
 
 use Modern::Perl '2014';
 use autodie;
@@ -87,27 +91,25 @@ exit main(@ARGV);
 sub main {
 
     #What constitutes a valid name in IOS
-    #OUR because of using in external files
-    our $valid_cisco_name      = qr/ [\S]+ /isxm;
-    our $validPointeeNameRegex = qr/ [\S]+ /isxm;
+    #OUR because of using it in external files
+    our $valid_cisco_name = qr/ [\S]+ /isxm;
 
-    #These hashes of regexes have been moved to an external file to reduce clutter here
+    #our $validPointeeNameRegex = qr/ [\S]+ /isxm;
+
+    #The hashes of regexes have been moved to an external file to reduce clutter here
     #Note that the keys/categories in pointers and pointees match (acl, route_map etc)
-    #This is so we can linkify properly
-    #You must keep pointers/pointees categories in sync
+    #This is so we can match them together properly
+    #You must keep pointers/pointees categories in sync if you add new ones
     #
     #Note that we're using the path of the script to load the files ($Bin), in case
     #you run it from some other directory
     #Add a trailing /
     $Bin .= '/';
-    
-    #regexes for numbers we want to reformat
+
+    #load regexes for numbers we want to reformat
     my %humanReadable = do $Bin . 'human_readable.pl';
 
-    #regexes for commands that refer to other lists of some sort
-    my %pointers = do $Bin . 'pointers.pl';
-
-    #regexes for the lists that are referred to
+    #load regexes for the lists that are referred to ("pointees")
     my %pointees = do $Bin . 'pointees.pl';
 
     #Loop through every file provided on command line
@@ -122,58 +124,84 @@ sub main {
         open my $filehandle,     '<', $filename           or die $!;
         open my $filehandleHtml, '>', $filename . '.html' or die $!;
 
+        #Read in the whole file
+        my @array_of_lines = <$filehandle>
+            or die $!;    # Reads all lines into array
+
+        #Find all pointees in the file
+        my $found_pointees_ref
+            = find_pointees( \@array_of_lines, \%pointees );
+
+        #Construct lists of pointees of each type for using in the regexes
+        #to make them more explicit for this particular file
+        our $list_of_pointees_ref
+            = construct_lists_of_pointees($found_pointees_ref);
+
+        #load regexes for commands that refer to other lists of some sort
+        #NOTE THAT THESE ARE DYNAMICALLY CONSTRUCTED FOR EACH FILE BASED ON THE
+        #POINTEES WE FOUND IN IT ABOVE
+        my %pointers = do $Bin . 'pointers.pl';
+
+        ### %pointers
+
         #Print a simple html beginning to output
         print $filehandleHtml <<"END";
 <html>
   <head>
     <title> 
       $filename
-   </title>
+    </title>
   </head>
 
     <body>
         <pre>
 END
 
-        #Say the current filename just for a progress indicator
+        #Say the current filename just as a progress indicator
         say $filename;
 
-        #Read each line, one at a time, of all files specified on command line or stdin
-        while ( my $line = <$filehandle> ) {
-
+        #Read each line, one at a time, of this file
+        foreach my $line (@array_of_lines) {
             chomp $line;
 
             #Remove linefeeds
-            $line =~ s/\R//g;
+            $line =~ s/\R//gx;
 
-            #Match it against our hash of pointers regexes
+            #Match it against our hash of POINTERS regexes
             foreach my $pointerType ( sort keys %pointers ) {
                 foreach my $pointerKey2 ( keys $pointers{"$pointerType"} ) {
                     if ( $line =~ $pointers{"$pointerType"}{"$pointerKey2"} )
                     {
-                        #Save what we captures
+                        #Save what we captured
                         my $unique_id = $+{unique_id};
                         my $points_to = $+{points_to};
 
                         #Save what we found for debugging
                         $foundPointers{"$line"} = $points_to;
 
-                        #Construct the text of the link
-                        my $linkText
-                            = '<a href="#'
-                            . $pointerType . '_'
-                            . $points_to
-                            . "\">$points_to</a>";
+                        #Points_to can be a list!
+                        #Split it up and create a link for each element
+                        my @fields = split( '\s+', $points_to );
 
-                        #Insert the link back into the line
-                        #Link point needs to be surrounded by whitespace or end of line
-                        $line =~ s/(\s+) $points_to (\s+|$)/$1$linkText$2/x;
+                        foreach my $label (@fields) {
+
+                            #Construct the text of the link
+                            my $linkText
+                                = '<a href="#'
+                                . $pointerType . '_'
+                                . $label
+                                . "\">$label</a>";
+
+                            #Insert the link back into the line
+                            #Link point needs to be surrounded by whitespace or end of line
+                            $line =~ s/(\s+) $label (\s+|$)/$1$linkText$2/gx;
+                        }
 
                     }
                 }
             }
 
-            #Match it against our hash of pointees regexes
+            #Match it against our hash of POINTEES regexes
             foreach my $pointeeType ( sort keys %pointees ) {
                 foreach my $pointeeKey2 ( keys $pointees{"$pointeeType"} ) {
                     if ( $line =~ $pointees{"$pointeeType"}{"$pointeeKey2"} )
@@ -187,10 +215,11 @@ END
                         #Have we seen this pointee already?
                         #We only want to make a link pointer for the first occurrence
                         if ( !$pointeeSeen{$pointeeType}{$unique_id} ) {
-                            $pointeeSeen{$pointeeType}{$unique_id} = 1;
+                            $pointeeSeen{$pointeeType}{$unique_id}
+                                = "$pointed_at";
 
                             #Add a break <br> to make this stand out from text above it
-                            #Add underline/italic to hold destination line
+                            #Add underline/italic to destination line
                             #along with the anchor for links to refer to
                             $line
                                 = '<br>' . '<b>'
@@ -222,7 +251,7 @@ END
                             my $number_formatted = format_bytes($number);
 
                             #Replace the non-formatted number with the formmated one
-                            $line =~ s/$number/$number_formatted/;
+                            $line =~ s/$number/$number_formatted/x;
                         }
 
                     }
@@ -261,3 +290,72 @@ sub usage {
     exit 1;
 }
 
+sub construct_lists_of_pointees {
+
+    #Make a hash of lists, for each type of pointee, of what we've seen defined to use
+    #as part of the respective pointer regexes
+
+    my ($pointees_seen_ref)
+        = validate_pos( @_, { type => HASHREF }, );
+
+    my %pointees_list = ();
+
+    #Go through each type all of the pointees we've seen defined in this file
+    foreach my $pointeeType ( sort keys %{$pointees_seen_ref} ) {
+        my @list_of_pointees;
+        foreach
+            my $pointeeKey2 ( sort keys $pointees_seen_ref->{"$pointeeType"} )
+        {
+            #Add this label to our list
+            push( @list_of_pointees,
+                $pointees_seen_ref->{"$pointeeType"}{"$pointeeKey2"} );
+
+        }
+
+        #Make a list of those names joined by |
+        #This list is what will be used in the pointer regex
+        $pointees_list{$pointeeType} = join( ' | ', @list_of_pointees );
+    }
+    ### %pointees_list
+    return \%pointees_list;
+}
+
+sub find_pointees {
+
+    #Construct a hash of the types of pointees we've seen
+    my ( $array_of_lines_ref, $pointee_regex_ref )
+        = validate_pos( @_, { type => ARRAYREF }, { type => HASHREF } );
+
+    my %foundPointees = ();
+
+    foreach my $line (@$array_of_lines_ref) {
+        chomp $line;
+
+        #Remove linefeeds
+        $line =~ s/\R//gx;
+
+        #Match it against our hash of pointees regexes
+        foreach my $pointeeType ( sort keys %{$pointee_regex_ref} ) {
+            foreach
+                my $pointeeKey2 ( keys $pointee_regex_ref->{"$pointeeType"} )
+            {
+                if ( $line
+                    =~ $pointee_regex_ref->{"$pointeeType"}{"$pointeeKey2"} )
+                {
+                    my $unique_id  = $+{unique_id};
+                    my $pointed_at = $+{pointed_at};
+
+                    #Have we seen this pointee already?
+                    #We only want to make a link pointer for the first occurrence
+                    if ( !$foundPointees{$pointeeType}{$unique_id} ) {
+                        $foundPointees{$pointeeType}{$unique_id}
+                            = "$pointed_at";
+
+                    }
+                }
+            }
+        }
+    }
+    ### %foundPointees
+    return \%foundPointees;
+}
