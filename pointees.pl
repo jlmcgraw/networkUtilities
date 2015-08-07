@@ -62,7 +62,7 @@
                                 ^ \s* 
                                 policy-map \s+
                                 type \s+
-                                (?: queuing) \s+
+                                (?: queuing | qos) \s+
                                 (?<pointed_at> 
                                     (?: $valid_cisco_name) 
                                 ) 
@@ -181,7 +181,7 @@
                     ^ \s*
                     class-map \s+
                     type \s+
-                    (?: control-plane) \s+
+                    (?: control-plane | qos) \s+
                     (?: match-any | match-all) \s+
                     (?<pointed_at> $valid_cisco_name) )
                     /ixsm,
@@ -193,6 +193,7 @@
                     (?: network-qos | queuing ) \s+
                     (?<pointed_at> $valid_cisco_name) )
                     /ixsm,
+
     },
 'aaa_group' => {
     1 => qr/(?<unique_id>

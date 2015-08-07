@@ -180,6 +180,15 @@
         (?<points_to> (?: $list_of_pointees_ref->{"class"}) )
         (\s*|$)
         /ixsm,
+        
+    #NXOS
+    2 => qr/ ^ \s*
+        class \s+
+        type \s+
+        (?: queuing) \s+
+        (?<points_to> (?: $list_of_pointees_ref->{"class"}) )
+        (\s*|$)
+        /ixsm,
 
     },
 
