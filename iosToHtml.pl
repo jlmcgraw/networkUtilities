@@ -21,15 +21,17 @@
 #-------------------------------------------------------------------------------
 
 #TODO
+#   Yes, I'm reading through the file twice.  I haven't reached the point
+#       of really trying to optimize anything
 #   Add a unit to numbers we make human readable?
-#   Make markers with a space in them work right
+#   Make pointed_at/points_to with a space in them work right
 #       eg "track 1" or "ospf 10"
 #BUGS
 #   wrong link location (first match) when pointed_to occurs twice in string
 #       eg: standby 1 track 1 decrement 10
 
 #DONE
-#   Match a list of referenced items
+#   Match a list of referenced items which correct link for each
 #        match ip address prefix-list LIST1 LIST3 LIST3
 
 use Modern::Perl '2014';
@@ -301,7 +303,7 @@ sub construct_lists_of_pointees {
 
     my %pointees_list = ();
 
-    #Go through each type all of the pointees we've seen defined in this file
+    #Go through each type and save all of the pointees we've seen defined in this file
     foreach my $pointeeType ( sort keys %{$pointees_seen_ref} ) {
         my @list_of_pointees;
         foreach
@@ -313,8 +315,13 @@ sub construct_lists_of_pointees {
 
         }
 
+        #Sort them by length, longest first
+        #This is done so stuff like COS2V will match COS2V instead of just COS2
+        #Perhaps regex could also be changed to use \b
+        @list_of_pointees = sort { length $b <=> length $a } @list_of_pointees;
+        
         #Make a list of those names joined by |
-        #This list is what will be used in the pointer regex
+        #This list is what will be used in the pointer regex (see pointers.pl)
         $pointees_list{$pointeeType} = join( ' | ', @list_of_pointees );
     }
     ### %pointees_list
@@ -323,7 +330,7 @@ sub construct_lists_of_pointees {
 
 sub find_pointees {
 
-    #Construct a hash of the types of pointees we've seen
+    #Construct a hash of the types of pointees we've seen in this file
     my ( $array_of_lines_ref, $pointee_regex_ref )
         = validate_pos( @_, { type => ARRAYREF }, { type => HASHREF } );
 

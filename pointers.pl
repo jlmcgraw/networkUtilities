@@ -60,7 +60,14 @@
     1 =>
         qr/^ \s* neighbor \s+ $RE{net}{IPv4} \s+ route-map \s+ (?<points_to> $list_of_pointees_ref->{"route_map"})/ixsm,
     2 =>
-        qr/^ \s* redistribute \s+ (?:static|bgp|ospf|eigrp|isis|rip) (?: \s+ \d+)? \s+ route-map \s+ (?<points_to> $list_of_pointees_ref->{"route_map"})/ixsm,
+        qr/^ \s* 
+            redistribute \s+ 
+            (?:static|bgp|ospf|eigrp|isis|rip) 
+            (?: \s+ \d+ \s+)? 
+            (?: subnets \s+)?  
+            route-map \s+ 
+            (?<points_to> $list_of_pointees_ref->{"route_map"})
+            /ixsm,
     3 =>
         qr/^ \s* neighbor \s+ $RE{net}{IPv4} \s+ default-originate \s+ route-map \s+ (?<points_to> $list_of_pointees_ref->{"route_map"})/ixsm,
     #NXOS
@@ -177,7 +184,7 @@
     #NXOS
     1 => qr/ ^ \s*
         class \s+
-        (?<points_to> (?: $list_of_pointees_ref->{"class"}) )
+        (?<points_to> (?: $list_of_pointees_ref->{"class"}))
         (\s*|$)
         /ixsm,
         
