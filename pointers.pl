@@ -209,10 +209,21 @@
         /ixsm,
 
     },
+    
 'routing_process' => {
     1 => qr/ ^ \s*
         router \s+
         (?<points_to> (?: $list_of_pointees_ref->{"routing_process"}) )
+        /ixsm,
+
+    },
+    
+'object_group' => {
+#BUG TODO: Catch both 
+#access-list outside_access_in extended permit tcp object-group Support_Network any object-group Support_Ports 
+    1 => qr/ \w+ \s*             #Make this guy have to have some alphanumeric in front of him
+        object-group \s+
+        (?<points_to> (?: $list_of_pointees_ref->{"object_group"}) )
         /ixsm,
 
     },

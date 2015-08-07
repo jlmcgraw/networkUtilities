@@ -39,7 +39,7 @@ use autodie;
 use Regexp::Common;
 
 # Uncomment to see debugging comments
-# use Smart::Comments;
+use Smart::Comments;
 
 use Number::Bytes::Human qw(format_bytes);
 use Number::Format qw(:subs :vars);
@@ -173,16 +173,18 @@ END
             #Match it against our hash of POINTERS regexes
             foreach my $pointerType ( sort keys %pointers ) {
                 foreach my $pointerKey2 ( keys $pointers{"$pointerType"} ) {
-                    if ( $line =~ $pointers{"$pointerType"}{"$pointerKey2"} )
+                    #The while allows multiple pointers in one line
+                    while ( $line =~ m/$pointers{"$pointerType"}{"$pointerKey2"}/g )
                     {
                         #Save what we captured
                         my $unique_id = $+{unique_id};
                         my $points_to = $+{points_to};
-
+                        
                         #Save what we found for debugging
-                        $foundPointers{"$line"} = $points_to;
+                        $foundPointers{"$line"} .= $points_to;
 
                         #Points_to can be a list!
+                        #See pointers->prefix_list->2 for an example
                         #Split it up and create a link for each element
                         my @fields = split( '\s+', $points_to );
 
@@ -207,7 +209,7 @@ END
             #Match it against our hash of POINTEES regexes
             foreach my $pointeeType ( sort keys %pointees ) {
                 foreach my $pointeeKey2 ( keys $pointees{"$pointeeType"} ) {
-                    if ( $line =~ $pointees{"$pointeeType"}{"$pointeeKey2"} )
+                    if ( $line =~ m/$pointees{"$pointeeType"}{"$pointeeKey2"}/ )
                     {
                         my $unique_id  = $+{unique_id};
                         my $pointed_at = $+{pointed_at};

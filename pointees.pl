@@ -216,3 +216,13 @@
             (\s+|$)
             /ixsm,
     },
+'object_group' => {
+    1 => qr/(?<unique_id>
+                        ^ \s*
+                        object-group \s+
+                        (?: network | service | protocol | icmp-type )\s+
+                        (?<pointed_at> $valid_cisco_name)
+            )
+            (\s+|$)
+            /ixsm,
+    },
