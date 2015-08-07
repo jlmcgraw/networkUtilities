@@ -29,14 +29,32 @@
     8 =>
         qr /^ \s* ntp \s+ access-group \s+ (?: peer | serve | serve-only | query-only) (?<points_to> $list_of_pointees_ref->{"acl"}) $/ixsm,
     9 =>
-        qr /^ \s* match (?: \s+ not )? access-group \s+ (?<points_to> $list_of_pointees_ref->{"acl"}) $/ixsm,
-
+        qr /^ \s* 
+                match (?: \s+ not )? \s+ 
+                access-group \s+ 
+                name \s+ 
+                (?<points_to> $list_of_pointees_ref->{"acl"}) 
+                $
+                /ixsm,
+    #nxos
+    10=>
+        qr /^ \s* 
+                snmp-server \s+ 
+                community \s+ 
+                $valid_cisco_name \s+ 
+                use-acl \s+
+                (?<points_to> $list_of_pointees_ref->{"acl"}) 
+                $
+                /ixsm,
     },
 'service_policy' => {
     1 =>
         qr/^ \s* service-policy \s+ (?: input|output) \s+ (?<points_to> $list_of_pointees_ref->{"service_policy"})/ixsm,
     2 =>
         qr/^ \s* service-policy \s+ (?<points_to> $list_of_pointees_ref->{"service_policy"})$/ixsm,
+    #NXOS
+    3 =>
+        qr/^ \s* service-policy \s+ type \s+ (?: queuing) \s+ (?: input | output) \s (?<points_to> $list_of_pointees_ref->{"service_policy"})$/ixsm,
     },
 'route_map' => {
     1 =>
@@ -45,6 +63,16 @@
         qr/^ \s* redistribute \s+ (?:static|bgp|ospf|eigrp|isis|rip) (?: \s+ \d+)? \s+ route-map \s+ (?<points_to> $list_of_pointees_ref->{"route_map"})/ixsm,
     3 =>
         qr/^ \s* neighbor \s+ $RE{net}{IPv4} \s+ default-originate \s+ route-map \s+ (?<points_to> $list_of_pointees_ref->{"route_map"})/ixsm,
+    #NXOS
+    4=>
+        qr/^ \s* 
+            route-map \s+ 
+            (?<points_to> $list_of_pointees_ref->{"route_map"} )
+            \s+ 
+            (?: in | out) 
+            \s* $
+            /ixsm,
+
     },
 'prefix_list' => {
     1 =>
@@ -64,7 +92,11 @@
     1 =>
         qr/^ \s* neighbor \s+ $RE{net}{IPv4} \s+ filter-list \s+ (?<points_to> $list_of_pointees_ref->{"as_path_access_list"}) \s+ (?:in|out)$/ixsm,
     2 =>
-        qr/^ \s* match \s+ as-path \s+ (?<points_to> $list_of_pointees_ref->{"as_path_access_list"}) $/ixsm,
+        qr/^ \s* 
+            match \s+ 
+            as-path \s+ 
+            (?<points_to> $list_of_pointees_ref->{"as_path_access_list"}) 
+            \s* $/ixsm,
 
     },
 'interface' => {
@@ -78,7 +110,13 @@
         qr/^ \s* ip \s+ flow-export \s+ source \s+ (?<points_to> $list_of_pointees_ref->{"interface"}) /ixsm,
     6 =>
         qr/^ \s* neighbor \s+ $RE{net}{IPv4} \s+ update-source \s+ (?<points_to> $list_of_pointees_ref->{"interface"}) $/ixsm,
-
+    7 =>
+        qr/^ \s* update-source \s+ (?<points_to> $list_of_pointees_ref->{"interface"}) $/ixsm,
+    8 => qr/^ \s* 
+                (?: source | destination ) \s+ 
+                interface \s+ 
+                (?<points_to> $list_of_pointees_ref->{"interface"}) 
+                /ixsm,
     },
     
 'track' => {    
@@ -136,13 +174,15 @@
     },
 
 'class' => {
+    #NXOS
     1 => qr/ ^ \s*
         class \s+
         (?<points_to> (?: $list_of_pointees_ref->{"class"}) )
-        $
+        (\s*|$)
         /ixsm,
 
     },
+
 'aaa_group' => {
     1 => qr/ ^ \s*
         aaa \s+
@@ -150,6 +190,13 @@
         .*?
         group \s+
         (?<points_to> (?: $list_of_pointees_ref->{"aaa_group"}) )
+        /ixsm,
+
+    },
+'routing_process' => {
+    1 => qr/ ^ \s*
+        router \s+
+        (?<points_to> (?: $list_of_pointees_ref->{"routing_process"}) )
         /ixsm,
 
     },

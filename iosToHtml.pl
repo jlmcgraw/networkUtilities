@@ -22,7 +22,8 @@
 
 #TODO
 #   Add a unit to numbers we make human readable?
-
+#   Make markers with a space in them work right
+#       eg "track 1" or "ospf 10"
 #BUGS
 #   wrong link location (first match) when pointed_to occurs twice in string
 #       eg: standby 1 track 1 decrement 10

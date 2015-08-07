@@ -14,7 +14,7 @@
                                 ^ \s*
                                 ip \s+
                                 access-list \s+
-                                extended \s+
+                                (?: extended \s+)?
                                 (?<pointed_at>
                                     (?: $valid_cisco_name)
                                 )
@@ -27,6 +27,25 @@
                                     (?: $valid_cisco_name)
                                 )
                     )/ixsm,
+    #NXOS
+    3 => qr/(?<unique_id>
+                ^ \s*
+                mac \s+
+                access-list \s+
+                (?<pointed_at>
+                    (?: $valid_cisco_name)
+                )
+    )
+    /ixsm,
+    4 => qr/(?<unique_id>
+                ^ \s*
+                ipv6 \s+
+                access-list \s+
+                (?<pointed_at>
+                    (?: $valid_cisco_name)
+                )
+    )
+    /ixsm,
     },
 'service_policy' => {
     1 => qr/ (?<unique_id> 
@@ -36,7 +55,20 @@
                                     (?: $valid_cisco_name) 
                                 ) 
                     )
-                    /ixsm
+                    \s* $
+                    /ixsm,
+    #NXOS
+    2=> qr/ (?<unique_id> 
+                                ^ \s* 
+                                policy-map \s+
+                                type \s+
+                                (?: queuing) \s+
+                                (?<pointed_at> 
+                                    (?: $valid_cisco_name) 
+                                ) 
+                    )
+                    \s* $
+                    /ixsm,                   
     },
 'route_map' => {
     1 => qr/ (?<unique_id> 
@@ -44,9 +76,24 @@
                                 route-map \s+ 
                                 (?<pointed_at> 
                                     (?: $valid_cisco_name) 
-                                ) 
+                                )
+                                (?: deny | permit) \s+
+                                \d+
+                                \s* 
+                                $
                     )
-                    /ixsm
+                    /ixsm,
+    #NXOS
+    2 => qr/ (?<unique_id> 
+                                ^ \s*
+                                route-map \s+
+                                (?<pointed_at> 
+                                    (?: $valid_cisco_name) 
+                                )
+                                )
+                                \s+
+                                (?: permit | deny) \s+
+                    /ixsm,
     },
 'prefix_list' => {
     1 =>
@@ -58,7 +105,11 @@
     },
 'as_path_access_list' => {
     1 =>
-        qr/(?<unique_id> ^ \s* ip \s+ as-path \s+ access-list \s (?<pointed_at> $valid_cisco_name) )/ixsm,
+        qr/(?<unique_id> ^ \s*
+                        ip \s+
+                        as-path \s+ 
+                        access-list \s 
+                        (?<pointed_at> $valid_cisco_name) )/ixsm,
 
     },
 'interface' => {
@@ -125,6 +176,23 @@
                     )
                     $
                     /ixsm,
+        #NXOS
+        2 => qr/(?<unique_id> 
+                    ^ \s*
+                    class-map \s+
+                    type \s+
+                    (?: control-plane) \s+
+                    (?: match-any | match-all) \s+
+                    (?<pointed_at> $valid_cisco_name) )
+                    /ixsm,
+        #NXOS
+        3 => qr/(?<unique_id> 
+                    ^ \s*
+                    class-map \s+
+                    type \s+
+                    (?: network-qos | queuing ) \s+
+                    (?<pointed_at> $valid_cisco_name) )
+                    /ixsm,
     },
 'aaa_group' => {
     1 => qr/(?<unique_id>
@@ -135,6 +203,15 @@
                         (?: tacacs\+ ) \s+
                         (?<pointed_at> $valid_cisco_name)
             )
-            $
+            (\s+|$)
+            /ixsm,
+    },
+'routing_process' => {
+    1 => qr/(?<unique_id>
+                        ^ \s*
+                        router \s+
+                        (?<pointed_at> (?:ospf | eigrp | bgp | isis | rip) \s+ $valid_cisco_name)
+            )
+            (\s+|$)
             /ixsm,
     },
