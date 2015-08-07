@@ -27,6 +27,7 @@
                                     (?: $valid_cisco_name)
                                 )
                     )/ixsm,
+
     #NXOS
     3 => qr/(?<unique_id>
                 ^ \s*
@@ -47,7 +48,7 @@
     )
     /ixsm,
     },
-'service_policy' => {
+    'service_policy' => {
     1 => qr/ (?<unique_id> 
                                 ^ \s* 
                                 policy-map \s+ 
@@ -57,8 +58,9 @@
                     )
                     \s* $
                     /ixsm,
+
     #NXOS
-    2=> qr/ (?<unique_id> 
+    2 => qr/ (?<unique_id> 
                                 ^ \s* 
                                 policy-map \s+
                                 type \s+
@@ -68,9 +70,9 @@
                                 ) 
                     )
                     \s* $
-                    /ixsm,                   
+                    /ixsm,
     },
-'route_map' => {
+    'route_map' => {
     1 => qr/ (?<unique_id> 
                                 ^ \s*
                                 route-map \s+ 
@@ -83,6 +85,7 @@
                                 $
                     )
                     /ixsm,
+
     #NXOS
     2 => qr/ (?<unique_id> 
                                 ^ \s*
@@ -95,39 +98,40 @@
                                 (?: permit | deny) \s+
                     /ixsm,
     },
-'prefix_list' => {
+    'prefix_list' => {
     1 =>
         qr/(?<unique_id> ^ \s* ip \s+ prefix-list \s+ (?<pointed_at> $valid_cisco_name) )/ixsm,
 
     },
-'community_list' => { 1 =>
+    'community_list' => { 1 =>
         qr/(?<unique_id> ^ \s* ip \s+ community-list \s+ (?:standard|extended) (?<pointed_at> $valid_cisco_name) )/ixsm,
     },
-'as_path_access_list' => {
-    1 =>
-        qr/(?<unique_id> ^ \s*
+    'as_path_access_list' => {
+    1 => qr/(?<unique_id> ^ \s*
                         ip \s+
                         as-path \s+ 
                         access-list \s 
                         (?<pointed_at> $valid_cisco_name) )/ixsm,
 
     },
-'interface' => {
+    'interface' => {
     1 =>
         qr/(?<unique_id> ^ \s* interface \s+ (?<pointed_at> $valid_cisco_name) )/ixsm,
 
+    #NXOS,
+    2 => qr/(?<unique_id> ^ \s* interface \s+ port-channel
+        (?<pointed_at> $valid_cisco_name) )/ixsm,
     },
 
-'track' => {
-    1 =>
-        qr/(?<unique_id>^ \s*
+    'track' => {
+    1 => qr/(?<unique_id>^ \s*
                          track \s+
                         (?<pointed_at> $valid_cisco_name )
             )/ixsm,
 
     },
 
-'vrf' => {
+    'vrf' => {
     1 => qr/(?<unique_id>
                         ^ \s*
                         ip \s+
@@ -145,8 +149,18 @@
                     $
                     /ixsm,
 
+    #NXOS
+    3 => qr/(?<unique_id>
+                        ^ \s*
+                        vrf \s+
+                        context \s+
+                        (?<pointed_at> $valid_cisco_name)
+                    )
+                    ( \s* | $)
+                    /ixsm,
+
     },
-'key_chain' => {
+    'key_chain' => {
     1 => qr/(?<unique_id>
                         ^ \s*
                         key \s+ 
@@ -157,7 +171,7 @@
                     /ixsm,
 
     },
-'ip_sla' => {
+    'ip_sla' => {
     1 => qr/(?<unique_id>
                         ^ \s*
                         ip \s+
@@ -167,7 +181,7 @@
                     $
                     /ixsm,
     },
-'class' => {
+    'class' => {
     1 => qr/(?<unique_id>
                         ^ \s*
                         class-map \s+
@@ -176,8 +190,9 @@
                     )
                     $
                     /ixsm,
-        #NXOS
-        2 => qr/(?<unique_id> 
+
+    #NXOS
+    2 => qr/(?<unique_id> 
                     ^ \s*
                     class-map \s+
                     type \s+
@@ -185,8 +200,9 @@
                     (?: match-any | match-all) \s+
                     (?<pointed_at> $valid_cisco_name) )
                     /ixsm,
-        #NXOS
-        3 => qr/(?<unique_id> 
+
+    #NXOS
+    3 => qr/(?<unique_id> 
                     ^ \s*
                     class-map \s+
                     type \s+
@@ -195,7 +211,7 @@
                     /ixsm,
 
     },
-'aaa_group' => {
+    'aaa_group' => {
     1 => qr/(?<unique_id>
                         ^ \s*
                         aaa \s+
@@ -207,7 +223,7 @@
             (\s+|$)
             /ixsm,
     },
-'routing_process' => {
+    'routing_process' => {
     1 => qr/(?<unique_id>
                         ^ \s*
                         router \s+
@@ -216,7 +232,7 @@
             (\s+|$)
             /ixsm,
     },
-'object_group' => {
+    'object_group' => {
     1 => qr/(?<unique_id>
                         ^ \s*
                         object-group \s+

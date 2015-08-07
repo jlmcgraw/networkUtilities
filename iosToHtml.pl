@@ -173,13 +173,15 @@ END
             #Match it against our hash of POINTERS regexes
             foreach my $pointerType ( sort keys %pointers ) {
                 foreach my $pointerKey2 ( keys $pointers{"$pointerType"} ) {
+
                     #The while allows multiple pointers in one line
-                    while ( $line =~ m/$pointers{"$pointerType"}{"$pointerKey2"}/g )
+                    while ( $line
+                        =~ m/$pointers{"$pointerType"}{"$pointerKey2"}/g )
                     {
                         #Save what we captured
                         my $unique_id = $+{unique_id};
                         my $points_to = $+{points_to};
-                        
+
                         #Save what we found for debugging
                         $foundPointers{"$line"} .= $points_to;
 
@@ -209,7 +211,8 @@ END
             #Match it against our hash of POINTEES regexes
             foreach my $pointeeType ( sort keys %pointees ) {
                 foreach my $pointeeKey2 ( keys $pointees{"$pointeeType"} ) {
-                    if ( $line =~ m/$pointees{"$pointeeType"}{"$pointeeKey2"}/ )
+                    if ( $line
+                        =~ m/$pointees{"$pointeeType"}{"$pointeeKey2"}/ )
                     {
                         my $unique_id  = $+{unique_id};
                         my $pointed_at = $+{pointed_at};
@@ -320,8 +323,9 @@ sub construct_lists_of_pointees {
         #Sort them by length, longest first
         #This is done so stuff like COS2V will match COS2V instead of just COS2
         #Perhaps regex could also be changed to use \b
-        @list_of_pointees = sort { length $b <=> length $a } @list_of_pointees;
-        
+        @list_of_pointees
+            = sort { length $b <=> length $a } @list_of_pointees;
+
         #Make a list of those names joined by |
         #This list is what will be used in the pointer regex (see pointers.pl)
         $pointees_list{$pointeeType} = join( ' | ', @list_of_pointees );

@@ -1,5 +1,5 @@
-#Numbers we'd like to format to make more readable (renders the config invalid, though)
-#TODO: I'd like to stick a unit (bits, bytes) on there too, somehow
+    #Numbers we'd like to format to make more readable (renders the config invalid, though)
+    #TODO: I'd like to stick a unit (bits, bytes) on there too, somehow
 
     1 => qr/^ \s* 
                 shape \s+ 
@@ -7,15 +7,15 @@
                 (\d+) \s+ 
                 (\d+) \s+ 
                 (\d+)
-                /ixsm, 
-                
-    2 => qr/^ \s* 
+                /ixsm,
+
+        2 => qr/^ \s* 
                 bandwidth \s+
                 (\d+)
                 $
                 /ixsm,
 
-    3 => qr/^ \s* 
+        3 => qr/^ \s* 
                 police \s+
                 cir \s+ 
                 (\d+) \s+ 
@@ -25,7 +25,7 @@
                 (\d+)
                 /ixsm,
 
-    4 => qr/^ \s* 
+        4 => qr/^ \s* 
                 timeout \s+
                 (\d+)
                 $
