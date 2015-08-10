@@ -40,6 +40,9 @@
 	prefix lists etc etc)
 	It's best to start with all of your configuration files in one directory
 
-	eg 
+	e.g.:
+		./create_host_info_hashes.pl ./sample_configs/*.cfg
+		./iosToHtml.pl -e -h ./sample_configs/*.cfg
+
 ##create_host_info_hashes.pl
 	Create a hash used by iosToHtml.pl to allow linking between configurations
