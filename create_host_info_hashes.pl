@@ -155,8 +155,9 @@ sub main {
 }
 
 sub usage {
-    say "Create an overall hash of info from each configuration file to be used with iosToHtml";
-    say ""
+    say
+        "Create an overall hash of info from each configuration file to be used with iosToHtml";
+    say "";
     say "Usage:";
     say "   $0 <config file1> <config file2> <*.cfg> etc";
     say "";
