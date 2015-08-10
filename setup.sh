@@ -21,4 +21,5 @@ sudo apt-get \
             libsmart-comments-perl \
             libnumber-format-perl \
             libnumber-bytes-human-perl \
+            libhash-merge-perl \
             libregexp-common-perl

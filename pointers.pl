@@ -45,7 +45,17 @@
                 (?<points_to> $list_of_pointees_ref->{"acl"}) 
                 $
                 /ixsm,
+    #IOS: ip access-group 
+    11 => qr /^ \s* 
+                ip \s+ 
+                access-group  \s+ 
+                (?<points_to> $list_of_pointees_ref->{"acl"}) 
+                (?: \s+ in|out)?
+                (?: \s+ | $)
+                /ixsm,
+
     },
+    
     'service_policy' => {
     1 =>
         qr/^ \s* service-policy \s+ (?: input|output) \s+ (?<points_to> $list_of_pointees_ref->{"service_policy"})/ixsm,
@@ -56,6 +66,7 @@
     3 =>
         qr/^ \s* service-policy \s+ type \s+ (?: queuing) \s+ (?: input | output) \s (?<points_to> $list_of_pointees_ref->{"service_policy"})$/ixsm,
     },
+
     'route_map' => {
     1 =>
         qr/^ \s* neighbor \s+ $RE{net}{IPv4} \s+ route-map \s+ (?<points_to> $list_of_pointees_ref->{"route_map"})/ixsm,
@@ -67,7 +78,14 @@
             route-map \s+ 
             (?<points_to> $list_of_pointees_ref->{"route_map"})
             /ixsm,
-    3 =>
+    3 => qr/^ \s* 
+            redistribute \s+ 
+            (?:static|bgp|ospf|eigrp|isis|rip) 
+            (?: .*?)
+            route-map \s+ 
+            (?<points_to> $list_of_pointees_ref->{"route_map"})
+            /ixsm,
+    4 =>
         qr/^ \s* neighbor \s+ $RE{net}{IPv4} \s+ default-originate \s+ route-map \s+ (?<points_to> $list_of_pointees_ref->{"route_map"})/ixsm,
 
     #NXOS
@@ -83,6 +101,16 @@
     5 => qr/^ \s* 
             network \s+ 
             $RE{net}{IPv4} \/ \d+ \s+
+            route-map \s+
+            (?<points_to> $list_of_pointees_ref->{"route_map"} )
+            /ixsm,
+
+    #IOS
+    6 => qr/^ \s* 
+            network \s+ 
+            (?: $RE{net}{IPv4} | SCRUBBED ) \s+
+            mask \s+
+            $RE{net}{IPv4} \s+
             route-map \s+
             (?<points_to> $list_of_pointees_ref->{"route_map"} )
             /ixsm,

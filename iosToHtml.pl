@@ -43,6 +43,8 @@ use Regexp::Common;
 
 use Number::Bytes::Human qw(format_bytes);
 use Number::Format qw(:subs :vars);
+use Storable;
+use File::Basename;
 
 # use Data::Dumper;
 #
@@ -73,7 +75,7 @@ use vars qw/ %opt /;
 no if $] >= 5.018, warnings => "experimental";
 
 #Define the valid command line options
-my $opt_string = 'hv';
+my $opt_string = 'ehv';
 my $arg_num    = scalar @ARGV;
 
 #We need at least one argument
@@ -114,6 +116,16 @@ sub main {
 
     #load regexes for the lists that are referred to ("pointees")
     my %pointees = do $Bin . 'pointees.pl';
+
+    my $host_info_ref;
+
+    #Try to retrieve host_info_hash if user wants to try linking between files
+    if ( $opt{e} ) {
+
+        #This is pre-created by find_address_in_configs.pl
+        $host_info_ref = retrieve( $Bin . 'host_info_hash.stored' )
+            or die "Unable to open host_info_hash";
+    }
 
     #Loop through every file provided on command line
     foreach my $filename (@ARGV) {
@@ -266,6 +278,44 @@ END
                 }
             }
 
+            #Did user request to try to link to external files?
+            #BUG TODO HACK This is very experimental currently
+            if ( $opt{e} ) {
+                if ( $line
+                    =~ m/^ \s+ neighbor \s+ (?<neighbor_ip>$RE{net}{IPv4})/ixms
+                    )
+                {
+
+                    my $neighbor_ip = $+{neighbor_ip};
+
+                    #                      say $neighbor_ip;
+
+                    if ( exists $host_info_ref->{'ip_address'}{$neighbor_ip} )
+                    {
+                        my ( $file, $interface )
+                            = split( ',',
+                            $host_info_ref->{'ip_address'}{$neighbor_ip} );
+
+                        #Pull out the various filename components of the input file from the command line
+                        my ( $filename, $dir, $ext )
+                            = fileparse( $file, qr/\.[^.]*/x );
+
+                        #Construct the text of the link
+                        my $linkText
+                            = '<a href="'
+                            . $filename
+                            . $ext . '.html' . '#'
+                            . "interface_$interface"
+                            . "\">$neighbor_ip</a>";
+
+                        #Insert the link back into the line
+                        #Link point needs to be surrounded by whitespace or end of line
+                        $line
+                            =~ s/(\s+) $neighbor_ip (\s+|$)/$1$linkText$2/gx;
+                    }
+                }
+            }
+
             #Print the (possibly) modified line to html file
             say {$filehandleHtml} $line;
         }
@@ -294,6 +344,7 @@ sub usage {
     say "Usage:";
     say "   $0 -h <config file1> <config file2> <*.cfg> etc";
     say "       -h Make some numbers human readable";
+    say "       -e Try to make links to other files (bgp neighbors, etc)";
     say "";
     exit 1;
 }
