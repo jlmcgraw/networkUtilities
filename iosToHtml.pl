@@ -36,10 +36,10 @@
 
 use Modern::Perl '2014';
 use autodie;
-use Regexp::Common;
+#use Regexp::Common;
 
 # Uncomment to see debugging comments
-# use Smart::Comments;
+use Smart::Comments;
 
 use Number::Bytes::Human qw(format_bytes);
 use Number::Format qw(:subs :vars);
@@ -184,7 +184,7 @@ END
 
             #Match it against our hash of POINTERS regexes
             foreach my $pointerType ( sort keys %pointers ) {
-                foreach my $pointerKey2 ( keys $pointers{"$pointerType"} ) {
+                foreach my $pointerKey2 ( sort keys $pointers{"$pointerType"} ) {
 
                     #The while allows multiple pointers in one line
                     while ( $line
@@ -222,7 +222,7 @@ END
 
             #Match it against our hash of POINTEES regexes
             foreach my $pointeeType ( sort keys %pointees ) {
-                foreach my $pointeeKey2 ( keys $pointees{"$pointeeType"} ) {
+                foreach my $pointeeKey2 ( sort keys $pointees{"$pointeeType"} ) {
                     if ( $line
                         =~ m/$pointees{"$pointeeType"}{"$pointeeKey2"}/ )
                     {
