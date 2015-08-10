@@ -328,7 +328,10 @@ END
 
                     #List devices on the same subnet when we know of them
                     when (
-                        m/^ \s+ ip \s+ address \s+ (?<ip_and_mask> $RE{net}{IPv4} \s+ $RE{net}{IPv4})/ixms
+                        m/(?: ^ \s+ ip \s+ address \s+ (?<ip_and_mask> $RE{net}{IPv4} \s+ $RE{net}{IPv4}) |
+                              ^ \s+ ip \s+ address \s+ (?<ip_and_mask> $RE{net}{IPv4} \s* \/ \d+)
+                              )
+                        /ixms
                         )
 
                         #ip address 10.102.54.2 255.255.255.0
