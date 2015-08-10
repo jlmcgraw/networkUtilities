@@ -115,19 +115,20 @@
 
     },
     'interface' => {
-    1 =>
+        #NXOS,
+    1 => qr/(?<unique_id> ^ \s* 
+                            interface \s+ 
+                            port-channel
+                            (?<pointed_at> $valid_cisco_name) 
+            )/ixsm,
+   
+    2 =>
         qr/(?<unique_id> ^ \s* 
                             interface \s+ 
                             (?<pointed_at> $valid_cisco_name) 
             )/ixsm,
 
-    #NXOS,
-    2 => qr/(?<unique_id> ^ \s* 
-                            interface \s+ 
-                            port-channel
-                            (?<pointed_at> $valid_cisco_name) 
-            )/ixsm,
-    },
+ },
 
     'track' => {
     1 => qr/(?<unique_id>^ \s*
