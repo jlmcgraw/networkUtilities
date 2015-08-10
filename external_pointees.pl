@@ -41,6 +41,19 @@
 
                             (\s+|$)
                             )/ixsm,
+    #RIOS: interface inpath0_0 ip address 10.74.2.107 /29
+    #Note the space between address and mask, which we remove elsewhere
+    4=>
+        qr/(?<unique_id> ^ \s*
+                            interface \s+
+                            $valid_cisco_name \s+
+                            ip \s+
+                            address \s+
+                            (?<pointed_at>
+                                $RE{net}{IPv4}
+                                \s \/ \d+)
+                            (\s+|$)
+                            )/ixsm,
     },
     
       

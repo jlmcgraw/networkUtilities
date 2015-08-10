@@ -39,8 +39,8 @@ use autodie;
 use Regexp::Common;
 
 # Uncomment to see debugging comments
-#use Smart::Comments;
-
+# use Smart::Comments;
+use NetAddr::IP;
 use Number::Bytes::Human qw(format_bytes);
 use Number::Format qw(:subs :vars);
 use Storable;
@@ -182,9 +182,14 @@ END
             #Remove linefeeds
             $line =~ s/\R//gx;
 
+            #Save the current amount of indentation of this line
+            my ($current_indent_level) = $line =~ m/^(\s*)/ixsm;
+
             #Match it against our hash of POINTERS regexes
             foreach my $pointerType ( sort keys %pointers ) {
-                foreach my $pointerKey2 ( sort keys $pointers{"$pointerType"} ) {
+                foreach
+                    my $pointerKey2 ( sort keys $pointers{"$pointerType"} )
+                {
 
                     #The while allows multiple pointers in one line
                     while ( $line
@@ -222,7 +227,9 @@ END
 
             #Match it against our hash of POINTEES regexes
             foreach my $pointeeType ( sort keys %pointees ) {
-                foreach my $pointeeKey2 ( sort keys $pointees{"$pointeeType"} ) {
+                foreach
+                    my $pointeeKey2 ( sort keys $pointees{"$pointeeType"} )
+                {
                     if ( $line
                         =~ m/$pointees{"$pointeeType"}{"$pointeeKey2"}/ )
                     {
@@ -279,39 +286,122 @@ END
             }
 
             #Did user request to try to link to external files?
-            #BUG TODO HACK This is very experimental currently
+            #BUG TODO HACK This section is very experimental currently
             if ( $opt{e} ) {
-                if ( $line
-                    =~ m/^ \s+ neighbor \s+ (?<neighbor_ip> $RE{net}{IPv4})/ixms
-                    )
-                {
+                given ($line) {
 
-                    my $neighbor_ip = $+{neighbor_ip};
-
-                    #                      say $neighbor_ip;
-
-                    if ( exists $host_info_ref->{'ip_address'}{$neighbor_ip} )
+                    #Link to BGP neighbors if we have a config for them
+                    when (
+                        m/^ \s+ neighbor \s+ (?<neighbor_ip> $RE{net}{IPv4})/ixms
+                        )
                     {
-                        my ( $file, $interface )
-                            = split( ',',
-                            $host_info_ref->{'ip_address'}{$neighbor_ip} );
 
-                        #Pull out the various filename components of the input file from the command line
-                        my ( $filename, $dir, $ext )
-                            = fileparse( $file, qr/\.[^.]*/x );
+                        my $neighbor_ip = $+{neighbor_ip};
 
-                        #Construct the text of the link
-                        my $linkText
-                            = '<a href="'
-                            . $filename
-                            . $ext . '.html' . '#'
-                            . "interface_$interface"
-                            . "\">$neighbor_ip</a>";
+                        #                      say $neighbor_ip;
 
-                        #Insert the link back into the line
-                        #Link point needs to be surrounded by whitespace or end of line
-                        $line
-                            =~ s/(\s+) $neighbor_ip (\s+|$)/$1$linkText$2/gx;
+                        if (exists $host_info_ref->{'ip_address'}
+                            {$neighbor_ip} )
+                        {
+                            my ( $file, $interface ) = split( ',',
+                                $host_info_ref->{'ip_address'}{$neighbor_ip}
+                            );
+
+                            #Pull out the various filename components of the input file from the command line
+                            my ( $filename, $dir, $ext )
+                                = fileparse( $file, qr/\.[^.]*/x );
+
+                            #Construct the text of the link
+                            my $linkText
+                                = '<a href="'
+                                . $filename
+                                . $ext . '.html' . '#'
+                                . "interface_$interface"
+                                . "\">$neighbor_ip</a>";
+
+                            #Insert the link back into the line
+                            #Link point needs to be surrounded by whitespace or end of line
+                            $line
+                                =~ s/(\s+) $neighbor_ip (\s+|$)/$1$linkText$2/gx;
+                        }
+                    }
+
+                    #List devices on the same subnet when we know of them
+                    when (
+                        m/^ \s+ ip \s+ address \s+ (?<ip_and_mask> $RE{net}{IPv4} \s+ $RE{net}{IPv4})/ixms
+                        )
+
+                        #ip address 10.102.54.2 255.255.255.0
+                    {
+
+                        my $ip_and_netmask = $+{ip_and_mask};
+
+                        #                      say $ip_and_mask;
+
+                        #HACK In RIOS, there's a space between IP address and CIDR
+                        #Remove that without hopefully causing other issues
+                        $ip_and_netmask =~ s|\s/|/|;
+
+                        #Try to create a new NetAddr::IP object from this key
+                        my $subnet = NetAddr::IP->new($ip_and_netmask);
+
+                        #If it worked...
+                        if ($subnet) {
+
+                            #                             my $ip_addr        = $subnet->addr;
+                            my $network = $subnet->network;
+
+                            #                             my $mask           = $subnet->mask;
+                            #                             my $masklen        = $subnet->masklen;
+                            #                             my $ip_addr_bigint = $subnet->bigint();
+                            #                             my $isRfc1918      = $subnet->is_rfc1918();
+                            #                             my $range          = $subnet->range();
+
+                            #Do we know about this subnet via create_host_info_hashes
+                            if ( exists $host_info_ref->{'subnet'}{$network} )
+                            {
+
+                                my @peer_array;
+
+                                while ( my ( $peer_file, $peer_interface )
+                                    = each $host_info_ref->{'subnet'}
+                                    {$network} )
+                                {
+
+                                    #Don't list ourself as a peer
+                                    if ( $filename =~ $peer_file ) {
+                                        next;
+                                    }
+
+                                    #Pull out the various filename components of the file
+                                    my ( $filename, $dir, $ext )
+                                        = fileparse( $peer_file,
+                                        qr/\.[^.]*/x );
+
+                                    #Construct the text of the link
+                                    my $linkText
+                                        = '<a href="'
+                                        . $filename
+                                        . $ext . '.html' . '#'
+                                        . "interface_$peer_interface"
+                                        . "\">$filename</a>";
+
+                                    #And save that link
+                                    push @peer_array, $linkText;
+                                }
+
+                                #Join them all together
+                                my $peer_list = join( ' ', @peer_array );
+
+                                #And add them below the IP address line if there
+                                #are any peers
+                                if ($peer_list) {
+                                    $line
+                                        .= "\n"
+                                        . "$current_indent_level! PEERS: $peer_list";
+                                }
+                            }
+                        }
                     }
                 }
             }

@@ -236,6 +236,10 @@ sub calculate_subnets {
             = split( ',',
             $pointees_seen_ref->{$filename}{'ip_address'}{$ip_address_key} );
 
+        #HACK In RIOS, there's a space between IP address and CIDR
+        #Remove that without hopefully causing other issues
+        $ip_and_netmask =~ s|\s/|/|;
+
         #Try to create a new NetAddr::IP object from this key
         my $subnet = NetAddr::IP->new($ip_and_netmask);
 

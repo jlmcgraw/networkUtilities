@@ -48,7 +48,8 @@
     )
     /ixsm,
     },
-    'service_policy' => {
+
+'service_policy' => {
     1 => qr/ (?<unique_id> 
                                 ^ \s* 
                                 policy-map \s+ 
@@ -72,7 +73,8 @@
                     \s* $
                     /ixsm,
     },
-    'route_map' => {
+
+'route_map' => {
     1 => qr/ (?<unique_id> 
                                 ^ \s*
                                 route-map \s+ 
@@ -98,15 +100,18 @@
                                 (?: permit | deny) \s+
                     /ixsm,
     },
-    'prefix_list' => {
+    
+'prefix_list' => {
     1 =>
         qr/(?<unique_id> ^ \s* ip \s+ prefix-list \s+ (?<pointed_at> $valid_cisco_name) )/ixsm,
 
     },
-    'community_list' => { 1 =>
+    
+'community_list' => { 1 =>
         qr/(?<unique_id> ^ \s* ip \s+ community-list \s+ (?:standard|extended) (?<pointed_at> $valid_cisco_name) )/ixsm,
     },
-    'as_path_access_list' => {
+    
+'as_path_access_list' => {
     1 => qr/(?<unique_id> ^ \s*
                         ip \s+
                         as-path \s+ 
@@ -114,7 +119,8 @@
                         (?<pointed_at> $valid_cisco_name) )/ixsm,
 
     },
-    'interface' => {
+
+'interface' => {
         #NXOS,
     1 => qr/(?<unique_id> ^ \s* 
                             interface \s+ 
@@ -127,10 +133,9 @@
                             interface \s+ 
                             (?<pointed_at> $valid_cisco_name) 
             )/ixsm,
+    },
 
- },
-
-    'track' => {
+'track' => {
     1 => qr/(?<unique_id>^ \s*
                          track \s+
                         (?<pointed_at> $valid_cisco_name )
