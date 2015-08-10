@@ -39,7 +39,7 @@ use autodie;
 use Regexp::Common;
 
 # Uncomment to see debugging comments
-use Smart::Comments;
+# use Smart::Comments;
 
 use Number::Bytes::Human qw(format_bytes);
 use Number::Format qw(:subs :vars);
