@@ -36,10 +36,10 @@
 
 use Modern::Perl '2014';
 use autodie;
-#use Regexp::Common;
+use Regexp::Common;
 
 # Uncomment to see debugging comments
-use Smart::Comments;
+#use Smart::Comments;
 
 use Number::Bytes::Human qw(format_bytes);
 use Number::Format qw(:subs :vars);
@@ -282,7 +282,7 @@ END
             #BUG TODO HACK This is very experimental currently
             if ( $opt{e} ) {
                 if ( $line
-                    =~ m/^ \s+ neighbor \s+ (?<neighbor_ip>$RE{net}{IPv4})/ixms
+                    =~ m/^ \s+ neighbor \s+ (?<neighbor_ip> $RE{net}{IPv4})/ixms
                     )
                 {
 
