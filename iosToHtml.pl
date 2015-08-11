@@ -406,6 +406,76 @@ END
                             }
                         }
                     }
+                        #Hosts in ACLs
+                    when (
+                        m/^ \s+ (?: permit | deny ) \s+ .*? host \s+ (?<host_ip> $RE{net}{IPv4})/ixms
+                        )
+                    {
+
+                        my $host_ip = $+{host_ip};
+
+                        #                      say $host_ip;
+
+                        #Is this particular IP referenced in our pre-collected host_info_hash
+                        if (exists $host_info_ref->{'ip_address'}{$host_ip} )
+                        {
+                            #Get the file and interface the IP was referenced in
+                            my ( $file, $interface ) = split( ',',
+                                $host_info_ref->{'ip_address'}{$host_ip}
+                            );
+
+                            #Pull out the various filename components of the input file from the command line
+                            my ( $filename, $dir, $ext )
+                                = fileparse( $file, qr/\.[^.]*/x );
+
+                            #Construct the text of the link
+                            my $linkText
+                                = '<a href="'
+                                . $filename
+                                . $ext . '.html' . '#'
+                                . "interface_$interface"
+                                . "\">$host_ip</a>";
+
+                            #Insert the link back into the line
+                            #Link point needs to be surrounded by whitespace or end of line
+                            $line
+                                =~ s/(\s+) $host_ip (\s+|$)/$1$linkText$2/gx;
+                        }
+                    }
+                                            #IP SLA
+                    when (                        m/\w+ \s +source-ip \s+ (?<host_ip> $RE{net}{IPv4})/ixms                        )
+                    {
+
+                        my $host_ip = $+{host_ip};
+
+                        #                      say $host_ip;
+
+                        #Is this particular IP referenced in our pre-collected host_info_hash
+                        if (exists $host_info_ref->{'ip_address'}{$host_ip} )
+                        {
+                            #Get the file and interface the IP was referenced in
+                            my ( $file, $interface ) = split( ',',
+                                $host_info_ref->{'ip_address'}{$host_ip}
+                            );
+
+                            #Pull out the various filename components of the input file from the command line
+                            my ( $filename, $dir, $ext )
+                                = fileparse( $file, qr/\.[^.]*/x );
+
+                            #Construct the text of the link
+                            my $linkText
+                                = '<a href="'
+                                . $filename
+                                . $ext . '.html' . '#'
+                                . "interface_$interface"
+                                . "\">$host_ip</a>";
+
+                            #Insert the link back into the line
+                            #Link point needs to be surrounded by whitespace or end of line
+                            $line
+                                =~ s/(\s+) $host_ip (\s+|$)/$1$linkText$2/gx;
+                        }
+                    }
                 }
             }
 
@@ -436,8 +506,11 @@ sub usage {
     say "";
     say "Usage:";
     say "   $0 -h <config file1> <config file2> <*.cfg> etc";
+    say "";
     say "       -h Make some numbers human readable";
+    say "";
     say "       -e Try to make links to other files (bgp neighbors, etc)";
+    say "          run create_host_info_hashes.pl first to collect necessary information";
     say "";
     exit 1;
 }
