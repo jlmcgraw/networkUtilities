@@ -1,5 +1,5 @@
 #Some small network related scripts
-#Look at setup.sh for how to install dependencies etc.
+    Look at setup.sh for how to install dependencies etc.
 
 ##iosToHtml.pl
 	Convert an IOS config file into very basic HTML, creating links between 

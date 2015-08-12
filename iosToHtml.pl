@@ -206,8 +206,6 @@ sub usage {
     say "       -h Make some numbers human readable";
     say "";
     say "       -e Try to make links to other files (bgp neighbors, etc)";
-    say
-        "          run create_host_info_hashes.pl first to collect necessary information";
     say "";
     exit 1;
 }
