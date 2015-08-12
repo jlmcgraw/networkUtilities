@@ -20,26 +20,41 @@
 #-------------------------------------------------------------------------------
 
 #TODO
-# Expand this to create regexes for each file too, so iosToHtml doesn't have to ecah time
+#   Look into MCE and other multithreading options
+#   Expand this to create regexes for each file too, so iosToHtml doesn't have to ecah time
 #BUGS
 
 #DONE
-
-use Modern::Perl '2014';
+#Standard modules
+use strict;
+use warnings;
 use autodie;
-use Regexp::Common;
-
-# Uncomment to see debugging comments
-# use Smart::Comments;
-
-use Data::Dumper;
-use Params::Validate qw(:all);
+use Storable;
+use File::Basename;
+use threads;
+use Thread::Queue;
+use Benchmark qw(:hireswallclock);
 use Getopt::Std;
 use FindBin '$Bin';
-use NetAddr::IP;
 use vars qw/ %opt /;
-use Storable;
+use Data::Dumper;
+
+#Look into using this so users don't need to install modules
+#   use lib "$FindBin::Bin/lib";
+
+#Additional modules
+use Modern::Perl '2014';
+use Regexp::Common;
+use NetAddr::IP;
+use Number::Bytes::Human qw(format_bytes);
+use Number::Format qw(:subs :vars);
+use Params::Validate qw(:all);
 use Hash::Merge qw(merge);
+
+#Smart_Comments=0 perl my_script.pl
+# to run without smart comments, and
+#Smart_Comments=1 perl my_script.pl
+use Smart::Comments -ENV;
 
 # The sort routine for Data::Dumper
 $Data::Dumper::Sortkeys = sub {
