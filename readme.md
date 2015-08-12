@@ -1,12 +1,26 @@
 #Some small network related scripts
+#Look at setup.sh for how to install dependencies etc.
+
+##iosToHtml.pl
+	Convert an IOS config file into very basic HTML, creating links between 
+	commands referenced lists and that list (eg access lists, route maps, 
+	prefix lists etc etc).  
+
+	Very useful for trying to follow complex configurations
+
+	It's best to start with all of your configuration files in one directory
+
+	e.g.:
+		./iosToHtml.pl -e -h ./sample_configs/*.cfg
+
+##create_host_info_hashes.pl
+	Create a hash used by iosToHtml.pl to allow linking between configurations
+	Automatically called by iosToHtml.pl as needed.  
+	Delete "host_info_hash.stored" to recreate it for new or additional files
 
 ##tcpSplit.pl
 	Splits an input pcap capture file into a separate file for each stream using tcpdump
 	Much faster than extractTcpStreams.sh
-
-##extractTcpStreams.sh
-	Splits an input pcap capture file into a separate file for each stream using tshark
-	Currently the name format is "stream ID - source IP - destination IP - destination port"
 
 ##tcpStatistics.sh
 	Use tshark to print some statistics about a given pcap network capture file.
@@ -34,15 +48,7 @@
 	Parse some rules from Riverbed Interceptor configurations into an Excel 
 	spreadsheet to reading/organizing them easier
 
-##iosToHtml.pl
-	Convert an IOS config file into very basic HTML, creating links between 
-	commands referenced lists and that list (eg access lists, route maps, 
-	prefix lists etc etc)
-	It's best to start with all of your configuration files in one directory
 
-	e.g.:
-		./create_host_info_hashes.pl ./sample_configs/*.cfg
-		./iosToHtml.pl -e -h ./sample_configs/*.cfg
-
-##create_host_info_hashes.pl
-	Create a hash used by iosToHtml.pl to allow linking between configurations
+##extractTcpStreams.sh
+	Splits an input pcap capture file into a separate file for each stream using tshark
+	Currently the name format is "stream ID - source IP - destination IP - destination port"
