@@ -49,7 +49,7 @@ use vars qw/ %opt /;
 
 # use Data::Dumper;
 #Look into using this so users don't need to install modules
-#   use lib "$FindBin::Bin/lib";
+use lib "$FindBin::Bin/lib";
 
 #Additional modules
 use Modern::Perl '2014';
