@@ -119,6 +119,7 @@ if ( -e $Bin . "/$known_networks_filename" ) {
     say "Loading $known_networks_filename ...";
     %known_networks = do $Bin . "/$known_networks_filename";
 }
+
 # print Dumper \%known_networks;
 
 #Call main routine
@@ -128,6 +129,8 @@ sub main {
 
     #Loop through every file provided on command line
     foreach my $filename (@ARGV) {
+
+        #Note which file we're working on
         say $filename;
 
         #Open the input and output files
@@ -139,10 +142,10 @@ sub main {
         my @array_of_lines = <$filehandle>
             or die $!;    # Reads all lines into array
 
-        #A shared hash to collect data in
+        #A hash to collect data in, shared for multi-threading
         my %found_networks_and_hosts : shared;
 
-        # Make sure the two base keys are shared
+        # Make sure the two base keys are shared for multi-threading
         $found_networks_and_hosts{'hosts'}    = &share( {} );
         $found_networks_and_hosts{'networks'} = &share( {} );
 
@@ -166,6 +169,7 @@ sub main {
         #Make one long string out of the array
         my $scalar_of_lines = join "\n", @array_of_lines;
 
+        # For future HTML output
         # say {$filehandleTested} $line;
 
         #Gather info about each found host and put back into ACL
@@ -175,6 +179,8 @@ sub main {
         #Gather info about each found network and put back into ACL
         parallel_process_networks( \%found_networks_and_hosts,
             \$scalar_of_lines );
+
+        #Print out the annotated ACL
         say $scalar_of_lines;
 
     }
@@ -193,14 +199,18 @@ sub parallel_process_hosts {
 
     # Queue up all of the hosts for the threads
     $q->enqueue($_) for keys $found_networks_and_hosts_ref->{'hosts'};
+
+    #Nothing else to queue
     $q->end();
+
+    #How many hosts we queued
     say $q->pending() . " hosts queued";
 
     # Maximum number of worker threads
     # BUG TODO Adjust this dynamically based on number of CPUs
     my $thread_limit = 70;
 
-    #Create $thread_limit worker threads calling "process_hosts_and_networks"
+    #Create $thread_limit worker threads calling "process_hosts_thread"
     my @thr = map {
         threads->create(
             sub {
@@ -215,18 +225,19 @@ sub parallel_process_hosts {
     # Wait for all of the threads in @thr to terminate
     $_->join() for @thr;
 
+    #Smart comment for debug
     ## %found_networks_and_hosts;
+
     #Substitute info we found back into the lines of the ACL
     foreach my $host_key ( keys $found_networks_and_hosts_ref->{'hosts'} ) {
 
-        # say $host_key;
         #Get the info we found for this host
         my $host_name
             = $found_networks_and_hosts_ref->{'hosts'}{$host_key}{'dns_name'};
         my $host_status
             = $found_networks_and_hosts_ref->{'hosts'}{$host_key}{'status'};
 
-        #If there's no DNS entry for this host don't include in substitution
+        #If there's no DNS entry for this host don't include IP in substitution
         if ( $host_name eq $host_key ) {
 
             #Substitute it back into the ACL
@@ -246,22 +257,26 @@ sub parallel_process_networks {
     my ( $found_networks_and_hosts_ref, $scalar_of_lines_ref )
         = validate_pos( @_, { type => HASHREF }, { type => SCALARREF }, );
 
-    #Now prepare to get DNS names and responsiveness for each host/network
+    #Now prepare to process info network
     #in a parallel fashion so it doesn't take forever
 
     # A new empty queue
     my $q = Thread::Queue->new();
 
-    # Queue up all of the hosts for the threads
+    # Queue up all of the networks for the threads
     $q->enqueue($_) for keys $found_networks_and_hosts_ref->{'networks'};
+
+    #No more data to queue
     $q->end();
+
+    #How many networks did we queue
     say $q->pending() . " networks queued";
 
     # Maximum number of worker threads
     # BUG TODO Adjust this dynamically based on number of CPUs
     my $thread_limit = 70;
 
-    #Create $thread_limit worker threads calling "process_hosts_and_networks"
+    #Create $thread_limit worker threads calling "process_networks_thread"
     my @thr = map {
         threads->create(
             sub {
@@ -276,7 +291,9 @@ sub parallel_process_networks {
     # Wait for all of the threads in @thr to terminate
     $_->join() for @thr;
 
+    #Smart comment for debugging
     # ## %found_networks_and_hosts;
+
     #Substitute info we found back into the lines of the ACL
     foreach
         my $network_key ( keys $found_networks_and_hosts_ref->{'networks'} )
@@ -291,10 +308,9 @@ sub parallel_process_networks {
             = $found_networks_and_hosts_ref->{'networks'}{$network_key}
             {'status'};
 
-        # my $host_status = $found_networks_and_hosts_ref->{'networks'}{$network_key}{'status'};
         #Substitute it back into the ACL
         ${$scalar_of_lines_ref}
-            =~ s/$network_key/$network_key [$number_of_hosts hosts, $status]/g;
+            =~ s/$network_key/$network_key [ $number_of_hosts hosts $status]/g;
     }
 
 }
@@ -314,7 +330,7 @@ sub gather_hosts_from_this_line {
         my $host_ip = $+{host};
 
         #Save the hosts we find on this line
-        # push( @found_hosts, $host_ip );
+
         #Make sure this new key is shared
         if ( !exists $found_networks_and_hosts_ref->{hosts}{$host_ip} ) {
 
@@ -359,9 +375,6 @@ sub gather_networks_from_this_line {
         #Save that array reference to another array
         my @one = @{$possible_matches_ref};
 
-        # Append the list of hosts to our found_hosts array
-        # push( @found_hosts, @one );
-
         #Get a count of how many elements in that array
         my $number_of_hosts = @{$possible_matches_ref};
 
@@ -373,23 +386,24 @@ sub gather_networks_from_this_line {
             $found_networks_and_hosts_ref->{'networks'}
                 { $address . ' ' . $wildcard_mask } = &share( {} );
 
+            #How many hosts in the possible matches list
             $found_networks_and_hosts_ref->{'networks'}
                 { $address . ' ' . $wildcard_mask }{'number_of_hosts'}
                 = "$number_of_hosts";
+
+            #Default having no specific route for this network
             $found_networks_and_hosts_ref->{'networks'}
                 { $address . ' ' . $wildcard_mask }{'status'}
                 = "NO SPECIFIC ROUTE";
 
-            # $found_networks_and_hosts_ref->{$address . ' ' . $wildcard_mask}{'list_of_hosts'}="@one";
+            #All possible matches to the mask
+            $found_networks_and_hosts_ref->{'networks'}
+                { $address . ' ' . $wildcard_mask }{'list_of_hosts'} = "@one";
         }
         else {
             say
                 "$address $wildcard_mask already exists!-------------------------------------------------------------------";
         }
-
-        #Substitute our new info back into the line in a slight different
-        #to prevent endless regex loop
-        # $line                    =~ s/ \s+ $address \s+ $wildcard_mask/ $address\/$wildcard_mask [$number_of_hosts hosts]/ismxg;
     }
 }
 
@@ -413,6 +427,8 @@ sub process_hosts_thread {
     # unlock($found_networks_and_hosts_ref)->{'hosts'};
 
     my $timeout = 3;
+
+    #This needs to be 'tcp' or 'udp' on unix systems (or run as root)
     my $p = Net::Ping->new( 'icmp', $timeout )
         or die "Thread $id: Unable to create Net::Ping object ";
 
@@ -421,11 +437,12 @@ sub process_hosts_thread {
 
     if ( $p->ping($host_ip) ) {
 
-        #If the host responded, change the status
+        #If the host responded, change its status
         $status = 'UP';
     }
 
     # say "Thread $id: $host_ip -> $status";
+    #Update the hash for this host
     $found_networks_and_hosts_ref->{'hosts'}{$host_ip}{'status'} = "$status";
     $p->close;
 
@@ -435,12 +452,14 @@ sub process_networks_thread {
     my ( $network_and_mask, $found_networks_and_hosts_ref )
         = validate_pos( @_, { type => SCALAR }, { type => HASHREF }, );
 
+    #Test if a route for this network even exists in %known_networks hash
+
     # Get the thread id. Allows each thread to be identified.
     my $id = threads->tid();
 
     # say "Thread $id: $network_and_mask";
 
-    #Test if a route for this network even exists in %known_networks hash
+    #Split into components
     my ( $network, $network_mask ) = split( ' ', $network_and_mask );
 
     #This little bit of magic inverts the wildcard mask to a netmask.  Copied from somewhere on the net
@@ -464,13 +483,14 @@ sub process_networks_thread {
         # $isRfc1918         = $acl_subnet->is_rfc1918();
         # $range           = $subnet->range();
 
-        #Test it against all known networks
+        #Test it against all known networks...
         foreach my $known_network ( keys %known_networks ) {
 
             #Create a subnet for the known network
             my $known_subnet = NetAddr::IP->new($known_network);
 
-            #If that worked...(which it won't with all wildcard masks)
+            #If that worked...
+            #(which it won't with some wildcard masks)
             if ($known_subnet) {
 
                 #Is the ACL subnet within the known network?
@@ -478,7 +498,7 @@ sub process_networks_thread {
 
                     #Update the status of this network
                     $found_networks_and_hosts_ref->{'networks'}
-                        {$network_and_mask}{'status'} = "KNOWN INTERNALLY";
+                        {$network_and_mask}{'status'} = '';
                 }
             }
             else {
@@ -506,8 +526,6 @@ sub usage {
 }
 
 sub pretty_addr {
-
-    #     my ($addr) = @_;
     my ($addr) = validate_pos( @_, { type => SCALAR }, );
 
     my ( $hostname, $aliases, $addrtype, $length, @addrs )
@@ -515,15 +533,11 @@ sub pretty_addr {
 
     #Return $hostname if defined, else $addr
     return ( $hostname // $addr );
-
-    #     $hostname ? $hostname . " [" . $addr . "]"
-    #               : $addr;
 }
 
 sub hostname {
-
-    #     my ($addr) = @_;
     my ($addr) = validate_pos( @_, { type => SCALAR }, );
+
     my ( $hostname, $aliases, $addrtype, $length, @addrs )
         = gethostbyaddr( inet_aton($addr), AF_INET );
     return $hostname || "[" . $addr . "]";
@@ -537,7 +551,7 @@ sub list_of_matches_acl {
 
     #Pass in the variables of ACL network and wildcard mask
     #eg 10.200.128.0 0.0.0.255
-    #     my ( $acl_address, $acl_mask ) = @_;
+
     my ( $acl_address, $acl_mask )
         = validate_pos( @_, { type => SCALAR }, { type => SCALAR }, );
 
@@ -545,7 +559,6 @@ sub list_of_matches_acl {
     my @potential_matches;
 
     #Split the incoming parameters into 4 octets
-
     my @acl_address_octets = split /\./, $acl_address;
     my @acl_mask_octets    = split /\./, $acl_mask;
 
@@ -597,8 +610,8 @@ sub list_of_matches_acl {
 
 sub test_octet {
 
-    #Test all possible numbers in an octet (0..255) against octet of acl and mask
-    #     my ( $acl_octet, $acl_wildcard_octet ) = @_;
+    #Test all possible numbers in an octet (0..255) against octet of ACL and mask
+
     my ( $acl_octet, $acl_wildcard_octet )
         = validate_pos( @_, { type => SCALAR }, { type => SCALAR }, );
 
@@ -629,7 +642,7 @@ sub test_octet {
 sub wildcard_mask_test {
 
     #Test one number against acl address and mask
-    #     my ( $test_octet, $acl_octet, $acl_wildcard_octet ) = @_;
+
     my ( $test_octet, $acl_octet, $acl_wildcard_octet ) = validate_pos(
         @_,
         { type => SCALAR },
