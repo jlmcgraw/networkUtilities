@@ -1,6 +1,13 @@
 #Some small network related scripts
     Look at setup.sh for how to install dependencies etc.
 
+##ping_hosts_in_acl.pl
+	Parse a file containing an IOS ACL containing host and/or wildcard mask entries
+	and test reachability for each host and network mentioned in it.
+	Can use a list of known BGP networks (see bgp_asn_path_via_snmp.pl) to test
+	whether a network is specifically known
+	Still a work in progress
+
 ##iosToHtml.pl
 	Convert an IOS config file into very basic HTML, creating links between 
 	commands referenced lists and that list (eg access lists, route maps, 
