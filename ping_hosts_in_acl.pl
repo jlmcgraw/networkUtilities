@@ -119,7 +119,7 @@ if ( -e $Bin . "/$known_networks_filename" ) {
     say "Loading $known_networks_filename ...";
     %known_networks = do $Bin . "/$known_networks_filename";
 }
-print Dumper \%known_networks;
+# print Dumper \%known_networks;
 
 #Call main routine
 exit main(@ARGV);
