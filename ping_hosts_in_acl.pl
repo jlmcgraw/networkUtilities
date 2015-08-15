@@ -176,9 +176,9 @@ sub main {
         # For future HTML output
         # say {$filehandleTested} $line;
 
-        # #Gather info about each found host and put back into ACL
-        # parallel_process_hosts( \%found_networks_and_hosts,
-        # \$scalar_of_lines );
+        #Gather info about each found host and put back into ACL
+        parallel_process_hosts( \%found_networks_and_hosts,
+        \$scalar_of_lines );
 
         #Gather info about each found network and put back into ACL
         parallel_process_networks( \%found_networks_and_hosts,
