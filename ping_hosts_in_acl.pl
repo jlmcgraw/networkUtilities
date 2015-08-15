@@ -31,7 +31,7 @@
 # More config formats
 #
 #BUGS
-
+#   Freaks out on normal host/subnet masks
 #DONE
 
 #Standard modules
@@ -178,7 +178,7 @@ sub main {
 
         #Gather info about each found host and put back into ACL
         parallel_process_hosts( \%found_networks_and_hosts,
-        \$scalar_of_lines );
+            \$scalar_of_lines );
 
         #Gather info about each found network and put back into ACL
         parallel_process_networks( \%found_networks_and_hosts,
@@ -360,10 +360,14 @@ sub gather_networks_from_this_line {
     my ( $line, $found_networks_and_hosts_ref )
         = validate_pos( @_, { type => SCALAR }, { type => HASHREF }, );
 
+    #Try to only catch lines that look like ACLs
+    #Because trying to process a regular host/subnet mask as  a host/wildcard mask
+    #Can take waaaaay too long
+    return unless ( $line =~ /^ \s* (access-list | permit | deny )/ixsm );
+
     #Find all "x.x.x.x y.y.y.y" entries (eg host and wildcard_mask)
     while (
-        $line =~ /
-                        (?<network> $RE{net}{IPv4}) \s+
+        $line =~ /      (?<network> $RE{net}{IPv4}) \s+
                         (?<wildcard_mask> $RE{net}{IPv4}) 
                         (\s* | $)
                         /ixsmg
@@ -379,6 +383,7 @@ sub gather_networks_from_this_line {
         #Save that array reference to another array
         my @one = @{$possible_matches_ref};
 
+        # print @one;
         #Get a count of how many elements in that array
         my $number_of_hosts = @{$possible_matches_ref};
 
