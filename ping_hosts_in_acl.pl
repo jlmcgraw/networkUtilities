@@ -22,8 +22,10 @@
 #-------------------------------------------------------------------------------
 
 #TODO
+# Option for number of threads
+# Option for type of ping test
 # Provide color-coded HTML output
-# Process all hosts in subnets.  Should probably limit the size of subnets procesed
+# Process all hosts in subnets.  Should probably limit the size of subnets processed
 # Quit processing a subnet on the first active response since that indicates
 #   the subnet is still valid
 # IPv6
@@ -106,6 +108,9 @@ unless ( getopts( "$opt_string", \%opt ) ) {
     usage();
     exit(1);
 }
+
+#The maximum number of simultaneous threads
+my $max_threads = 32;
 
 my $known_networks_filename = 'known_networks.stored';
 
@@ -212,7 +217,7 @@ sub parallel_process_hosts {
 
     # Maximum number of worker threads
     # BUG TODO Adjust this dynamically based on number of CPUs
-    my $thread_limit = 70;
+    # my $thread_limit = 70;
 
     #Create $thread_limit worker threads calling "process_hosts_thread"
     my @thr = map {
@@ -224,7 +229,7 @@ sub parallel_process_hosts {
                 }
             }
         );
-    } 1 .. $thread_limit;
+    } 1 .. $max_threads;
 
     # Wait for all of the threads in @thr to terminate
     $_->join() for @thr;
@@ -241,19 +246,26 @@ sub parallel_process_hosts {
         my $host_status
             = $found_networks_and_hosts_ref->{'hosts'}{$host_key}{'status'};
 
+        my $text_to_insert = "$host_name : $host_status";
+
         #If there's no DNS entry for this host don't include IP in substitution
         if ( $host_name eq $host_key ) {
-
-            #Substitute it back into the ACL
-            ${$scalar_of_lines_ref}
-                =~ s/host $host_key/host $host_key [$host_status]/g;
-        }
-        else {
-            #Substitute it back into the ACL
-            ${$scalar_of_lines_ref}
-                =~ s/host $host_key/host $host_key [$host_name: $host_status]/g;
+            $text_to_insert = "$host_status";
         }
 
+        #Substitute it back into the ACL
+        ${$scalar_of_lines_ref}
+            =~ s/host $host_key/host $host_key [text_to_insert]/g;
+
+        #Mark up simple ACL lines
+        # ${$scalar_of_lines_ref}
+        # =~ s/^
+        # \s*
+        # access-list \s+
+        # (\d+) \s+
+        # (permit | deny) \s+
+        # $host_key
+        # $/access-list $1 $2 $host_key [$text_to_insert]/ixg;
     }
 }
 
@@ -278,7 +290,7 @@ sub parallel_process_networks {
 
     # Maximum number of worker threads
     # BUG TODO Adjust this dynamically based on number of CPUs
-    my $thread_limit = 70;
+    # my $thread_limit = 70;
 
     #Create $thread_limit worker threads calling "process_networks_thread"
     my @thr = map {
@@ -290,7 +302,7 @@ sub parallel_process_networks {
                 }
             }
         );
-    } 1 .. $thread_limit;
+    } 1 .. $max_threads;
 
     # Wait for all of the threads in @thr to terminate
     $_->join() for @thr;
@@ -354,6 +366,42 @@ sub gather_hosts_from_this_line {
         }
 
     }
+
+    #Find all simple "permit|deny x.x.x.x" entries
+    #access-list 13 permit 10.0.0.1
+    if ($line =~ /^ \s*
+					access-list \s+
+					\d+ \s+
+					(?: permit | deny ) \s+ 
+					(?<host> $RE{net}{IPv4} )
+					$
+                /ixsm
+        )
+    {
+        my $host_ip = $+{host};
+
+        #Save the hosts we find on this line
+
+        #Make sure this new key is shared
+        if ( !exists $found_networks_and_hosts_ref->{hosts}{$host_ip} ) {
+
+            #Share the key, which deletes existing data
+            $found_networks_and_hosts_ref->{hosts}{$host_ip} = &share( {} );
+
+            #Set the initial data for this host
+            $found_networks_and_hosts_ref->{'hosts'}{$host_ip}{'dns_name'}
+                = 'unknown';
+            $found_networks_and_hosts_ref->{'hosts'}{$host_ip}{'status'}
+                = 'unknown';
+
+        }
+        else {
+            say
+                "$host_ip already exists!-------------------------------------------------------------------";
+        }
+
+    }
+
 }
 
 sub gather_networks_from_this_line {
@@ -402,8 +450,7 @@ sub gather_networks_from_this_line {
 
             #Default having no specific route for this network
             $found_networks_and_hosts_ref->{'networks'}
-                { $address . ' ' . $wildcard_mask }{'status'}
-                = "NO SPECIFIC ROUTE";
+                { $address . ' ' . $wildcard_mask }{'status'} = "via DEFAULT";
 
             #All possible matches to the mask
             $found_networks_and_hosts_ref->{'networks'}
@@ -423,7 +470,7 @@ sub process_hosts_thread {
     # Get the thread id. Allows each thread to be identified.
     my $id = threads->tid();
 
-    # say "Thread $id: $host_ip";
+    #say "Thread $id: $host_ip";
 
     #Do a DNS lookup for the host
     my $name = pretty_addr($host_ip);
@@ -511,7 +558,7 @@ sub process_networks_thread {
 
                     #Update the status of this network
                     $found_networks_and_hosts_ref->{'networks'}
-                        {$network_and_mask}{'status'} = '';
+                        {$network_and_mask}{'status'} = "via $known_subnet";
                 }
             }
             else {
