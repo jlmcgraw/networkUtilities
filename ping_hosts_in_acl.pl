@@ -107,20 +107,24 @@ unless ( getopts( "$opt_string", \%opt ) ) {
     exit(1);
 }
 
-my $known_networks_filename = 'known_networks.dumper';
+my $known_networks_filename = 'known_networks.stored';
 
-my %known_networks;
+# my %known_networks;
+my $known_networks_ref;
 
 #Load a hash of our known networks, if it exists
 if ( -e $Bin . "/$known_networks_filename" ) {
-
-    #This is a Data::Dumper output from "bgp_asn_path_via_snmp.pl"
-    #with the default route manually removed
     say "Loading $known_networks_filename ...";
-    %known_networks = do $Bin . "/$known_networks_filename";
+
+    # #This is a Data::Dumper output from "bgp_asn_path_via_snmp.pl"
+    # #with the default route manually removed
+    # %known_networks = do $Bin . "/$known_networks_filename";
+
+    #Read in hash from 'storable' format
+    $known_networks_ref = retrieve($known_networks_filename);
 }
 
-# print Dumper \%known_networks;
+# print Dumper $known_networks_ref;
 
 #Call main routine
 exit main(@ARGV);
@@ -172,9 +176,9 @@ sub main {
         # For future HTML output
         # say {$filehandleTested} $line;
 
-        #Gather info about each found host and put back into ACL
-        parallel_process_hosts( \%found_networks_and_hosts,
-            \$scalar_of_lines );
+        # #Gather info about each found host and put back into ACL
+        # parallel_process_hosts( \%found_networks_and_hosts,
+        # \$scalar_of_lines );
 
         #Gather info about each found network and put back into ACL
         parallel_process_networks( \%found_networks_and_hosts,
@@ -484,7 +488,11 @@ sub process_networks_thread {
         # $range           = $subnet->range();
 
         #Test it against all known networks...
-        foreach my $known_network ( keys %known_networks ) {
+        foreach my $known_network ( keys %{$known_networks_ref} ) {
+
+            # say "known_network: $known_network";
+            #Everything will match default route, let's skip it
+            next if ( $known_network eq '0.0.0.0/0' );
 
             #Create a subnet for the known network
             my $known_subnet = NetAddr::IP->new($known_network);

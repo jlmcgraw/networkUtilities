@@ -37,7 +37,7 @@ use lib "$FindBin::Bin/lib";
 
 use Params::Validate qw(:all);
 
-# use Storable;
+use Storable;
 use Data::Dumper;
 
 #Look into using this so users don't need to install modules
@@ -126,6 +126,10 @@ $session->close();
 
 #Save the networks to a hash file (used by ping_hosts_in_acl)
 dump_to_file( 'known_networks.dumper', \%networks );
+
+#Save the hash back to disk
+store( \%networks, 'known_networks.stored' )
+    || die "can't store to 'known_networks.stored'\n";
 1;
 
 sub pretty_as_path () {
