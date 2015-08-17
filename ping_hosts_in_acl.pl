@@ -308,11 +308,9 @@ sub find_hosts_and_nets_in_line {
 
     #Remove all found networks from the line
     #This avoids false matches for host regex below
-    say $line;
     foreach my $net_to_remove ( @net_mask_matches, @net_cidr_matches ) {
         $line =~ s/$net_to_remove//g;
     }
-    say $line;
 
     #Now normalize what networks we found
     #Convert all of o@net_mask_matches "n.n.n.n m.m.m.m" -> "n.n.n.n/m.m.m.m"
