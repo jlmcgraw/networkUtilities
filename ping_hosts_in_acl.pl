@@ -518,7 +518,7 @@ sub parallel_process_hosts {
 
         #Substitute it back into the ACL
         ${$scalar_of_lines_ref}
-            =~ s/([^\d] \s+ )$host_key (\s* [^\dm])/$1<font color = "$text_color">$host_key <\/font> [$text_to_insert]$2/ixg;
+            =~ s/([^\d] \s+ )$host_key (\s* [^\dm])/$1<font color = "$text_color">$host_key<\/font> [$text_to_insert]$2/ixg;
     }
 }
 
@@ -577,7 +577,7 @@ sub parallel_process_networks {
 
         #Substitute it back into the ACL
         ${$scalar_of_lines_ref}
-            =~ s/$network_key/<font color = "$text_color">$network_key <\/font> [ $number_of_hosts hosts <font color = "$text_color">$status<\/font>]/g;
+            =~ s/$network_key/<font color = "$text_color">$network_key<\/font> [ $number_of_hosts hosts <font color = "$text_color">$status<\/font> ]/g;
     }
 
 }
