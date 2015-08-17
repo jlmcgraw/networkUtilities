@@ -218,7 +218,7 @@ sub main {
 
         #Smart_Comments
         # %found_networks_and_hosts
-        print Dumper \%found_networks_and_hosts;
+        #print Dumper \%found_networks_and_hosts;
 
         #Make one long string out of the array
         my $scalar_of_lines = join "\n", @array_of_lines;
