@@ -22,8 +22,6 @@
 #-------------------------------------------------------------------------------
 
 #TODO
-# Option for number of threads
-# Option for type of ping test
 # Provide color-coded HTML output
 # Process all hosts in subnets.  Should probably limit the size of subnets processed
 # Quit processing a subnet on the first active response since that indicates
@@ -33,15 +31,32 @@
 # More config formats
 #
 #BUGS
-#   Freaks out on normal host/subnet masks
+#   (FIXED) Freaks out on normal host/subnet masks
 #DONE
+#   Option for type of ping test
+#   Option for number of threads
 
 #Standard modules
 use strict;
 use warnings;
 use autodie;
 use Socket;
+use Config;
 use Data::Dumper;
+use Storable;
+
+# use File::Basename;
+use threads;
+use Thread::Queue;
+
+# Use Share
+use threads::shared;
+
+# use Benchmark qw(:hireswallclock);
+use Getopt::Std;
+use FindBin '$Bin';
+use vars qw/ %opt /;
+use Net::Ping;
 
 # The sort routine for Data::Dumper
 $Data::Dumper::Sortkeys = sub {
@@ -61,27 +76,13 @@ $Data::Dumper::Sortkeys = sub {
     }
 };
 
-use Storable;
-
-# use File::Basename;
-use threads;
-use Thread::Queue;
-
-# Use Share
-use threads::shared;
-
-# use Benchmark qw(:hireswallclock);
-use Getopt::Std;
-use FindBin '$Bin';
-use vars qw/ %opt /;
-use Net::Ping;
-
 #Use a local lib directory so users don't need to install modules
 use lib "$FindBin::Bin/lib";
 
 #Additional modules
 use Modern::Perl '2014';
-use Regexp::Common;
+
+# use Regexp::Common;
 use Params::Validate qw(:all);
 use NetAddr::IP;
 
@@ -94,7 +95,7 @@ use Smart::Comments;
 no if $] >= 5.018, warnings => "experimental";
 
 #Define the valid command line options
-my $opt_string = '';
+my $opt_string = 'p:t:';
 my $arg_num    = scalar @ARGV;
 
 #We need at least one argument
@@ -109,13 +110,49 @@ unless ( getopts( "$opt_string", \%opt ) ) {
     exit(1);
 }
 
+#Default method of testing remote connectivity
+my $ping_method = 'tcp';
+
+if ( $Config{archname} =~ m/win/ix ) {
+    print "$Config{osname}\n";
+    print "$Config{archname}\n";
+
+    #You can ping without root on windows
+    $ping_method = 'icmp';
+}
+
+#What method does the user want to ping via
+if ( $opt{p} ) {
+
+    #If something  provided on the command line use it instead
+    if ( $opt{p} =~ /icmp|udp|tcp|external/ix ) {
+        $ping_method = $opt{p};
+        say "Supplied ping method: $ping_method";
+    }
+    else { say "Supplied invalid ping method"; }
+}
+say "Testing connectivity by method $ping_method";
+
 #The maximum number of simultaneous threads
 my $max_threads = 32;
 
+if ( $opt{t} ) {
+    $max_threads = $opt{t};
+
+}
+
+#Where known networks are stored
 my $known_networks_filename = 'known_networks.stored';
 
 # my %known_networks;
 my $known_networks_ref;
+
+my $ipOctetRegex = qr/(?: 25[0-5] | 2[0-4]\d | [01]?\d\d? )/x;
+
+my $ipv4AddressRegex = qr/$ipOctetRegex\.
+                          $ipOctetRegex\.
+			  $ipOctetRegex\.
+			  $ipOctetRegex/mx;
 
 #Load a hash of our known networks, if it exists
 if ( -e $Bin . "/$known_networks_filename" ) {
@@ -145,11 +182,12 @@ sub main {
         #Open the input and output files
         open my $filehandle, '<', $filename or die $!;
 
-        # open my $filehandleTested, '>', $filename . '.tested' or die $!;
-
         #Read in the whole file
         my @array_of_lines = <$filehandle>
             or die $!;    # Reads all lines into array
+
+        #Remove newlines from whole array
+        chomp(@array_of_lines);
 
         #A hash to collect data in, shared for multi-threading
         my %found_networks_and_hosts : shared;
@@ -161,25 +199,28 @@ sub main {
         #Process each line of the file separately
         foreach my $line (@array_of_lines) {
 
-            chomp $line;
-
             #Remove linefeeds
-            $line =~ s/\R//gx;
+            $line =~ s/\R//g;
 
-            #Pull target hosts and networks from this line
-            #and populate the shared hash with that info (while sharing each new key)
-            gather_hosts_from_this_line( $line, \%found_networks_and_hosts );
-            gather_networks_from_this_line( $line,
+            #Find hosts and networks in this line
+            my ( $hosts_in_line_ref, $nets_in_line_ref )
+                = find_hosts_and_nets_in_line($line);
+
+            #Populate the shared hash with that info (while sharing each new key)
+            add_found_hosts_to_shared_hash( $hosts_in_line_ref,
                 \%found_networks_and_hosts );
 
-            # say $line;
+            #Populate the shared hash with that info (while sharing each new key)
+            add_found_networks_to_shared_hash( $nets_in_line_ref,
+                \%found_networks_and_hosts );
+
         }
+
+        #Smart_Comments
+        ### %found_networks_and_hosts
 
         #Make one long string out of the array
         my $scalar_of_lines = join "\n", @array_of_lines;
-
-        # For future HTML output
-        # say {$filehandleTested} $line;
 
         #Gather info about each found host and put back into ACL
         parallel_process_hosts( \%found_networks_and_hosts,
@@ -192,8 +233,231 @@ sub main {
         #Print out the annotated ACL
         say $scalar_of_lines;
 
+        #For future HTML output
+        open my $filehandleHtml, '>', $filename . '-tested.html' or die $!;
+
+        #Print a simple html beginning to output
+        print $filehandleHtml <<"END";
+<html>
+    <head>
+    <title>
+        $filename
+    </title>
+    </head>
+
+    <body>
+        <pre>
+END
+        say {$filehandleHtml} $scalar_of_lines;
+
+        #Close out the file with very basic html ending
+        print $filehandleHtml <<"END";
+        </pre>
+    </body>
+</html>
+END
+        close $filehandleHtml;
+
     }
     return 0;
+}
+
+sub find_hosts_and_nets_in_line {
+
+    #Find hosts and networks in this line
+    #net_matches array elements are normalized to n.n.n.n/m.m.m.m
+
+    my ( $line, )
+        = validate_pos( @_, { type => SCALAR }, );
+
+    #Save unmodified version of the line
+    my $original_line = $line;
+
+    #Smart comment
+    ### $line
+
+    #     #For debugging
+    #     if ( $line =~ /$ipv4AddressRegex/ ) {
+    #
+    #         #Remove leading space
+    #         $line =~ s/^\s+//g;
+    #         say $line;
+    #     }
+
+    my ( @host_matches, @net_mask_matches, @net_cidr_matches, @net_matches );
+
+    #Remove all occurences of "mask" to make net regex simpler
+    $line =~ s/mask \s+//ixsmg;
+
+    #Match what looks like IP and subnet/wildcard mask
+    (@net_mask_matches) = (
+        $line =~ / 
+                \s+ 
+                ( $ipv4AddressRegex \s+ $ipv4AddressRegex)
+                /ixmsg
+    );
+
+    #Match what looks like IP followed CIDR mask length
+    (@net_cidr_matches) = (
+        $line =~ /
+                    \s+ 
+                    ( $ipv4AddressRegex \s* \/ \d+)
+                    /ixmsg
+    );
+
+    #Remove all found networks from the line
+    #This avoids false matches for host regex below
+    foreach my $net_to_remove ( @net_mask_matches, @net_cidr_matches ) {
+        $line =~ s/$net_to_remove//g;
+    }
+
+    #Now normalize what networks we found
+    #Convert all of o@net_mask_matches "n.n.n.n m.m.m.m" -> "n.n.n.n/m.m.m.m"
+    map ( s/\s+/\//, @net_mask_matches );
+
+    #Convert all of net_cidr_matches  "n.n.n.n /mm" -> "n.n.n.n/m.m.m.m"
+    map {
+        #Split out components
+        my ( $net, $cidr ) = split( /[\s\/]/, $_ );
+
+        #Convert the CIDR length to a bigint
+        my $mask = ( 2**$cidr - 1 ) << ( 32 - $cidr );
+
+        #Convert the bigint to dotted format
+        $mask = join( ".", unpack( "C4", pack( "N", $mask ) ) );
+
+        #Set $_ for "map"
+        $_ = "$net/$mask";
+    } @net_cidr_matches;
+
+    #And now try to match hosts
+    (@host_matches) = (
+        $line =~ /
+                [^ \. \- a]                            #NOT proceeded by . or - (eg part of snmp mib)
+                                                       # HACK: or "a" from "area"
+                \s+
+                ( $ipv4AddressRegex ) (?: \s* | $)     #just an IP address by itself (a host)
+                (?! \. | $ipv4AddressRegex | mask)     #NOT followed by what looks like a mask
+                /ixmsg
+    );
+
+    #Combine the two network arrays into one
+    push( @net_matches, @net_cidr_matches, @net_mask_matches );
+
+    #Return two arrays
+    return ( \@host_matches, \@net_matches );
+}
+
+sub add_found_hosts_to_shared_hash {
+    my ( $hosts_in_line_ref, $found_networks_and_hosts_ref )
+        = validate_pos( @_, { type => ARRAYREF }, { type => HASHREF }, );
+
+    foreach my $host_ip ( @{$hosts_in_line_ref} ) {
+
+        #         say "\t\tHOST: $host_ip";
+
+        #Make sure this new key is shared
+        if ( !exists $found_networks_and_hosts_ref->{hosts}{$host_ip} ) {
+
+            #Share the key, which deletes existing data
+            $found_networks_and_hosts_ref->{hosts}{$host_ip}
+                = &share( {} );
+
+            #Set the initial data for this host
+            $found_networks_and_hosts_ref->{'hosts'}{$host_ip}{'dns_name'}
+                = 'unknown';
+            $found_networks_and_hosts_ref->{'hosts'}{$host_ip}{'status'}
+                = 'unknown';
+
+        }
+        else {
+            say
+                "$host_ip already exists!-------------------------------------------------------------------";
+        }
+
+    }
+}
+
+sub add_found_networks_to_shared_hash {
+    my ( $nets_in_line_ref, $found_networks_and_hosts_ref )
+        = validate_pos( @_, { type => ARRAYREF }, { type => HASHREF }, );
+
+    foreach my $network_and_mask ( @{$nets_in_line_ref} ) {
+
+        #At this point, $network_and_mask should be normalized to "n.n.n.n/m.m.m.m"
+
+        my ( $address, $mask ) = split( '/', $network_and_mask );
+
+        #         say $network_and_mask;
+        #         say "\t\tNET: $address mask $mask";
+
+        my ( $possible_matches_ref, @one, $number_of_hosts );
+
+        #What to do if this looks like a subnet mask
+        if ( is_subnet_mask($mask) ) {
+
+            my $acl_subnet = NetAddr::IP->new("$address/$mask");
+
+            #If we could create the subnet...
+            if ($acl_subnet) {
+                $number_of_hosts = $acl_subnet->num();
+
+                # say "acl_subnet: $network / $mask_norm_dotted";
+                # $ip_addr = $acl_subnet->addr;
+                # $network_mask = $acl_subnet->mask;
+                # $network_masklen = $subnet->masklen;
+                # $ip_addr_bigint  = $subnet->bigint();
+                # $isRfc1918         = $acl_subnet->is_rfc1918();
+                # $range           = $subnet->range();
+            }
+            else { say "Couldn't create $address/$mask"; }
+
+        }
+        else {
+
+            #Get a list of all addresses that match this host/wildcard_mask combination
+            $possible_matches_ref = list_of_matches_acl( $address, $mask );
+
+            #Save that array reference to another array
+            @one = @{$possible_matches_ref};
+
+            # print @one;
+            #Get a count of how many elements in that array
+            $number_of_hosts = @{$possible_matches_ref};
+
+            #             #empty the list if it's too big
+            #             if ($number_of_hosts > 64) {
+            #                 @one = ();
+            #                 }
+        }
+
+        #Make sure this new key is shared
+        if ( !exists $found_networks_and_hosts_ref->{'networks'}
+            { $address . ' ' . $mask } )
+        {
+            #Share the key, which deletes existing data
+            $found_networks_and_hosts_ref->{'networks'}
+                { $address . ' ' . $mask } = &share( {} );
+
+            #How many hosts in the possible matches list
+            $found_networks_and_hosts_ref->{'networks'}
+                { $address . ' ' . $mask }{'number_of_hosts'}
+                = "$number_of_hosts";
+
+            #Default having no specific route for this network
+            $found_networks_and_hosts_ref->{'networks'}
+                { $address . ' ' . $mask }{'status'} = "via DEFAULT";
+
+            #                 #All possible matches to the mask
+            #                 $found_networks_and_hosts_ref->{'networks'}
+            #                     { $address . ' ' . $mask }{'list_of_hosts'} = "@one";
+        }
+        else {
+            say
+                "$address $mask already exists!-------------------------------------------------------------------";
+        }
+
+    }
 }
 
 sub parallel_process_hosts {
@@ -215,11 +479,7 @@ sub parallel_process_hosts {
     #How many hosts we queued
     say $q->pending() . " hosts queued";
 
-    # Maximum number of worker threads
-    # BUG TODO Adjust this dynamically based on number of CPUs
-    # my $thread_limit = 70;
-
-    #Create $thread_limit worker threads calling "process_hosts_thread"
+    #Create $max_threads worker threads calling "process_hosts_thread"
     my @thr = map {
         threads->create(
             sub {
@@ -255,17 +515,7 @@ sub parallel_process_hosts {
 
         #Substitute it back into the ACL
         ${$scalar_of_lines_ref}
-            =~ s/host $host_key/host $host_key [text_to_insert]/g;
-
-        #Mark up simple ACL lines
-        # ${$scalar_of_lines_ref}
-        # =~ s/^
-        # \s*
-        # access-list \s+
-        # (\d+) \s+
-        # (permit | deny) \s+
-        # $host_key
-        # $/access-list $1 $2 $host_key [$text_to_insert]/ixg;
+            =~ s/host $host_key/host $host_key [$text_to_insert]/g;
     }
 }
 
@@ -288,11 +538,7 @@ sub parallel_process_networks {
     #How many networks did we queue
     say $q->pending() . " networks queued";
 
-    # Maximum number of worker threads
-    # BUG TODO Adjust this dynamically based on number of CPUs
-    # my $thread_limit = 70;
-
-    #Create $thread_limit worker threads calling "process_networks_thread"
+    #Create $max_threads worker threads calling "process_networks_thread"
     my @thr = map {
         threads->create(
             sub {
@@ -331,138 +577,6 @@ sub parallel_process_networks {
 
 }
 
-sub gather_hosts_from_this_line {
-    my ( $line, $found_networks_and_hosts_ref )
-        = validate_pos( @_, { type => SCALAR }, { type => HASHREF }, );
-
-    #Find all "host x.x.x.x" entries
-    while (
-        $line =~ /
-                        host \s+ 
-                        (?<host> $RE{net}{IPv4})
-                        /ixsmg
-        )
-    {
-        my $host_ip = $+{host};
-
-        #Save the hosts we find on this line
-
-        #Make sure this new key is shared
-        if ( !exists $found_networks_and_hosts_ref->{hosts}{$host_ip} ) {
-
-            #Share the key, which deletes existing data
-            $found_networks_and_hosts_ref->{hosts}{$host_ip} = &share( {} );
-
-            #Set the initial data for this host
-            $found_networks_and_hosts_ref->{'hosts'}{$host_ip}{'dns_name'}
-                = 'unknown';
-            $found_networks_and_hosts_ref->{'hosts'}{$host_ip}{'status'}
-                = 'unknown';
-
-        }
-        else {
-            say
-                "$host_ip already exists!-------------------------------------------------------------------";
-        }
-
-    }
-
-    #Find all simple "permit|deny x.x.x.x" entries
-    #access-list 13 permit 10.0.0.1
-    if ($line =~ /^ \s*
-					access-list \s+
-					\d+ \s+
-					(?: permit | deny ) \s+ 
-					(?<host> $RE{net}{IPv4} )
-					$
-                /ixsm
-        )
-    {
-        my $host_ip = $+{host};
-
-        #Save the hosts we find on this line
-
-        #Make sure this new key is shared
-        if ( !exists $found_networks_and_hosts_ref->{hosts}{$host_ip} ) {
-
-            #Share the key, which deletes existing data
-            $found_networks_and_hosts_ref->{hosts}{$host_ip} = &share( {} );
-
-            #Set the initial data for this host
-            $found_networks_and_hosts_ref->{'hosts'}{$host_ip}{'dns_name'}
-                = 'unknown';
-            $found_networks_and_hosts_ref->{'hosts'}{$host_ip}{'status'}
-                = 'unknown';
-
-        }
-        else {
-            say
-                "$host_ip already exists!-------------------------------------------------------------------";
-        }
-
-    }
-
-}
-
-sub gather_networks_from_this_line {
-    my ( $line, $found_networks_and_hosts_ref )
-        = validate_pos( @_, { type => SCALAR }, { type => HASHREF }, );
-
-    #Try to only catch lines that look like ACLs
-    #Because trying to process a regular host/subnet mask as  a host/wildcard mask
-    #Can take waaaaay too long
-    return unless ( $line =~ /^ \s* (access-list | permit | deny )/ixsm );
-
-    #Find all "x.x.x.x y.y.y.y" entries (eg host and wildcard_mask)
-    while (
-        $line =~ /      (?<network> $RE{net}{IPv4}) \s+
-                        (?<wildcard_mask> $RE{net}{IPv4}) 
-                        (\s* | $)
-                        /ixsmg
-        )
-    {
-        my $address       = $+{network};
-        my $wildcard_mask = $+{wildcard_mask};
-
-        #Get a list of all addresses that match this host/wildcard_mask combination
-        my $possible_matches_ref
-            = list_of_matches_acl( $address, $wildcard_mask );
-
-        #Save that array reference to another array
-        my @one = @{$possible_matches_ref};
-
-        # print @one;
-        #Get a count of how many elements in that array
-        my $number_of_hosts = @{$possible_matches_ref};
-
-        #Make sure this new key is shared
-        if ( !exists $found_networks_and_hosts_ref->{'networks'}
-            { $address . ' ' . $wildcard_mask } )
-        {
-            #Share the key, which deletes existing data
-            $found_networks_and_hosts_ref->{'networks'}
-                { $address . ' ' . $wildcard_mask } = &share( {} );
-
-            #How many hosts in the possible matches list
-            $found_networks_and_hosts_ref->{'networks'}
-                { $address . ' ' . $wildcard_mask }{'number_of_hosts'}
-                = "$number_of_hosts";
-
-            #Default having no specific route for this network
-            $found_networks_and_hosts_ref->{'networks'}
-                { $address . ' ' . $wildcard_mask }{'status'} = "via DEFAULT";
-
-            #All possible matches to the mask
-            $found_networks_and_hosts_ref->{'networks'}
-                { $address . ' ' . $wildcard_mask }{'list_of_hosts'} = "@one";
-        }
-        else {
-            say
-                "$address $wildcard_mask already exists!-------------------------------------------------------------------";
-        }
-    }
-}
-
 sub process_hosts_thread {
     my ( $host_ip, $found_networks_and_hosts_ref )
         = validate_pos( @_, { type => SCALAR }, { type => HASHREF }, );
@@ -478,14 +592,13 @@ sub process_hosts_thread {
     # say "Thread $id: $host_ip -> $name";
 
     # lock($found_networks_and_hosts_ref)->{'hosts'};
-    $found_networks_and_hosts_ref->{'hosts'}{$host_ip}{'dns_name'} = "$name";
-
-    # unlock($found_networks_and_hosts_ref)->{'hosts'};
+    $found_networks_and_hosts_ref->{'hosts'}{$host_ip}{'dns_name'}
+        = "$name";
 
     my $timeout = 3;
 
     #This needs to be 'tcp' or 'udp' on unix systems (or run as root)
-    my $p = Net::Ping->new( 'icmp', $timeout )
+    my $p = Net::Ping->new( $ping_method, $timeout )
         or die "Thread $id: Unable to create Net::Ping object ";
 
     #Default status is not responding
@@ -499,7 +612,8 @@ sub process_hosts_thread {
 
     # say "Thread $id: $host_ip -> $status";
     #Update the hash for this host
-    $found_networks_and_hosts_ref->{'hosts'}{$host_ip}{'status'} = "$status";
+    $found_networks_and_hosts_ref->{'hosts'}{$host_ip}{'status'}
+        = "$status";
     $p->close;
 
 }
@@ -518,15 +632,24 @@ sub process_networks_thread {
     #Split into components
     my ( $network, $network_mask ) = split( ' ', $network_and_mask );
 
-    #This little bit of magic inverts the wildcard mask to a netmask.  Copied from somewhere on the net
-    my $mask_wild_dotted = $network_mask;
-    my $mask_wild_packed = pack 'C4', split /\./, $mask_wild_dotted;
+    my $acl_subnet;
 
-    my $mask_norm_packed = ~$mask_wild_packed;
-    my $mask_norm_dotted = join '.', unpack 'C4', $mask_norm_packed;
+    #Does the mask appear to be a subnet mask?
+    if ( is_subnet_mask($network_mask) ) {
+        $acl_subnet = NetAddr::IP->new("$network/$network_mask");
+    }
+    else {
+        #Assume it's a wildcard_mask
+        #This little bit of magic inverts the wildcard mask to a netmask.  Copied from somewhere on the net
+        my $mask_wild_dotted = $network_mask;
+        my $mask_wild_packed = pack 'C4', split /\./, $mask_wild_dotted;
 
-    #Create a new subnet from captured info
-    my $acl_subnet = NetAddr::IP->new("$network/$mask_norm_dotted");
+        my $mask_norm_packed = ~$mask_wild_packed;
+        my $mask_norm_dotted = join '.', unpack 'C4', $mask_norm_packed;
+
+        #Create a new subnet from captured info
+        $acl_subnet = NetAddr::IP->new("$network/$mask_norm_dotted");
+    }
 
     #If we could create the subnet...
     if ($acl_subnet) {
@@ -544,7 +667,7 @@ sub process_networks_thread {
 
             # say "known_network: $known_network";
             #Everything will match default route, let's skip it
-            next if ( $known_network eq '0.0.0.0/0' );
+            next if ( $known_network eq '0.0.0.0 0.0.0.0' );
 
             #Create a subnet for the known network
             my $known_subnet = NetAddr::IP->new($known_network);
@@ -570,7 +693,7 @@ sub process_networks_thread {
     else {
 
         say
-            "Network w/ wildcard mask: Couldn't create subnet for $network $network_mask";
+            "Network w/ wildcard mask: Couldn't create subnet for $network mask $network_mask";
     }
 
     #Test how many of this network's hosts respond
@@ -580,7 +703,10 @@ sub process_networks_thread {
 sub usage {
     say "";
     say " Usage : ";
-    say " $0 <ACL_file1 > <ACL_file 2> <*.acl> etc ";
+    say " $0 <options> <ACL_file1 > <ACL_file 2> <*.acl> etc ";
+    say "";
+    say "       -p tcp/udp/icmp  Method to use for testing host reachability";
+    say "       -t <number>      Maximum number of threads to use";
     say "";
     exit 1;
 }
@@ -617,6 +743,12 @@ sub list_of_matches_acl {
 
     #The array of possible matches
     my @potential_matches;
+
+    #Abort if this looks to be a subnet mask
+    if ( is_subnet_mask($acl_mask) ) {
+        say "$acl_mask doesn't appear to be a wildcard mask";
+        return \@potential_matches;
+    }
 
     #Split the incoming parameters into 4 octets
     my @acl_address_octets = split /\./, $acl_address;
@@ -716,6 +848,26 @@ sub wildcard_mask_test {
 
     #Return value is whether they match
     return ( $acl_result eq $test_result );
+}
+
+sub is_subnet_mask {
+
+    #Test if supplied quad is likely a subnet mask or wildcard mask
+    my ($mask_to_test) = validate_pos( @_, { type => SCALAR }, );
+
+    #For now I'm just going to check whether the first bit is set and consider
+    #that to indicate a subnet mask
+    #Perhaps there are better heuristics to consider
+
+    #Split the incoming parameter into 4 octets
+    my @mask_octets = split /\./, $mask_to_test;
+
+    #Get the first octet
+    my $value     = $mask_octets[0];
+    my $test_mask = 0b10000000;        #128
+
+    #Return value is whether they match exactly
+    return ( ( $value & $test_mask ) == $test_mask );
 }
 
 sub dump_to_file {
