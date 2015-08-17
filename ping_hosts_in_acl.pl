@@ -138,7 +138,7 @@ my $max_threads = 32;
 
 if ( $opt{t} ) {
     $max_threads = $opt{t};
-
+    say "Using $max_threads threads";
 }
 
 #Where known networks are stored
@@ -217,7 +217,8 @@ sub main {
         }
 
         #Smart_Comments
-        ### %found_networks_and_hosts
+        # %found_networks_and_hosts
+        print Dumper \%found_networks_and_hosts;
 
         #Make one long string out of the array
         my $scalar_of_lines = join "\n", @array_of_lines;
@@ -231,7 +232,7 @@ sub main {
             \$scalar_of_lines );
 
         #Print out the annotated ACL
-        say $scalar_of_lines;
+        # say $scalar_of_lines;
 
         #For future HTML output
         open my $filehandleHtml, '>', $filename . '-tested.html' or die $!;
@@ -274,7 +275,7 @@ sub find_hosts_and_nets_in_line {
     my $original_line = $line;
 
     #Smart comment
-    ### $line
+    # $line
 
     #     #For debugging
     #     if ( $line =~ /$ipv4AddressRegex/ ) {
@@ -286,8 +287,8 @@ sub find_hosts_and_nets_in_line {
 
     my ( @host_matches, @net_mask_matches, @net_cidr_matches, @net_matches );
 
-    #Remove all occurences of "mask" to make net regex simpler
-    $line =~ s/mask \s+//ixsmg;
+    #Remove all occurrences of "mask" to make net regex simpler
+    $line =~ s/\s+ mask \s+/ /ixsmg;
 
     #Match what looks like IP and subnet/wildcard mask
     (@net_mask_matches) = (
@@ -307,9 +308,11 @@ sub find_hosts_and_nets_in_line {
 
     #Remove all found networks from the line
     #This avoids false matches for host regex below
+    say $line;
     foreach my $net_to_remove ( @net_mask_matches, @net_cidr_matches ) {
         $line =~ s/$net_to_remove//g;
     }
+    say $line;
 
     #Now normalize what networks we found
     #Convert all of o@net_mask_matches "n.n.n.n m.m.m.m" -> "n.n.n.n/m.m.m.m"
@@ -330,11 +333,11 @@ sub find_hosts_and_nets_in_line {
         $_ = "$net/$mask";
     } @net_cidr_matches;
 
-    #And now try to match hosts
+    #And now try to match hosts (after n.n.n.n m.m.m.m and "mask" are removed from $line)
     (@host_matches) = (
         $line =~ /
                 [^ \. \- a]                            #NOT proceeded by . or - (eg part of snmp mib)
-                                                       # HACK: or "a" from "area"
+                                                       # HACK: or traling "a" from "ospf area"
                 \s+
                 ( $ipv4AddressRegex ) (?: \s* | $)     #just an IP address by itself (a host)
                 (?! \. | $ipv4AddressRegex | mask)     #NOT followed by what looks like a mask
@@ -495,7 +498,7 @@ sub parallel_process_hosts {
     $_->join() for @thr;
 
     #Smart comment for debug
-    ## %found_networks_and_hosts;
+    # %found_networks_and_hosts;
 
     #Substitute info we found back into the lines of the ACL
     foreach my $host_key ( keys $found_networks_and_hosts_ref->{'hosts'} ) {
@@ -506,6 +509,8 @@ sub parallel_process_hosts {
         my $host_status
             = $found_networks_and_hosts_ref->{'hosts'}{$host_key}{'status'};
 
+        my $text_color = $host_status eq 'UP' ? 'lime' : 'red';
+
         my $text_to_insert = "$host_name : $host_status";
 
         #If there's no DNS entry for this host don't include IP in substitution
@@ -515,7 +520,7 @@ sub parallel_process_hosts {
 
         #Substitute it back into the ACL
         ${$scalar_of_lines_ref}
-            =~ s/host $host_key/host $host_key [$text_to_insert]/g;
+            =~ s/([^\d] \s+ )$host_key (\s* [^\dm])/$1<font color = "$text_color">$host_key <\/font> [$text_to_insert]$2/ixg;
     }
 }
 
@@ -570,9 +575,11 @@ sub parallel_process_networks {
             = $found_networks_and_hosts_ref->{'networks'}{$network_key}
             {'status'};
 
+        my $text_color = $status =~ /default/ix ? 'red' : 'lime';
+
         #Substitute it back into the ACL
         ${$scalar_of_lines_ref}
-            =~ s/$network_key/$network_key [ $number_of_hosts hosts $status]/g;
+            =~ s/$network_key/<font color = "$text_color">$network_key <\/font> [ $number_of_hosts hosts <font color = "$text_color">$status<\/font>]/g;
     }
 
 }
@@ -664,10 +671,10 @@ sub process_networks_thread {
 
         #Test it against all known networks...
         foreach my $known_network ( keys %{$known_networks_ref} ) {
-
+            ## $known_network
             # say "known_network: $known_network";
             #Everything will match default route, let's skip it
-            next if ( $known_network eq '0.0.0.0 0.0.0.0' );
+            next if ( $known_network eq '0.0.0.0/0' );
 
             #Create a subnet for the known network
             my $known_subnet = NetAddr::IP->new($known_network);
