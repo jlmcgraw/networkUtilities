@@ -95,7 +95,7 @@ use Smart::Comments -ENV;
 #no if $] >= 5.018, warnings => "experimental";
 
 #Define the valid command line options
-my $opt_string = 'p:t:';
+my $opt_string = 'dp:t:';
 my $arg_num    = scalar @ARGV;
 
 #We need at least one argument
@@ -143,6 +143,8 @@ if ( $opt{t} ) {
     $max_threads = $opt{t};
     say "Using $max_threads threads";
 }
+
+my $should_show_duplicates = $opt{d};
 
 #Where known networks are stored (created by bgp_asn_path_via_snmp.pl)
 my $known_networks_filename = 'known_networks.stored';
@@ -218,11 +220,15 @@ sub main {
         }
 
         ##Smart_Comments found_networks_and_hosts: %found_networks_and_hosts
-#         print Dumper \%found_networks_and_hosts;
+        #         print Dumper \%found_networks_and_hosts;
 
         #Make one long string out of the array
         #This is probably unecessary but I haven't bothered to change code yet
         my $scalar_of_lines = join "\n", @array_of_lines;
+
+        #Do we want to see things that were mentioned multiple times?
+        show_duplicates( \%found_networks_and_hosts )
+            if $should_show_duplicates;
 
         #Gather info about each found host and annotate original text with that info
         parallel_process_hosts( \%found_networks_and_hosts,
@@ -340,8 +346,11 @@ sub find_hosts_and_nets_in_line {
     for my $key ( keys %temp_nets_cidr ) {
 
         #Key is unnormalized text we found in config, clean it up
+        #Remove whitespace
+        $key =~ s/\s+//igx;
+
         #Split out components
-        my ( $net, $cidr ) = split( /[\s\/]/, $key );
+        my ( $net, $cidr ) = split( /[\/]/, $key );
 
         #Convert the CIDR length to a bigint
         my $mask = ( 2**$cidr - 1 ) << ( 32 - $cidr );
@@ -365,7 +374,7 @@ sub find_hosts_and_nets_in_line {
     #Populate hosts hash from array of matches
     %hosts = map { $_ => 1 } @host_matches;
 
-#     say $original_line;
+    #     say $original_line;
 
     #
     #     print Dumper \%nets_mask if \%nets_mask;
@@ -374,7 +383,8 @@ sub find_hosts_and_nets_in_line {
     #
     #Merge the network hashes
     my $merged_networks_hash_ref = merge( \%nets_mask, \%nets_cidr );
-#     print Dumper $merged_networks_hash_ref if $merged_networks_hash_ref;
+
+    #     print Dumper $merged_networks_hash_ref if $merged_networks_hash_ref;
 
     #     #Combine the two network arrays into one
     #     push( @net_matches, @net_cidr_matches, @net_mask_matches );
@@ -392,10 +402,10 @@ sub add_found_hosts_to_shared_hash {
     foreach my $host_ip ( keys %{$hosts_in_line_ref} ) {
 
         #Make sure this new key is shared
-        if ( !exists $found_networks_and_hosts_ref->{hosts}{$host_ip} ) {
+        if ( !exists $found_networks_and_hosts_ref->{'hosts'}{$host_ip} ) {
 
             #Share the key, which deletes existing data
-            $found_networks_and_hosts_ref->{hosts}{$host_ip}
+            $found_networks_and_hosts_ref->{'hosts'}{$host_ip}
                 = &share( {} );
 
             #Set the initial data for this host
@@ -403,13 +413,13 @@ sub add_found_hosts_to_shared_hash {
                 = 'unknown';
             $found_networks_and_hosts_ref->{'hosts'}{$host_ip}{'status'}
                 = 'unknown';
+             $found_networks_and_hosts_ref->{'hosts'}{$host_ip}{'count'} = 1;
 
         }
         else {
-            say
-                "$host_ip already exists!-------------------------------------------------------------------";
-            $found_networks_and_hosts_ref->{'hosts'}{$host_ip}{'count'}
-                += 1;
+#             say
+#             "$host_ip already exists!-------------------------------------------------------------------";
+            $found_networks_and_hosts_ref->{'hosts'}{$host_ip}{'count'}++;
         }
 
     }
@@ -509,16 +519,19 @@ sub add_found_networks_to_shared_hash {
             $found_networks_and_hosts_ref->{'networks'}
                 {$network_and_mask_as_found}{'normalized'}
                 = "$network_and_mask_normalized";
+            
+            $found_networks_and_hosts_ref->{'networks'}
+                {$network_and_mask_as_found}{'count'}=1;
 
             ##All possible matches to the mask
             #$found_networks_and_hosts_ref->{'networks'}{$network_and_mask_normalized }{'list_of_hosts'}
             #	= "@one";
         }
         else {
-            say
-                "$address $mask already exists!-------------------------------------------------------------------";
+#             say
+#                 "$address $mask already exists!-------------------------------------------------------------------";
             $found_networks_and_hosts_ref->{'networks'}
-                {$network_and_mask_as_found}{'count'} += 1;
+                {$network_and_mask_as_found}{'count'}++;
         }
 
     }
@@ -580,16 +593,16 @@ sub parallel_process_hosts {
         my $text_color = $host_status eq 'UP' ? 'lime' : 'red';
 
         #What to add
-        my $text_to_insert = "$host_name : $host_status";
+        my $text_to_insert = $host_name eq $host_key ? '' : " [$host_name]";
 
-        #If there's no DNS entry for this host don't include IP in substitution
-        if ( $host_name eq $host_key ) {
-            $text_to_insert = "$host_status";
-        }
+        #         #If there's no DNS entry for this host don't include IP in substitution
+        #         if ( $host_name eq $host_key ) {
+        #             $text_to_insert = "$host_status";
+        #         }
 
         #Substitute it back into the config
         ${$scalar_of_lines_ref}
-            =~ s/([^\d] \s+ )$host_key (\s* [^\dm])/$1<font color = "$text_color">$host_key<\/font> [$text_to_insert]$2/ixg;
+            =~ s/([^\d] \s+ )$host_key (\s* [^\dm])/$1<font color = "blue"> <font color = "$text_color">$host_key<\/font>$text_to_insert<\/font>$2/ixg;
     }
 }
 
@@ -624,6 +637,7 @@ sub parallel_process_networks {
             }
         );
     } 1 .. $max_threads;
+
     # Wait for all of the threads in @thr to terminate
     $_->join() for @thr;
 
@@ -672,7 +686,7 @@ sub process_hosts_thread {
     # Get the thread id. Allows each thread to be identified.
     my $id = threads->tid();
 
-#     say "Thread $id: $host_ip";
+    #     say "Thread $id: $host_ip";
 
     #Do a DNS lookup for the host
     my $name = pretty_addr($host_ip);
@@ -717,9 +731,9 @@ sub process_networks_thread {
     #Test if a route for this network even exists in %known_networks hash
 
     # Get the thread id. Allows each thread to be identified.
-     my $id = threads->tid();
+    my $id = threads->tid();
 
-#     say "Thread $id: $network_key";
+    #     say "Thread $id: $network_key";
 
     #Split into components
     #my ( $network, $network_mask ) = split( '/', $network_key );
@@ -987,4 +1001,26 @@ sub dump_to_file {
 
     print $fh Dumper $aoh_ref;
     close $fh or die "Can't close '$file': $!";
+}
+
+sub show_duplicates {
+
+    #Put the hosts we found into a hash
+    my ($found_networks_and_hosts_ref)
+        = validate_pos( @_, { type => HASHREF }, );
+    
+    say "Duplicates:";
+    for my $key ( keys %{ $found_networks_and_hosts_ref->{'hosts'} } ) {
+        if ( $found_networks_and_hosts_ref->{'hosts'}{$key}{'count'} > 1 )
+        {
+            say $key;
+        }
+    }
+    for my $key ( keys %{ $found_networks_and_hosts_ref->{'networks'} } ) {
+        if ( $found_networks_and_hosts_ref->{'networks'}{$key}{'count'} > 1 )
+        {
+            say $found_networks_and_hosts_ref->{'networks'}{$key}{'normalized'};
+        }
+    }
+    return 1;
 }
