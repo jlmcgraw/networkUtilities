@@ -53,6 +53,13 @@
                 (?: \s+ in|out)?
                 (?: \s+ | $)
                 /ixsm,
+    12 => qr /^ \s* 
+                match \s+
+                ip \s+
+                address \s+ 
+                (?<points_to> $list_of_pointees_ref->{"acl"}) 
+                (?: \s+ | $)
+                /ixsm,
 
     },
     
