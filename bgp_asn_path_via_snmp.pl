@@ -26,22 +26,14 @@
 
 use strict;
 use warnings;
-use SNMP_Session;
-use BER;
 use Socket;
 use Getopt::Long;
 use FindBin '$Bin';
-
 #Use a local lib directory so users don't need to install modules
 use lib "$FindBin::Bin/lib";
-
 use Params::Validate qw(:all);
-
 use Storable;
 use Data::Dumper;
-
-#Look into using this so users don't need to install modules
-use lib "$FindBin::Bin/lib";
 
 # The sort routine for Data::Dumper
 $Data::Dumper::Sortkeys = sub {
@@ -60,6 +52,10 @@ $Data::Dumper::Sortkeys = sub {
         return [ sort { lc $a cmp lc $b } keys %{ $_[0] } ];
     }
 };
+
+#Additional modules
+use SNMP_Session;
+use BER;
 
 sub usage ();
 
