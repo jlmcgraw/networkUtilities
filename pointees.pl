@@ -254,3 +254,13 @@
             (\s+|$)
             /ixsm,
     },
+    'snmp_view' => {
+    1 => qr/(?<unique_id>
+                        ^ \s*
+                        snmp-server \s+
+                        view \s+
+                        (?<pointed_at> $valid_cisco_name)
+            )
+            (\s+|$)
+            /ixsm,
+    },

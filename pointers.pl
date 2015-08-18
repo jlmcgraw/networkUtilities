@@ -296,3 +296,13 @@
         /ixsm,
 
     },
+    'snmp_view' => {
+    1 => qr/ ^ \s*
+        snmp-server \s+
+        community \s+
+        $valid_cisco_name \s+
+        view \s+
+        (?<points_to> (?: $list_of_pointees_ref->{"snmp_view"}) )
+        /ixsm,
+
+    },
