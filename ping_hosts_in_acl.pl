@@ -84,6 +84,7 @@ use Modern::Perl '2014';
 use Params::Validate qw(:all);
 use NetAddr::IP;
 use Net::Ping;
+use Hash::Merge qw(merge);
 
 #Smart_Comments=0 perl my_script.pl
 # to run without smart comments, and
@@ -217,7 +218,7 @@ sub main {
         }
 
         ##Smart_Comments found_networks_and_hosts: %found_networks_and_hosts
-        #print Dumper \%found_networks_and_hosts;
+#         print Dumper \%found_networks_and_hosts;
 
         #Make one long string out of the array
         #This is probably unecessary but I haven't bothered to change code yet
@@ -240,21 +241,20 @@ sub main {
         #Print a simple html beginning to output
         print $filehandleHtml <<"END";
 <html>
-    <head>
-    <title>
-        $filename
-    </title>
-    </head>
-
-    <body>
-        <pre>
+<head>
+<title>
+$filename
+</title>
+</head>
+<body>
+<pre>
 END
         say {$filehandleHtml} $scalar_of_lines;
 
         #Close out the file with very basic html ending
         print $filehandleHtml <<"END";
-        </pre>
-    </body>
+</pre>
+</body>
 </html>
 END
         close $filehandleHtml;
@@ -287,16 +287,25 @@ sub find_hosts_and_nets_in_line {
 
     my ( @host_matches, @net_mask_matches, @net_cidr_matches, @net_matches );
 
-    #Remove all occurrences of "mask" to make net regex simpler
-    $line =~ s/\s+ mask \s+/ /ixsmg;
+    my ( %hosts, %nets_mask, %nets_cidr );
+
+    #BUG Make it work with something like "permit ip host 192.1681.100 10.0.0.0 0.255.255.255"
+
+    # #Remove all occurrences of "mask" to make net regex simpler
+    # $line =~ s/\s+ mask \s+/ /ixsmg;
 
     #Match what looks like IP and subnet/wildcard mask
     (@net_mask_matches) = (
         $line =~ / 
                 \s+ 
-                ( $ipv4AddressRegex \s+ $ipv4AddressRegex)
+                ( $ipv4AddressRegex \s+ 
+				(?: mask \s+)? 
+				$ipv4AddressRegex)
                 /ixmsg
     );
+
+    #Make a hash from all results
+    my %temp_nets_mask = map { $_ => 1 } @net_mask_matches;
 
     #Match what looks like IP followed CIDR mask length
     (@net_cidr_matches) = (
@@ -306,56 +315,81 @@ sub find_hosts_and_nets_in_line {
                     /ixmsg
     );
 
+    #Make a hash from all results
+    my %temp_nets_cidr = map { $_ => 1 } @net_cidr_matches;
+
     #Remove all found networks from the line
-    #This avoids false matches for host regex below
+    #This helps avoid false matches for host regex below
     foreach my $net_to_remove ( @net_mask_matches, @net_cidr_matches ) {
         $line =~ s/$net_to_remove//g;
     }
 
-    #Now normalize what networks we found
-    #Convert all of o@net_mask_matches "n.n.n.n m.m.m.m" -> "n.n.n.n/m.m.m.m"
-    map ( s/\s+/\//, @net_mask_matches );
+    # #Now normalize what networks we found
+    # #Convert all of @net_mask_matches "n.n.n.n m.m.m.m" -> "n.n.n.n/m.m.m.m"
+    for my $key ( keys %temp_nets_mask ) {
 
-    #Convert all of net_cidr_matches  "n.n.n.n /mm" -> "n.n.n.n/m.m.m.m"
-    map {
+        #Key is unnormalized, clean it up
+        my $normalized_key = $key;
+
+        $normalized_key =~ s/ (\s+ mask \s+) | \s+ /\//ix;
+
+        $nets_mask{$key}{'normalized'} = $normalized_key;
+    }
+
+    # #Convert all of net_cidr_matches  "n.n.n.n /mm" -> "n.n.n.n/m.m.m.m"
+    for my $key ( keys %temp_nets_cidr ) {
+
+        #Key is unnormalized text we found in config, clean it up
         #Split out components
-        my ( $net, $cidr ) = split( /[\s\/]/, $_ );
+        my ( $net, $cidr ) = split( /[\s\/]/, $key );
 
         #Convert the CIDR length to a bigint
         my $mask = ( 2**$cidr - 1 ) << ( 32 - $cidr );
 
         #Convert the bigint to dotted format
         $mask = join( ".", unpack( "C4", pack( "N", $mask ) ) );
-
-        #Set $_ for "map"
-        $_ = "$net/$mask";
-    } @net_cidr_matches;
+        $nets_cidr{$key}{'normalized'} = "$net/$mask";
+    }
 
     #And now try to match hosts (after n.n.n.n m.m.m.m and "mask" are removed from $line)
     (@host_matches) = (
         $line =~ /
                 [^ \. \- a]                            #NOT proceeded by . or - (eg part of snmp mib)
-                                                       # HACK: or traling "a" from "ospf area"
+                                                       # HACK: or trailing "a" from "ospf area"
                 \s+
                 ( $ipv4AddressRegex ) (?: \s* | $)     #just an IP address by itself (a host)
                 (?! \. | $ipv4AddressRegex | mask)     #NOT followed by what looks like a mask
                 /ixmsg
     );
 
-    #Combine the two network arrays into one
-    push( @net_matches, @net_cidr_matches, @net_mask_matches );
+    #Populate hosts hash from array of matches
+    %hosts = map { $_ => 1 } @host_matches;
 
-    #Return two array references
-    return ( \@host_matches, \@net_matches );
+#     say $original_line;
+
+    #
+    #     print Dumper \%nets_mask if \%nets_mask;
+    #     print Dumper \%nets_cidr if \%nets_cidr;
+    #     say @host_matches if @host_matches;
+    #
+    #Merge the network hashes
+    my $merged_networks_hash_ref = merge( \%nets_mask, \%nets_cidr );
+#     print Dumper $merged_networks_hash_ref if $merged_networks_hash_ref;
+
+    #     #Combine the two network arrays into one
+    #     push( @net_matches, @net_cidr_matches, @net_mask_matches );
+
+    #Return two hash references
+    return ( \%hosts, $merged_networks_hash_ref );
 }
 
 sub add_found_hosts_to_shared_hash {
 
     #Put the hosts we found into a hash
     my ( $hosts_in_line_ref, $found_networks_and_hosts_ref )
-        = validate_pos( @_, { type => ARRAYREF }, { type => HASHREF }, );
+        = validate_pos( @_, { type => HASHREF }, { type => HASHREF }, );
 
-    foreach my $host_ip ( @{$hosts_in_line_ref} ) {
+    foreach my $host_ip ( keys %{$hosts_in_line_ref} ) {
 
         #Make sure this new key is shared
         if ( !exists $found_networks_and_hosts_ref->{hosts}{$host_ip} ) {
@@ -385,13 +419,17 @@ sub add_found_networks_to_shared_hash {
 
     #Put the subnets we found into a hash
     my ( $nets_in_line_ref, $found_networks_and_hosts_ref )
-        = validate_pos( @_, { type => ARRAYREF }, { type => HASHREF }, );
+        = validate_pos( @_, { type => HASHREF }, { type => HASHREF }, );
 
-    foreach my $network_and_mask ( @{$nets_in_line_ref} ) {
+    foreach my $network_and_mask_as_found ( keys %{$nets_in_line_ref} ) {
 
-        #At this point, $network_and_mask should be normalized to "n.n.n.n/m.m.m.m"
+        #Split normalized network ("n.n.n.n/m.m.m.m") into address and mask
+        my $network_and_mask_normalized
+            = $nets_in_line_ref->{$network_and_mask_as_found}{'normalized'};
 
-        my ( $address, $mask ) = split( '/', $network_and_mask );
+        my ( $address, $mask )
+            = split( '/',
+            $nets_in_line_ref->{$network_and_mask_as_found}{'normalized'} );
 
         my ( $possible_matches_ref, @one, $number_of_hosts );
 
@@ -439,29 +477,48 @@ sub add_found_networks_to_shared_hash {
 
         #Make sure this new key is shared
         if ( !exists $found_networks_and_hosts_ref->{'networks'}
-            {$network_and_mask} )
+            {$network_and_mask_as_found} )
         {
             #Share the key, which deletes existing data
-            $found_networks_and_hosts_ref->{'networks'}{$network_and_mask}
-                = &share( {} );
+            $found_networks_and_hosts_ref->{'networks'}
+                {$network_and_mask_as_found} = &share( {} );
 
             #How many hosts in the possible matches list
             $found_networks_and_hosts_ref->{'networks'}
-                {$network_and_mask}{'number_of_hosts'} = "$number_of_hosts";
+                {$network_and_mask_as_found}{'address'} = "$address";
+
+            #How many hosts in the possible matches list
+            $found_networks_and_hosts_ref->{'networks'}
+                {$network_and_mask_as_found}{'mask'} = "$mask";
+
+            #How many hosts in the possible matches list
+            $found_networks_and_hosts_ref->{'networks'}
+                {$network_and_mask_as_found}{'number_of_hosts'}
+                = "$number_of_hosts";
 
             #Default having no specific route for this network
             $found_networks_and_hosts_ref->{'networks'}
-                {$network_and_mask}{'status'} = "via DEFAULT";
+                {$network_and_mask_as_found}{'status'} = "via DEFAULT";
 
-            #                 #All possible matches to the mask
-            #                 $found_networks_and_hosts_ref->{'networks'}
-            #                     { $network_and_mask }{'list_of_hosts'} = "@one";
+            #What did this network look like in the source text
+            $found_networks_and_hosts_ref->{'networks'}
+                {$network_and_mask_as_found}{'as_found'}
+                = "$network_and_mask_as_found";
+
+            #What did this network look like in the source text
+            $found_networks_and_hosts_ref->{'networks'}
+                {$network_and_mask_as_found}{'normalized'}
+                = "$network_and_mask_normalized";
+
+            ##All possible matches to the mask
+            #$found_networks_and_hosts_ref->{'networks'}{$network_and_mask_normalized }{'list_of_hosts'}
+            #	= "@one";
         }
         else {
             say
                 "$address $mask already exists!-------------------------------------------------------------------";
             $found_networks_and_hosts_ref->{'networks'}
-                {$network_and_mask}{'count'} += 1;
+                {$network_and_mask_as_found}{'count'} += 1;
         }
 
     }
@@ -567,7 +624,6 @@ sub parallel_process_networks {
             }
         );
     } 1 .. $max_threads;
-
     # Wait for all of the threads in @thr to terminate
     $_->join() for @thr;
 
@@ -588,13 +644,21 @@ sub parallel_process_networks {
             = $found_networks_and_hosts_ref->{'networks'}{$network_key}
             {'status'};
 
+        my $network_as_found
+            = $found_networks_and_hosts_ref->{'networks'}{$network_key}
+            {'as_found'};
+
+        my $network_normalized
+            = $found_networks_and_hosts_ref->{'networks'}{$network_key}
+            {'normalized'};
+
         #Color of the text depends on whether we found a specific route for this network (green)
         # or just a default (red)
         my $text_color = $status =~ /default/ix ? 'red' : 'lime';
 
         #Substitute it back into the original configuration text
         ${$scalar_of_lines_ref}
-            =~ s/$network_key/<font color = "$text_color">$network_key<\/font> [ $number_of_hosts hosts <font color = "$text_color">$status<\/font> ]/g;
+            =~ s/$network_as_found/<font color = "blue"> <font color = "$text_color">$network_as_found<\/font> [ $number_of_hosts hosts <font color = "$text_color">$status<\/font> ]<\/font>/g;
     }
 
 }
@@ -608,7 +672,7 @@ sub process_hosts_thread {
     # Get the thread id. Allows each thread to be identified.
     my $id = threads->tid();
 
-    #say "Thread $id: $host_ip";
+#     say "Thread $id: $host_ip";
 
     #Do a DNS lookup for the host
     my $name = pretty_addr($host_ip);
@@ -647,18 +711,23 @@ sub process_hosts_thread {
 sub process_networks_thread {
 
     #This is the body of the threads that run in parallel
-    my ( $network_and_mask, $found_networks_and_hosts_ref )
+    my ( $network_key, $found_networks_and_hosts_ref )
         = validate_pos( @_, { type => SCALAR }, { type => HASHREF }, );
 
     #Test if a route for this network even exists in %known_networks hash
 
     # Get the thread id. Allows each thread to be identified.
-    my $id = threads->tid();
+     my $id = threads->tid();
 
-    # say "Thread $id: $network_and_mask";
+#     say "Thread $id: $network_key";
 
     #Split into components
-    my ( $network, $network_mask ) = split( '/', $network_and_mask );
+    #my ( $network, $network_mask ) = split( '/', $network_key );
+    #Get components of this network
+    my $network = $found_networks_and_hosts_ref->{'networks'}{$network_key}
+        {'address'};
+    my $network_mask
+        = $found_networks_and_hosts_ref->{'networks'}{$network_key}{'mask'};
 
     my $acl_subnet;
 
@@ -714,7 +783,7 @@ sub process_networks_thread {
 
                     #Update the status of this network
                     $found_networks_and_hosts_ref->{'networks'}
-                        {$network_and_mask}{'status'} = "via $known_subnet";
+                        {$network_key}{'status'} = "via $known_subnet";
                 }
             }
             else {
