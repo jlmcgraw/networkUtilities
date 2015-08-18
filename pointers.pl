@@ -140,6 +140,12 @@
             (?<points_to> (?: $list_of_pointees_ref->{"prefix_list"} | \s )+ )           #This can be a list of things
                                                                                          #separated by whitespace
            /ixsm,
+    3 => qr/^ \s*
+            distribute-list \s+
+            prefix \s+ 
+            (?<points_to> (?: $list_of_pointees_ref->{"prefix_list"} | \s )+ )           #This can be a list of things
+                                                                                         #separated by whitespace
+           /ixsm,
     },
     'community_list'      => {},
     'as_path_access_list' => {
