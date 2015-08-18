@@ -1,0 +1,34 @@
+#These should match
+ permit ip any 10.151.0.0 0.0.255.255
+ permit ip any 10.151.0.0 0.0.255.255
+ permit ip any host 164.109.60.17
+ permit ip any host 164.109.60.17
+ ip address 10.255.248.51 255.255.255.255
+ ip address 10.255.248.51 255.255.255.255
+ network 10.90.243.48 0.0.0.15
+ network 10.90.40.0 mask 255.255.248.0
+ udp-jitter 10.255.228.5 40112 source-ip 10.255.225.173 num-packets 8 interval 60
+ip prefix-list DEFAULT seq 5 permit 0.0.0.0/0
+logging 135.89.143.18
+access-list 12 permit 158.82.0.134
+ntp server 135.89.143.2
+tacacs-server host 135.89.143.19
+ neighbor 10.240.2.17 remote-as 65503
+
+ip route 10.76.0.16 255.255.255.248 Null0 254 tag 155411 name USTOWWLUJNJ01R03_LAN_SEGMENT
+ permit ip 158.82.0.0 0.0.0.255 host 10.255.248.177
+ permit ip 10.240.2.64 0.0.0.63 10.78.192.16 0.0.0.7
+  20 permit ip 135.89.143.0/28 any 
+  ip address 10.240.2.66/26
+  ip address 10.242.2.66 /26
+ip prefix-list FROM_ATT_NETWORK seq 5 permit 158.82.192.0/18 le 32
+ip prefix-list TO_ATT_NETWORK_FAILURE_MODE seq 10 permit 158.82.192.0/21
+
+#These shouldn't match
+ip nat outside source static 10.240.131.20 32.21.152.33
+  ip router ospf 1 area 0.0.0.0
+  ip router ospf 1 area 0.0.0.0
+snmp-server view pointofview mib-2.25.2.3.1.4 included
+snmp-server view pointofview ciscoExperiment.13.1.1.1.1.12 included
+ permit tcp any any eq 445
+ permit tcp any any range 135 139
