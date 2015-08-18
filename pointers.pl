@@ -40,7 +40,7 @@
     10 => qr /^ \s* 
                 snmp-server \s+ 
                 community \s+ 
-                $valid_cisco_name \s+ 
+                $valid_cisco_name \s+
                 use-acl \s+
                 (?<points_to> $list_of_pointees_ref->{"acl"}) 
                 $
@@ -112,6 +112,12 @@
             mask \s+
             $RE{net}{IPv4} \s+
             route-map \s+
+            (?<points_to> $list_of_pointees_ref->{"route_map"} )
+            /ixsm,
+    7 => qr/^ \s* 
+            ip \s+
+            policy \s+ 
+            route-map \s+ 
             (?<points_to> $list_of_pointees_ref->{"route_map"} )
             /ixsm,
 
