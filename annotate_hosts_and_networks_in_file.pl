@@ -413,12 +413,12 @@ sub add_found_hosts_to_shared_hash {
                 = 'unknown';
             $found_networks_and_hosts_ref->{'hosts'}{$host_ip}{'status'}
                 = 'unknown';
-             $found_networks_and_hosts_ref->{'hosts'}{$host_ip}{'count'} = 1;
+            $found_networks_and_hosts_ref->{'hosts'}{$host_ip}{'count'} = 1;
 
         }
         else {
-#             say
-#             "$host_ip already exists!-------------------------------------------------------------------";
+            #             say
+            #             "$host_ip already exists!-------------------------------------------------------------------";
             $found_networks_and_hosts_ref->{'hosts'}{$host_ip}{'count'}++;
         }
 
@@ -519,17 +519,17 @@ sub add_found_networks_to_shared_hash {
             $found_networks_and_hosts_ref->{'networks'}
                 {$network_and_mask_as_found}{'normalized'}
                 = "$network_and_mask_normalized";
-            
+
             $found_networks_and_hosts_ref->{'networks'}
-                {$network_and_mask_as_found}{'count'}=1;
+                {$network_and_mask_as_found}{'count'} = 1;
 
             ##All possible matches to the mask
             #$found_networks_and_hosts_ref->{'networks'}{$network_and_mask_normalized }{'list_of_hosts'}
             #	= "@one";
         }
         else {
-#             say
-#                 "$address $mask already exists!-------------------------------------------------------------------";
+            #             say
+            #                 "$address $mask already exists!-------------------------------------------------------------------";
             $found_networks_and_hosts_ref->{'networks'}
                 {$network_and_mask_as_found}{'count'}++;
         }
@@ -1005,21 +1005,21 @@ sub dump_to_file {
 
 sub show_duplicates {
 
-    #Put the hosts we found into a hash
+    #Print any host/network that we saw more than once
     my ($found_networks_and_hosts_ref)
         = validate_pos( @_, { type => HASHREF }, );
-    
+
     say "Duplicates:";
     for my $key ( keys %{ $found_networks_and_hosts_ref->{'hosts'} } ) {
-        if ( $found_networks_and_hosts_ref->{'hosts'}{$key}{'count'} > 1 )
-        {
+        if ( $found_networks_and_hosts_ref->{'hosts'}{$key}{'count'} > 1 ) {
             say $key;
         }
     }
     for my $key ( keys %{ $found_networks_and_hosts_ref->{'networks'} } ) {
         if ( $found_networks_and_hosts_ref->{'networks'}{$key}{'count'} > 1 )
         {
-            say $found_networks_and_hosts_ref->{'networks'}{$key}{'normalized'};
+            say $found_networks_and_hosts_ref->{'networks'}{$key}
+                {'normalized'};
         }
     }
     return 1;
