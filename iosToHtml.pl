@@ -144,10 +144,10 @@ sub main {
         if ( !-e $Bin . 'host_info_hash.stored' ) {
             say "Creating host_info_hash";
 
-            my $status = system("./create_host_info_hashes.pl @ARGV");
+            my $status = system( $Bin . "create_host_info_hashes.pl @ARGV" );
 
             if ( ( $status >>= 8 ) != 0 ) {
-                die "Failed to run ./create_host_info_hashes.pl $!";
+                die "Failed to run " . $Bin . "create_host_info_hashes.pl $!";
             }
 
         }
