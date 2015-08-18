@@ -47,13 +47,9 @@ use Socket;
 use Config;
 use Data::Dumper;
 use Storable;
-
-# use File::Basename;
 use threads;
 use Thread::Queue;
 use threads::shared;
-
-# use Benchmark qw(:hireswallclock);
 use Getopt::Std;
 use FindBin '$Bin';
 use vars qw/ %opt /;
@@ -85,10 +81,7 @@ use Params::Validate qw(:all);
 use NetAddr::IP;
 use Net::Ping;
 use Hash::Merge qw(merge);
-
-#Smart_Comments=0 perl my_script.pl
-# to run without smart comments, and
-#Smart_Comments=1 perl my_script.pl
+#Smart_Comments=1 perl my_script.pl to show smart comments
 use Smart::Comments -ENV;
 
 #Use this to not print warnings
@@ -133,7 +126,7 @@ if ( $opt{p} ) {
     }
     else { say "Supplied invalid ping method"; }
 }
-say "Testing connectivity by method $ping_method";
+say "Testing connectivity by method: $ping_method";
 
 #The maximum number of simultaneous threads
 my $max_threads = 32;
@@ -169,7 +162,7 @@ if ( -e $Bin . "/$known_networks_filename" ) {
     $known_networks_ref = retrieve($known_networks_filename);
 }
 
-## known_networks_ref: $known_networks_ref
+##Smart_comment known_networks_ref: $known_networks_ref
 
 #Call main routine
 exit main(@ARGV);
@@ -247,20 +240,20 @@ sub main {
         #Print a simple html beginning to output
         print $filehandleHtml <<"END";
 <html>
-<head>
-<title>
-$filename
-</title>
-</head>
-<body>
-<pre>
+ <head>
+  <title>
+  $filename
+  </title>
+ </head>
+ <body>
+  <pre>
 END
         say {$filehandleHtml} $scalar_of_lines;
 
         #Close out the file with very basic html ending
         print $filehandleHtml <<"END";
-</pre>
-</body>
+  </pre>
+ </body>
 </html>
 END
         close $filehandleHtml;
@@ -280,9 +273,7 @@ sub find_hosts_and_nets_in_line {
     #Save unmodified version of the line
     my $original_line = $line;
 
-    #Smart comment
-    # $line
-
+    #Smart comment line: $line
     #     #For debugging
     #     if ( $line =~ /$ipv4AddressRegex/ ) {
     #
@@ -296,9 +287,6 @@ sub find_hosts_and_nets_in_line {
     my ( %hosts, %nets_mask, %nets_cidr );
 
     #BUG Make it work with something like "permit ip host 192.1681.100 10.0.0.0 0.255.255.255"
-
-    # #Remove all occurrences of "mask" to make net regex simpler
-    # $line =~ s/\s+ mask \s+/ /ixsmg;
 
     #Match what looks like IP and subnet/wildcard mask
     (@net_mask_matches) = (
@@ -330,15 +318,18 @@ sub find_hosts_and_nets_in_line {
         $line =~ s/$net_to_remove//g;
     }
 
-    # #Now normalize what networks we found
-    # #Convert all of @net_mask_matches "n.n.n.n m.m.m.m" -> "n.n.n.n/m.m.m.m"
+    #Now normalize what networks we found
+    #Convert all of @net_mask_matches "n.n.n.n m.m.m.m" -> "n.n.n.n/m.m.m.m"
     for my $key ( keys %temp_nets_mask ) {
 
-        #Key is unnormalized, clean it up
+        #Key is exactly what we found in text, clean it up
         my $normalized_key = $key;
+        #Remove "mask"
+        $normalized_key =~ s/ mask //ix;
+        #Replace spaces with /
+        $normalized_key =~ s/ \s+ /\//ix;
 
-        $normalized_key =~ s/ (\s+ mask \s+) | \s+ /\//ix;
-
+        #Store the normalized text
         $nets_mask{$key}{'normalized'} = $normalized_key;
     }
 
@@ -602,7 +593,7 @@ sub parallel_process_hosts {
 
         #Substitute it back into the config
         ${$scalar_of_lines_ref}
-            =~ s/([^\d] \s+ )$host_key (\s* [^\dm])/$1<font color = "blue"> <font color = "$text_color">$host_key<\/font>$text_to_insert<\/font>$2/ixg;
+            =~ s/([^\d] \s+ )$host_key (\s* [^\dm])/$1<font color = "blue"><font color = "$text_color">$host_key<\/font>$text_to_insert<\/font>$2/ixg;
     }
 }
 
@@ -672,7 +663,7 @@ sub parallel_process_networks {
 
         #Substitute it back into the original configuration text
         ${$scalar_of_lines_ref}
-            =~ s/$network_as_found/<font color = "blue"> <font color = "$text_color">$network_as_found<\/font> [ $number_of_hosts hosts <font color = "$text_color">$status<\/font> ]<\/font>/g;
+            =~ s/$network_as_found/<font color = "blue"><font color = "$text_color">$network_as_found<\/font> [ $number_of_hosts hosts <font color = "$text_color">$status<\/font> ]<\/font>/g;
     }
 
 }
