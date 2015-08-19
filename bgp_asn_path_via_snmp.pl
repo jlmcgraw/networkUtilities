@@ -55,6 +55,7 @@ $Data::Dumper::Sortkeys = sub {
 };
 
 #Additional modules
+use Modern::Perl '2014';
 use SNMP_Session;
 use BER;
 use NetAddr::IP;
@@ -85,7 +86,7 @@ die "Couldn't open SNMP session to $hostname"
     );
 
 #Print CSV header
-say join( ',', qw /dest_net preflen peer asPath lastAsn ip_addr_bigint/ );
+say "dest_net , preflen , peer , asPath , lastAsn , ip_addr_bigint";
 
 $session->map_table(
     [$bgp4PathAttrASPathSegment],
@@ -112,14 +113,11 @@ $session->map_table(
             $lastAsn = "self";
         }
 
-        
         my ( $ip_addr, $network_mask, $network_masklen, $ip_addr_bigint,
             $isRfc1918, $range );
 
         #Try to create a NetAddr object
         my $subnet = NetAddr::IP->new("$dest_net/$preflen");
-
-
 
         if ($subnet) {
             $ip_addr         = $subnet->addr;
@@ -141,7 +139,8 @@ $session->map_table(
         }
 
         #print out what we found for this network
-        say join( ',', qw/$dest_net $preflen $peer $asPath $lastAsn $ip_addr_bigint/ );
+        say
+            "$dest_net , $preflen , $peer , $asPath , $lastAsn , $ip_addr_bigint";
 
         #and save it in the hash
         $networks{ $dest_net . '/' . $preflen }{'network'}       = $dest_net;
