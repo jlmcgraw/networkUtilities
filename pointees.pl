@@ -107,8 +107,15 @@
 
     },
     
-'community_list' => { 1 =>
-        qr/(?<unique_id> ^ \s* ip \s+ community-list \s+ (?:standard|extended) (?<pointed_at> $valid_cisco_name) )/ixsm,
+'community_list' => { 
+    1 =>
+        qr/(?<unique_id> ^ \s* ip \s+ community-list \s+ (?:standard|extended) \s+ (?<pointed_at> $valid_cisco_name) )/ixsm,
+    2 =>
+        qr/(?<unique_id> ^ \s*
+                        ip \s+ 
+                        extcommunity-list \s+ 
+                        (?:standard|extended) \s+
+                        (?<pointed_at> $valid_cisco_name) )/ixsm,
     },
     
 'as_path_access_list' => {
@@ -264,3 +271,23 @@
             (\s+|$)
             /ixsm,
     },
+     'template_peer_policy' => {
+    1 => qr/(?<unique_id>
+                        ^ \s*
+                        template \s+
+                        peer-policy \s+
+                        (?<pointed_at> $valid_cisco_name)
+            )
+            (\s+|$)
+            /ixsm,
+    }, 
+     'template_peer_session' => {
+    1 => qr/(?<unique_id>
+                        ^ \s*
+                        template \s+
+                        peer-session \s+
+                        (?<pointed_at> $valid_cisco_name)
+            )
+            (\s+|$)
+            /ixsm,
+    }, 

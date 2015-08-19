@@ -147,10 +147,19 @@
                                                                                          #separated by whitespace
            /ixsm,
     },
-    'community_list'      => {},
+    'community_list'      => {
+        1 => qr/^ \s* 
+            match \s+ 
+            extcommunity \s+ 
+            (?<points_to> $list_of_pointees_ref->{"community_list"}) 
+            \s* $
+            /ixsm,
+
+    },
     'as_path_access_list' => {
     1 =>
         qr/^ \s* neighbor \s+ $RE{net}{IPv4} \s+ filter-list \s+ (?<points_to> $list_of_pointees_ref->{"as_path_access_list"}) \s+ (?:in|out)$/ixsm,
+    
     2 => qr/^ \s* 
             match \s+ 
             as-path \s+ 
@@ -303,6 +312,22 @@
         $valid_cisco_name \s+
         view \s+
         (?<points_to> (?: $list_of_pointees_ref->{"snmp_view"}) )
+        /ixsm,
+
+    },
+'template_peer_policy' => {
+    1 => qr/
+        inherit \s+
+        peer-policy \s+
+        (?<points_to> (?: $list_of_pointees_ref->{"template_peer_policy"}) )
+        /ixsm,
+
+    },
+'template_peer_session' => {
+    1 => qr/
+        inherit \s+
+        peer-session \s+
+        (?<points_to> (?: $list_of_pointees_ref->{"template_peer_session"}) )
         /ixsm,
 
     },
