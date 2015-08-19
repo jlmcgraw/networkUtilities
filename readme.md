@@ -1,16 +1,17 @@
 #Some small network related scripts
     Look at setup.sh for how to install dependencies etc.
 
-##ping_hosts_in_acl.pl
-	Parse a file containing an IOS ACL containing host and/or wildcard mask entries
-	and test reachability for each host and network mentioned in it.
+##annotate_hosts_and_networks_in_file.pl
+	Parse a text file (router config, ACL etc etc) containing host and/or wildcard mask entries
+	and test reachability for each host and network mentioned in it.  Create
+	simple HTML output with in-line color coded anotations for everything found (status, host count etc)
 	Can use a list of known BGP networks (see bgp_asn_path_via_snmp.pl) to test
-	whether a network is specifically known
+	whether a network is specifically known 
 	Still a work in progress
 
 ##iosToHtml.pl
 	Convert an IOS config file into very basic HTML, creating links between 
-	commands referenced lists and that list (eg access lists, route maps, 
+	commands referencing lists and that list (eg access lists, route maps, 
 	prefix lists etc etc).  
 
 	Very useful for trying to follow complex configurations
@@ -34,7 +35,7 @@
 	
 ##aclUsage.pl
 	Tally up overall ACL hits from Solarwinds Network Configuration manager 
-	output of Cisco IOS "show ip access-lists"
+	output of Cisco IOS "show ip access-lists" for multiple devices
 
 ##splitNcmOutputIntoFilePerDevice.pl
 	Split an input Solarwinds Network Configuration manager output log into a 
@@ -53,7 +54,7 @@
 
 ##parseRiverbedInterceptorRules.pl
 	Parse some rules from Riverbed Interceptor configurations into an Excel 
-	spreadsheet to reading/organizing them easier
+	spreadsheet to make reading/organizing them easier
 
 
 ##extractTcpStreams.sh

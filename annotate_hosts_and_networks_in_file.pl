@@ -81,6 +81,7 @@ use Params::Validate qw(:all);
 use NetAddr::IP;
 use Net::Ping;
 use Hash::Merge qw(merge);
+
 #Smart_Comments=1 perl my_script.pl to show smart comments
 use Smart::Comments -ENV;
 
@@ -137,6 +138,7 @@ if ( $opt{t} ) {
     say "Using $max_threads threads";
 }
 
+#Does the user want to show duplicates?
 my $should_show_duplicates = $opt{d};
 
 #Where known networks are stored (created by bgp_asn_path_via_snmp.pl)
@@ -248,6 +250,8 @@ sub main {
  <body>
   <pre>
 END
+
+        #The html-ized output
         say {$filehandleHtml} $scalar_of_lines;
 
         #Close out the file with very basic html ending
@@ -273,7 +277,7 @@ sub find_hosts_and_nets_in_line {
     #Save unmodified version of the line
     my $original_line = $line;
 
-    #Smart comment line: $line
+    ##Smart comment line: $line
     #     #For debugging
     #     if ( $line =~ /$ipv4AddressRegex/ ) {
     #
@@ -293,8 +297,8 @@ sub find_hosts_and_nets_in_line {
         $line =~ / 
                 \s+ 
                 ( $ipv4AddressRegex \s+ 
-				(?: mask \s+)? 
-				$ipv4AddressRegex)
+                (?: mask \s+)? 
+		$ipv4AddressRegex)
                 /ixmsg
     );
 
@@ -324,8 +328,10 @@ sub find_hosts_and_nets_in_line {
 
         #Key is exactly what we found in text, clean it up
         my $normalized_key = $key;
+
         #Remove "mask"
         $normalized_key =~ s/ mask //ix;
+
         #Replace spaces with /
         $normalized_key =~ s/ \s+ /\//ix;
 
@@ -365,20 +371,8 @@ sub find_hosts_and_nets_in_line {
     #Populate hosts hash from array of matches
     %hosts = map { $_ => 1 } @host_matches;
 
-    #     say $original_line;
-
-    #
-    #     print Dumper \%nets_mask if \%nets_mask;
-    #     print Dumper \%nets_cidr if \%nets_cidr;
-    #     say @host_matches if @host_matches;
-    #
     #Merge the network hashes
     my $merged_networks_hash_ref = merge( \%nets_mask, \%nets_cidr );
-
-    #     print Dumper $merged_networks_hash_ref if $merged_networks_hash_ref;
-
-    #     #Combine the two network arrays into one
-    #     push( @net_matches, @net_cidr_matches, @net_mask_matches );
 
     #Return two hash references
     return ( \%hosts, $merged_networks_hash_ref );
@@ -408,8 +402,7 @@ sub add_found_hosts_to_shared_hash {
 
         }
         else {
-            #             say
-            #             "$host_ip already exists!-------------------------------------------------------------------";
+            #Increment the count of times we've seen this object
             $found_networks_and_hosts_ref->{'hosts'}{$host_ip}{'count'}++;
         }
 
@@ -514,13 +507,13 @@ sub add_found_networks_to_shared_hash {
             $found_networks_and_hosts_ref->{'networks'}
                 {$network_and_mask_as_found}{'count'} = 1;
 
-            ##All possible matches to the mask
+            #All possible matches to the mask
+            #Could be huge so it's commented out for now
             #$found_networks_and_hosts_ref->{'networks'}{$network_and_mask_normalized }{'list_of_hosts'}
             #	= "@one";
         }
         else {
-            #             say
-            #                 "$address $mask already exists!-------------------------------------------------------------------";
+            #Increment the count of times we've seen this object
             $found_networks_and_hosts_ref->{'networks'}
                 {$network_and_mask_as_found}{'count'}++;
         }
@@ -584,12 +577,8 @@ sub parallel_process_hosts {
         my $text_color = $host_status eq 'UP' ? 'lime' : 'red';
 
         #What to add
+        #If there's no DNS entry for this host don't add anything
         my $text_to_insert = $host_name eq $host_key ? '' : " [$host_name]";
-
-        #         #If there's no DNS entry for this host don't include IP in substitution
-        #         if ( $host_name eq $host_key ) {
-        #             $text_to_insert = "$host_status";
-        #         }
 
         #Substitute it back into the config
         ${$scalar_of_lines_ref}
@@ -633,7 +622,7 @@ sub parallel_process_networks {
     $_->join() for @thr;
 
     #Smart comment for debugging
-    # ## %found_networks_and_hosts;
+    ## found_networks_and_hosts: %found_networks_and_hosts;
 
     #Substitute info we found back into the lines of the ACL
     foreach my $network_key (
@@ -675,7 +664,7 @@ sub process_hosts_thread {
         = validate_pos( @_, { type => SCALAR }, { type => HASHREF }, );
 
     # Get the thread id. Allows each thread to be identified.
-    my $id = threads->tid();
+    #my $id = threads->tid();
 
     #     say "Thread $id: $host_ip";
 
@@ -716,21 +705,20 @@ sub process_hosts_thread {
 sub process_networks_thread {
 
     #This is the body of the threads that run in parallel
+    #Test if a route for this network even exists in %known_networks hash
+    #Other tests could be added here (eg Who owns this block?)
     my ( $network_key, $found_networks_and_hosts_ref )
         = validate_pos( @_, { type => SCALAR }, { type => HASHREF }, );
 
-    #Test if a route for this network even exists in %known_networks hash
-
     # Get the thread id. Allows each thread to be identified.
-    my $id = threads->tid();
+    #my $id = threads->tid();
 
-    #     say "Thread $id: $network_key";
+    #say "Thread $id: $network_key";
 
-    #Split into components
-    #my ( $network, $network_mask ) = split( '/', $network_key );
-    #Get components of this network
+    #Get address and mask components
     my $network = $found_networks_and_hosts_ref->{'networks'}{$network_key}
         {'address'};
+
     my $network_mask
         = $found_networks_and_hosts_ref->{'networks'}{$network_key}{'mask'};
 
@@ -814,6 +802,7 @@ sub usage {
     say "";
     say "       -p tcp/udp/icmp  Method to use for testing host reachability";
     say "       -t <number>      Maximum number of threads to use";
+    say "       -d               Print items mentioned more than once";
     say "";
     exit 1;
 }
