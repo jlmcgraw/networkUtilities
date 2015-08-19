@@ -73,10 +73,41 @@ my $bgp4PathAttrASPathSegment = [ 1, 3, 6, 1, 2, 1, 15, 6, 1, 5 ];
 my $hostname  = $ARGV[0] || usage();
 my $community = $ARGV[1] || "public";
 
-my $session;
+# my $session;
 my %networks;
 my %bgp_asn;
+my $local_asn;
 
+#Using two sets of SNMP libraries, ugly hack for now
+use Net::SNMP;
+
+my $OID_sysUpTime = '1.3.6.1.2.1.1.3.0';
+my $bgpLocalAs    = '1.3.6.1.2.1.15.2.0';
+
+my ( $session, $error ) = Net::SNMP->session(
+    -hostname  => $hostname || 'localhost',
+    -community => $community || 'public',
+);
+
+if ( !defined $session ) {
+    printf "ERROR: %s.\n", $error;
+    exit 1;
+}
+
+my $result = $session->get_request( -varbindlist => [$bgpLocalAs], );
+
+if ( !defined $result ) {
+    printf "ERROR: %s.\n", $session->error();
+    $session->close();
+    exit 1;
+}
+
+#Get the local ASN
+$local_asn = $result->{$bgpLocalAs};
+
+$session->close();
+
+#SNMP_session after this point
 die "Couldn't open SNMP session to $hostname"
     unless (
     $session = (
@@ -101,7 +132,7 @@ $session->map_table(
 			  ( [0-9]+ \. [0-9]+ \. [0-9]+ \. [0-9]+ )/x
         );
 
-        grep ( defined $_ && ( $_ = pretty_print $_), ($as_path_segment) );
+#         grep ( defined $_ && ( $_ = pretty_print $_), ($as_path_segment) );
 
         my ($asPath) = pretty_as_path($as_path_segment);
 
@@ -111,7 +142,7 @@ $session->map_table(
 
             #There won't be an ASN for routes that this device is advertising,
             #so let's insert something
-            $lastAsn = "self";
+            $lastAsn = "$local_asn";
         }
 
         my ( $ip_addr, $network_mask, $network_masklen, $ip_addr_bigint,
@@ -196,13 +227,14 @@ sub pretty_as_path () {
 
         $start += 2;
         if ( $length == 0 ) {
-            print "------------------------------------------------------\n";
+            print
+                "------Locally advertised network------------------------------------------------\n";
 
             # next;
         }
         ( $pretty_ases, $start ) = pretty_ases( $length, $aps, $start );
 
-        $result .= ( $type == 1 ? "SET " : $type == 2 ? "" : "type $type??" )
+        $result .= ( $type == 1 ? "" : $type == 2 ? "" : "type $type??" )
             . $pretty_ases;
 
     }
