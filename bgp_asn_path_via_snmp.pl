@@ -29,6 +29,7 @@ use warnings;
 use Socket;
 use Getopt::Long;
 use FindBin '$Bin';
+
 #Use a local lib directory so users don't need to install modules
 use lib "$FindBin::Bin/lib";
 use Params::Validate qw(:all);
@@ -56,6 +57,7 @@ $Data::Dumper::Sortkeys = sub {
 #Additional modules
 use SNMP_Session;
 use BER;
+use NetAddr::IP;
 
 sub usage ();
 
@@ -83,7 +85,7 @@ die "Couldn't open SNMP session to $hostname"
     );
 
 #Print CSV header
-print "dest_net, preflen, peer, asPath, lastAsn\n";
+say join( ',', qw /dest_net preflen peer asPath lastAsn ip_addr_bigint/ );
 
 $session->map_table(
     [$bgp4PathAttrASPathSegment],
@@ -110,8 +112,36 @@ $session->map_table(
             $lastAsn = "self";
         }
 
+        
+        my ( $ip_addr, $network_mask, $network_masklen, $ip_addr_bigint,
+            $isRfc1918, $range );
+
+        #Try to create a NetAddr object
+        my $subnet = NetAddr::IP->new("$dest_net/$preflen");
+
+
+
+        if ($subnet) {
+            $ip_addr         = $subnet->addr;
+            $network_mask    = $subnet->mask;
+            $network_masklen = $subnet->masklen;
+            $ip_addr_bigint  = $subnet->bigint();
+            $isRfc1918       = $subnet->is_rfc1918();
+            $range           = $subnet->range();
+
+            $networks{ $dest_net . '/' . $preflen }{'ip_addr'} = $ip_addr;
+            $networks{ $dest_net . '/' . $preflen }{'network_mask'}
+                = $network_mask;
+            $networks{ $dest_net . '/' . $preflen }{'network_masklen'}
+                = $network_masklen;
+            $networks{ $dest_net . '/' . $preflen }{'ip_addr_bigint'}
+                = $ip_addr_bigint;
+            $networks{ $dest_net . '/' . $preflen }{'isRfc1918'} = $isRfc1918;
+            $networks{ $dest_net . '/' . $preflen }{'range'}     = $range;
+        }
+
         #print out what we found for this network
-        print "$dest_net, $preflen, $peer, $asPath, $lastAsn\n";
+        say join( ',', qw/$dest_net $preflen $peer $asPath $lastAsn $ip_addr_bigint/ );
 
         #and save it in the hash
         $networks{ $dest_net . '/' . $preflen }{'network'}       = $dest_net;
