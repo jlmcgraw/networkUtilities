@@ -25,9 +25,10 @@
 
 #TODO
 # Normalize how subnets are shown in config
-# Process all hosts in subnets.  Should probably limit the size of subnets processed
-# Quit processing a subnet on the first active response since that indicates
-#   the subnet is still valid
+# Process all hosts in subnets.  
+#   Should probably limit the size of subnets processed
+#   Quit processing a subnet on the first active response since that indicates
+#       the subnet is still valid
 # IPv6
 # Groups
 # More config formats
@@ -664,7 +665,7 @@ sub process_hosts_thread {
         = validate_pos( @_, { type => SCALAR }, { type => HASHREF }, );
 
     # Get the thread id. Allows each thread to be identified.
-    #my $id = threads->tid();
+    my $id = threads->tid();
 
     #     say "Thread $id: $host_ip";
 
@@ -711,7 +712,7 @@ sub process_networks_thread {
         = validate_pos( @_, { type => SCALAR }, { type => HASHREF }, );
 
     # Get the thread id. Allows each thread to be identified.
-    #my $id = threads->tid();
+    my $id = threads->tid();
 
     #say "Thread $id: $network_key";
 
