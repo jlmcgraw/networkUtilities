@@ -123,9 +123,9 @@ $session->map_table(
             $ip_addr         = $subnet->addr;
             $network_mask    = $subnet->mask;
             $network_masklen = $subnet->masklen;
-            $ip_addr_bigint  = $subnet->bigint();
-            $isRfc1918       = $subnet->is_rfc1918();
-            $range           = $subnet->range();
+            $ip_addr_bigint  = $subnet->numeric();
+            $isRfc1918       = $subnet->is_rfc1918;
+            $range           = $subnet->range;
 
             $networks{ $dest_net . '/' . $preflen }{'ip_addr'} = $ip_addr;
             $networks{ $dest_net . '/' . $preflen }{'network_mask'}
