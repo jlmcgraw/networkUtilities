@@ -132,7 +132,7 @@ $session->map_table(
 			  ( [0-9]+ \. [0-9]+ \. [0-9]+ \. [0-9]+ )/x
         );
 
-#         grep ( defined $_ && ( $_ = pretty_print $_), ($as_path_segment) );
+        grep ( defined $_ && ( $_ = pretty_print $_), ($as_path_segment) );
 
         my ($asPath) = pretty_as_path($as_path_segment);
 
