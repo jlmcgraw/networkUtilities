@@ -135,7 +135,7 @@ sub main {
     #load regexes for the items that are pointed at ("pointees")
     my %pointees = do $Bin . 'pointees.pl';
 
-    my $host_info_ref;
+    my $host_info_ref = {};
 
     #Try to retrieve host_info_hash if user wants to try linking between files
     if ($should_link_externally) {
