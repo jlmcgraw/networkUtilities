@@ -790,6 +790,8 @@ sub process_networks_thread {
 
         say
             "Network w/ wildcard mask: Couldn't create subnet for $network mask $network_mask";
+             $found_networks_and_hosts_ref->{'networks'}
+                        {$network_key}{'status'} = "NON_CONTIGOUS_MASK";
     }
 
     #Test how many of this network's hosts respond
