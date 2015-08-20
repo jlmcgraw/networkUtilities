@@ -734,7 +734,7 @@ sub process_networks_thread {
     else {
         #Assume it's a wildcard_mask
         #This little bit of magic inverts the wildcard mask to a netmask.  Copied from somewhere on the net
-        #Note that it doesn't work with non contigous masks
+        #Note that it doesn't work with non contiguous masks
         my $mask_wild_dotted = $network_mask;
         my $mask_wild_packed = pack 'C4', split /\./, $mask_wild_dotted;
 
@@ -791,7 +791,7 @@ sub process_networks_thread {
         say
             "Network w/ wildcard mask: Couldn't create subnet for $network mask $network_mask";
              $found_networks_and_hosts_ref->{'networks'}
-                        {$network_key}{'status'} = "NON_CONTIGOUS_MASK";
+                        {$network_key}{'status'} = "NON_CONTIGUOUS_MASK";
     }
 
     #Test how many of this network's hosts respond
