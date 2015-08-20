@@ -426,7 +426,7 @@ sub add_found_networks_to_shared_hash {
             = split( '/',
             $nets_in_line_ref->{$network_and_mask_as_found}{'normalized'} );
 
-        my ( $possible_matches_ref, @one, $number_of_hosts );
+        my ( $all_possible_matches_ref, $ranged_possible_matches_ref, @one, $number_of_hosts );
 
         #Does this look like a subnet mask?
         if ( is_subnet_mask($mask) ) {
@@ -456,18 +456,15 @@ sub add_found_networks_to_shared_hash {
         else {
             #We're guessing this is a wildcard mask
             #Get a list of all addresses that match this host/wildcard_mask combination
-            $possible_matches_ref = list_of_matches_acl( $address, $mask );
+            ($all_possible_matches_ref, $ranged_possible_matches_ref) = list_of_matches_acl( $address, $mask );
 
             #Save that array reference to another array
-            @one = @{$possible_matches_ref};
+            #We'll use ranges for now
+            #@one = @{$all_possible_matches_ref};
+             @one = @{$ranged_possible_matches_ref};
 
             #Get a count of how many elements in that array
-            $number_of_hosts = @{$possible_matches_ref};
-
-            #             #empty the list if it's too big
-            #             if ($number_of_hosts > 64) {
-            #                 @one = ();
-            #                 }
+            $number_of_hosts = @{$all_possible_matches_ref};
         }
 
         #Make sure this new key is shared
@@ -508,10 +505,9 @@ sub add_found_networks_to_shared_hash {
             $found_networks_and_hosts_ref->{'networks'}
                 {$network_and_mask_as_found}{'count'} = 1;
 
-            #All possible matches to the mask
-            #Could be huge so it's commented out for now
-            #$found_networks_and_hosts_ref->{'networks'}{$network_and_mask_normalized }{'list_of_hosts'}
-            #	= "@one";
+            #Matches to the mask (as a range or individual hosts)
+            $found_networks_and_hosts_ref->{'networks'}
+                {$network_and_mask_as_found }{'list_of_hosts'} = "@one";
         }
         else {
             #Increment the count of times we've seen this object
@@ -630,7 +626,7 @@ sub parallel_process_networks {
         keys %{ $found_networks_and_hosts_ref->{'networks'} } )
     {
 
-        #Get the info we found for this host
+        #Get the info we found for this network
         my $number_of_hosts
             = $found_networks_and_hosts_ref->{'networks'}{$network_key}
             {'number_of_hosts'};
@@ -646,6 +642,10 @@ sub parallel_process_networks {
         my $network_normalized
             = $found_networks_and_hosts_ref->{'networks'}{$network_key}
             {'normalized'};
+            
+        my $list_of_hosts
+            = $found_networks_and_hosts_ref->{'networks'}{$network_key}
+            {'list_of_hosts'};
 
         #Color of the text depends on whether we found a specific route for this network (green)
         # or just a default (red)
@@ -653,7 +653,7 @@ sub parallel_process_networks {
 
         #Substitute it back into the original configuration text
         ${$scalar_of_lines_ref}
-            =~ s/$network_as_found/<font color = "blue"><font color = "$text_color">$network_as_found<\/font> [ $number_of_hosts hosts <font color = "$text_color">$status<\/font> ]<\/font>/g;
+            =~ s/$network_as_found/<font color = "blue"><font color = "$text_color">$network_as_found<\/font> [ $number_of_hosts hosts <font color = "$text_color">$status<\/font>, matches $list_of_hosts ]<\/font>/g;
     }
 
 }
@@ -841,12 +841,12 @@ sub list_of_matches_acl {
         = validate_pos( @_, { type => SCALAR }, { type => SCALAR }, );
 
     #The array of possible matches
-    my @potential_matches;
+    my (@all_matches, @ranged_matches);
 
     #Abort if this looks to be a subnet mask
     if ( is_subnet_mask($acl_mask) ) {
         say "$acl_mask doesn't appear to be a wildcard mask";
-        return \@potential_matches;
+        return \@all_matches;
     }
 
     #Split the incoming parameters into 4 octets
@@ -881,7 +881,15 @@ sub list_of_matches_acl {
     #Copy the referenced array into a new one
     my @four = @{$matches_octet_4_ref};
 
-    #Assemble the list of possible matches
+    #This generates ranges rather than ALL individual matches
+    my $ranged_octet1 = scalar list2ranges(@one);
+    my $ranged_octet2 = scalar list2ranges(@two);
+    my $ranged_octet3 = scalar list2ranges(@three);
+    my $ranged_octet4 = scalar list2ranges(@four);
+    
+    push( @ranged_matches, "$ranged_octet1.$ranged_octet2.$ranged_octet3.$ranged_octet4" );
+    
+    #Assemble the list of ALL possible IP addresses that match
     #Iterating over all options for each octet
     foreach my $octet1 (@one) {
         foreach my $octet2 (@two) {
@@ -890,13 +898,13 @@ sub list_of_matches_acl {
 
                     #Save this potential match to the array of matches
                     #say "$octet1.$octet2.$octet3.$octet4"
-                    push( @potential_matches,
+                    push( @all_matches,
                         "$octet1.$octet2.$octet3.$octet4" );
                 }
             }
         }
     }
-    return \@potential_matches;
+    return \@all_matches, \@ranged_matches;
 }
 
 sub test_octet {
@@ -1004,4 +1012,27 @@ sub show_duplicates {
         }
     }
     return 1;
+}
+
+sub list2ranges {
+    #From: http://www.perlmonks.org/?node_id=175558
+    #Condense a list of numbers down to ranges
+    my @list    = sort { $a <=> $b } @_;
+    my $current = $list[0];
+    my @ranges  = ($current);
+    for ( my $i = 1; $i <= @list; $i++ ) {
+        if (   $list[$i] && $list[$i] - $current == 1
+            || $list[$i]
+            && $list[$i] - $current < 1
+            && substr( $list[$i], 0, -1 ) eq substr( $current, 0, -1 ) )
+        {
+            $current = $list[$i];
+        }
+        else {
+            $ranges[-1] .= " - $current" if $ranges[-1] != $current;
+            $list[$i] && push @ranges, $current = "$list[$i]";
+        }
+    }
+
+    return wantarray ? @ranges : join( ", ", @ranges );
 }
