@@ -92,8 +92,6 @@
             route-map \s+ 
             (?<points_to> $list_of_pointees_ref->{"route_map"})
             /ixsm,
-    4 =>
-        qr/^ \s* neighbor \s+ $RE{net}{IPv4} \s+ default-originate \s+ route-map \s+ (?<points_to> $list_of_pointees_ref->{"route_map"})/ixsm,
 
     #NXOS
     4 => qr/^ \s* 
@@ -127,7 +125,8 @@
             route-map \s+ 
             (?<points_to> $list_of_pointees_ref->{"route_map"} )
             /ixsm,
-
+    8 =>
+        qr/^ \s* neighbor \s+ $RE{net}{IPv4} \s+ default-originate \s+ route-map \s+ (?<points_to> $list_of_pointees_ref->{"route_map"})/ixsm,
     },
     'prefix_list' => {
     1 =>
