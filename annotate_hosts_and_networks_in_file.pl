@@ -189,14 +189,18 @@ if ( -e $Bin . "/$known_networks_filename" ) {
 
 ##Smart_comment known_networks_ref: $known_networks_ref
 
-if ( $Config{archname} =~ m/win/ix ) {
-
-}
-
 #Call main routine
 exit main(@ARGV);
 
 sub main {
+
+    #A hash to collect data in, shared for multi-threading
+    #Accumulated for every file so we don't work on a given host or network more than once
+    my %found_networks_and_hosts : shared;
+
+    # Make sure the two base keys are shared for multi-threading
+    $found_networks_and_hosts{'hosts'}    = &share( {} );
+    $found_networks_and_hosts{'networks'} = &share( {} );
 
     #Loop through every file provided on command line
     foreach my $filename (@ARGV) {
@@ -213,13 +217,6 @@ sub main {
 
         #Remove newlines from whole array
         chomp(@array_of_lines);
-
-        #A hash to collect data in, shared for multi-threading
-        my %found_networks_and_hosts : shared;
-
-        # Make sure the two base keys are shared for multi-threading
-        $found_networks_and_hosts{'hosts'}    = &share( {} );
-        $found_networks_and_hosts{'networks'} = &share( {} );
 
         #Process each line of the file separately
         foreach my $line (@array_of_lines) {
@@ -424,7 +421,7 @@ sub add_found_hosts_to_shared_hash {
             $found_networks_and_hosts_ref->{'hosts'}{$host_ip}{'dns_name'}
                 = 'unknown';
             $found_networks_and_hosts_ref->{'hosts'}{$host_ip}{'status'}
-                = 'unknown';
+                = 'untested';
             $found_networks_and_hosts_ref->{'hosts'}{$host_ip}{'count'} = 1;
 
         }
@@ -561,7 +558,14 @@ sub parallel_process_hosts {
     my $q = Thread::Queue->new();
 
     # Queue up all of the hosts for the threads
-    $q->enqueue($_) for keys %{ $found_networks_and_hosts_ref->{'hosts'} };
+    foreach my $host_ip ( keys %{ $found_networks_and_hosts_ref->{'hosts'} } )
+    {
+        #Don't work on this host again if we already have
+        next
+            unless $found_networks_and_hosts_ref->{'hosts'}{$host_ip}
+            {'status'} eq 'untested';
+        $q->enqueue($host_ip);
+    }
 
     #Nothing else to queue
     $q->end();
@@ -622,8 +626,20 @@ sub parallel_process_networks {
     # A new empty queue
     my $q = Thread::Queue->new();
 
+    # # Queue up all of the networks for the threads
+    # $q->enqueue($_) for keys %{ $found_networks_and_hosts_ref->{'networks'} };
+
     # Queue up all of the networks for the threads
-    $q->enqueue($_) for keys %{ $found_networks_and_hosts_ref->{'networks'} };
+    foreach my $network_key (
+        keys %{ $found_networks_and_hosts_ref->{'networks'} } )
+    {
+        #Don't work on this network again if we already have
+        next
+            if
+            exists $found_networks_and_hosts_ref->{'networks'}{$network_key}
+            {'tested'};
+        $q->enqueue($network_key);
+    }
 
     #No more data to queue
     $q->end();
@@ -819,6 +835,8 @@ sub process_networks_thread {
                     "Network w/ wildcard mask: Couldn't create subnet for $known_network";
             }
         }
+        $found_networks_and_hosts_ref->{'networks'}{$network_key}{'tested'}
+            = 1;
     }
     else {
 
@@ -1076,8 +1094,6 @@ sub list2ranges {
 
 sub format_number_list {
 
-    #Create a range from a list of numbers
-    #eg 1-5 instead of 1,2,3,4,5
     #From http://perl.plover.com/qotw/r/solution/006
     my @output;
     while (@_) {
