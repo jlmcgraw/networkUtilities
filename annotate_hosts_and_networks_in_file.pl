@@ -25,7 +25,7 @@
 
 #TODO
 # Normalize how subnets are shown in config
-# Process all hosts in subnets.  
+# Process all hosts in subnets.
 #   Should probably limit the size of subnets processed
 #   Quit processing a subnet on the first active response since that indicates
 #       the subnet is still valid
@@ -88,6 +88,23 @@ use Smart::Comments -ENV;
 
 #Use this to not print warnings
 #no if $] >= 5.018, warnings => "experimental";
+
+if ( exists $ENV{GATEWAY_INTERFACE} ) {
+    say "Called from CGI";
+    print <<"EOF";
+<HTML>
+
+<HEAD>
+<TITLE>Hello, world!</TITLE>
+</HEAD>
+
+<BODY>
+<H1>Hello, world!</H1>
+</BODY>
+
+</HTML>
+EOF
+}
 
 #Define the valid command line options
 my $opt_string = 'dp:t:';
@@ -426,7 +443,8 @@ sub add_found_networks_to_shared_hash {
             = split( '/',
             $nets_in_line_ref->{$network_and_mask_as_found}{'normalized'} );
 
-        my ( $all_possible_matches_ref, $ranged_possible_matches_ref, @one, $number_of_hosts );
+        my ( $all_possible_matches_ref, $ranged_possible_matches_ref, @one,
+            $number_of_hosts );
 
         #Does this look like a subnet mask?
         if ( is_subnet_mask($mask) ) {
@@ -456,12 +474,13 @@ sub add_found_networks_to_shared_hash {
         else {
             #We're guessing this is a wildcard mask
             #Get a list of all addresses that match this host/wildcard_mask combination
-            ($all_possible_matches_ref, $ranged_possible_matches_ref) = list_of_matches_acl( $address, $mask );
+            ( $all_possible_matches_ref, $ranged_possible_matches_ref )
+                = list_of_matches_acl( $address, $mask );
 
             #Save that array reference to another array
             #We'll use ranges for now
             #@one = @{$all_possible_matches_ref};
-             @one = @{$ranged_possible_matches_ref};
+            @one = @{$ranged_possible_matches_ref};
 
             #Get a count of how many elements in that array
             $number_of_hosts = @{$all_possible_matches_ref};
@@ -507,7 +526,7 @@ sub add_found_networks_to_shared_hash {
 
             #Matches to the mask (as a range or individual hosts)
             $found_networks_and_hosts_ref->{'networks'}
-                {$network_and_mask_as_found }{'list_of_hosts'} = "@one";
+                {$network_and_mask_as_found}{'list_of_hosts'} = "@one";
         }
         else {
             #Increment the count of times we've seen this object
@@ -642,7 +661,7 @@ sub parallel_process_networks {
         my $network_normalized
             = $found_networks_and_hosts_ref->{'networks'}{$network_key}
             {'normalized'};
-            
+
         my $list_of_hosts
             = $found_networks_and_hosts_ref->{'networks'}{$network_key}
             {'list_of_hosts'};
@@ -741,8 +760,14 @@ sub process_networks_thread {
         my $mask_norm_packed = ~$mask_wild_packed;
         my $mask_norm_dotted = join '.', unpack 'C4', $mask_norm_packed;
 
+        #Get the prefix length of this wildcard mask.
+        # Works with non-contiguous masks
+        my ( $prefix_length, $prefix_length_long )
+            = find_longest_subnet_mask_in_wildcard_mask($network_mask);
+
         #Create a new subnet from captured info
-        $acl_subnet = NetAddr::IP->new("$network/$mask_norm_dotted");
+        #         $acl_subnet = NetAddr::IP->new("$network/$mask_norm_dotted");
+        $acl_subnet = NetAddr::IP->new("$network/$prefix_length");
     }
 
     #If we could create the subnet...
@@ -790,8 +815,8 @@ sub process_networks_thread {
 
         say
             "Network w/ wildcard mask: Couldn't create subnet for $network mask $network_mask";
-             $found_networks_and_hosts_ref->{'networks'}
-                        {$network_key}{'status'} = "NON_CONTIGUOUS_MASK";
+        $found_networks_and_hosts_ref->{'networks'}{$network_key}{'status'}
+            = "NON_CONTIGUOUS_MASK";
     }
 
     #Test how many of this network's hosts respond
@@ -843,7 +868,7 @@ sub list_of_matches_acl {
         = validate_pos( @_, { type => SCALAR }, { type => SCALAR }, );
 
     #The array of possible matches
-    my (@all_matches, @ranged_matches);
+    my ( @all_matches, @ranged_matches );
 
     #Abort if this looks to be a subnet mask
     if ( is_subnet_mask($acl_mask) ) {
@@ -888,9 +913,10 @@ sub list_of_matches_acl {
     my $ranged_octet2 = scalar list2ranges(@two);
     my $ranged_octet3 = scalar list2ranges(@three);
     my $ranged_octet4 = scalar list2ranges(@four);
-    
-    push( @ranged_matches, "$ranged_octet1.$ranged_octet2.$ranged_octet3.$ranged_octet4" );
-    
+
+    push( @ranged_matches,
+        "$ranged_octet1.$ranged_octet2.$ranged_octet3.$ranged_octet4" );
+
     #Assemble the list of ALL possible IP addresses that match
     #Iterating over all options for each octet
     foreach my $octet1 (@one) {
@@ -900,8 +926,7 @@ sub list_of_matches_acl {
 
                     #Save this potential match to the array of matches
                     #say "$octet1.$octet2.$octet3.$octet4"
-                    push( @all_matches,
-                        "$octet1.$octet2.$octet3.$octet4" );
+                    push( @all_matches, "$octet1.$octet2.$octet3.$octet4" );
                 }
             }
         }
@@ -1017,6 +1042,7 @@ sub show_duplicates {
 }
 
 sub list2ranges {
+
     #From: http://www.perlmonks.org/?node_id=175558
     #Condense a list of numbers down to ranges
     my @list    = sort { $a <=> $b } @_;
@@ -1037,4 +1063,48 @@ sub list2ranges {
     }
 
     return wantarray ? @ranges : join( ", ", @ranges );
+}
+
+sub format_number_list {
+
+    #From http://perl.plover.com/qotw/r/solution/006
+    my @output;
+    while (@_) {
+        my $range_start = shift;
+        my $range_end   = $range_start;
+
+        # check if the numbers go in sequence from here
+        $range_end = shift while ( @_ && $_[0] == $range_end + 1 );
+
+        # ...and add to output accordingly
+        if ( $range_start == $range_end ) { push @output, $range_start; }
+        else { push @output, "$range_start-$range_end"; }
+    }
+    join ", ", @output;
+}
+
+sub find_longest_subnet_mask_in_wildcard_mask {
+
+    #This is dumb, I know, but I was having trouble with a smarter solution
+    #Find first unset bit after finding one set bit
+
+    my $mask = shift;
+
+    my $binary_rep;
+    my @octets = split /\./, $mask;
+    foreach my $octet (@octets) {
+
+        #Just make one long binary string out of the octets
+        $binary_rep .= sprintf( "%08b", $octet );
+    }
+
+    #Number of zeros at the beginning of string
+    my ($zeroes) = $binary_rep =~ /^([0]+)/;
+    my $prefix_length = length($zeroes);
+
+    #Bit position of first 0 after a 1
+    my ($zeroes_ones) = $binary_rep =~ /^([0]+[1]+)/;
+    my $prefix_length_long = length($zeroes_ones);
+
+    return ( $prefix_length, $prefix_length_long );
 }

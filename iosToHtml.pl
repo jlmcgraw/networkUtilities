@@ -21,6 +21,9 @@
 #-------------------------------------------------------------------------------
 
 #TODO
+#   Make this work as CGI
+#   Hightlight missing pointees in red?
+#   Maybe should regenerate overall host info hash each run?
 #   Yes, I'm reading through the file twice.  I haven't reached the point
 #       of really trying to optimize anything
 #   Add a unit to numbers we make human readable?
@@ -83,8 +86,26 @@ use Smart::Comments -ENV;
 #     }
 # };
 
+#Are running as CGI?
+if ( exists $ENV{GATEWAY_INTERFACE} ) {
+    say "Called from CGI";
+    print <<"EOF";
+<HTML>
+
+<HEAD>
+<TITLE>Testing</TITLE>
+</HEAD>
+
+<BODY>
+<H1>Hello, world!</H1>
+</BODY>
+
+</HTML>
+EOF
+}
+
 #Use this to not print warnings
-no if $] >= 5.018, warnings => "experimental";
+# no if $] >= 5.018, warnings => "experimental";
 
 #Define the valid command line options
 my $opt_string = 'eh';
@@ -225,8 +246,8 @@ sub construct_lists_of_pointees {
 
         my @list_of_pointees;
 
-        foreach
-            my $pointeeKey2 ( sort keys $pointees_seen_ref->{"$pointeeType"} )
+        foreach my $pointeeKey2 (
+            sort keys %{ $pointees_seen_ref->{"$pointeeType"} } )
         {
             #Add this label to our list
             push( @list_of_pointees,
@@ -264,8 +285,8 @@ sub find_pointees {
 
         #Match it against our hash of pointees regexes
         foreach my $pointeeType ( sort keys %{$pointee_regex_ref} ) {
-            foreach
-                my $pointeeKey2 ( keys $pointee_regex_ref->{"$pointeeType"} )
+            foreach my $pointeeKey2 (
+                keys %{ $pointee_regex_ref->{"$pointeeType"} } )
             {
                 if ( $line
                     =~ $pointee_regex_ref->{"$pointeeType"}{"$pointeeKey2"} )
@@ -304,17 +325,18 @@ sub config_to_html {
     my %pointeeSeen   = ();
 
     #Open the input and output files
-    open my $filehandle,     '<', $filename           or die $!;
-    open my $filehandleHtml, '>', $filename . '.html' or die $!;
+    open my $filehandle, '<', $filename or die $!;
 
     #Read in the whole file
     my @array_of_lines = <$filehandle>
         or die $!;    # Reads all lines into array
 
-    #Find all pointees in the file
+    my @html_formatted_text;
+
+    #Find all pointees (things that are pointed TO) in the file
     my $found_pointees_ref = find_pointees( \@array_of_lines, $pointees_ref );
 
-    #Construct lists of pointees of each type for using in the regexes
+    #Construct lists of these pointees of each type for using in the POINTER regexes
     #to make them more explicit for this particular file
     our $list_of_pointees_ref
         = construct_lists_of_pointees($found_pointees_ref);
@@ -325,19 +347,6 @@ sub config_to_html {
     my %pointers = do $Bin . 'pointers.pl';
 
     ### %pointers
-
-    #Print a simple html beginning to output
-    print $filehandleHtml <<"END";
-<html>
-  <head>
-    <title> 
-      $filename
-    </title>
-  </head>
-
-    <body>
-        <pre>
-END
 
     # Get the thread id. Allows each thread to be identified.
     my $id = threads->tid();
@@ -357,9 +366,11 @@ END
         #to make stuff we might insert line up right (eg PEERS)
         my ($current_indent_level) = $line =~ m/^(\s*)/ixsm;
 
-        #Match it against our hash of POINTERS regexes
+        #Match $line against our hash of POINTERS regexes
         foreach my $pointerType ( sort keys %pointers ) {
-            foreach my $pointerKey2 ( sort keys $pointers{"$pointerType"} ) {
+            foreach
+                my $pointerKey2 ( sort keys %{ $pointers{"$pointerType"} } )
+            {
 
                 #The while allows multiple pointers in one line
                 while (
@@ -395,10 +406,10 @@ END
             }
         }
 
-        #Match it against our hash of POINTEES regexes
+        #Match $line against our hash of POINTEES regexes
         foreach my $pointeeType ( sort keys %{$pointees_ref} ) {
-            foreach
-                my $pointeeKey2 ( sort keys $pointees_ref->{"$pointeeType"} )
+            foreach my $pointeeKey2 (
+                sort keys %{ $pointees_ref->{"$pointeeType"} } )
             {
                 if ( $line
                     =~ m/$pointees_ref->{"$pointeeType"}{"$pointeeKey2"}/ )
@@ -472,7 +483,7 @@ END
 
                     my $neighbor_ip = $+{neighbor_ip};
 
-                    #                      say $neighbor_ip;
+                    #say $neighbor_ip;
 
                     if ( exists $host_info_ref->{'ip_address'}{$neighbor_ip} )
                     {
@@ -502,7 +513,7 @@ END
                 #List devices on the same subnet when we know of them
                 when (
                     m/(?: ^ \s+ ip \s+ address \s+ (?<ip_and_mask> $RE{net}{IPv4} \s+ $RE{net}{IPv4}) |
-                              ^ \s+ ip \s+ address \s+ (?<ip_and_mask> $RE{net}{IPv4} \s* \/ \d+)
+                          ^ \s+ ip \s+ address \s+ (?<ip_and_mask> $RE{net}{IPv4} \s* \/ \d+)
                               )
                         /ixms
                     )
@@ -539,7 +550,8 @@ END
                             my @peer_array;
 
                             while ( my ( $peer_file, $peer_interface )
-                                = each $host_info_ref->{'subnet'}{$network} )
+                                = each
+                                %{ $host_info_ref->{'subnet'}{$network} } )
                             {
 
                                 #Don't list ourself as a peer
@@ -650,20 +662,48 @@ END
             }
         }
 
-        #Print the (possibly) modified line to html file
-        say {$filehandleHtml} $line;
+        #Save the (possibly) modified line for later printing
+        push @html_formatted_text, $line
+
     }
 
+    #Output as a web page
+    output_as_html( $filename, \@html_formatted_text );
+
+    close $filehandle;
+
+    ### %foundPointers
+    ### %foundPointees
+    ### %pointeeSeen
+}
+
+sub output_as_html {
+    my ( $filename, $html_formatted_text_ref )
+        = validate_pos( @_, { type => SCALAR }, { type => ARRAYREF }, );
+
+    open my $filehandleHtml, '>', $filename . '.html' or die $!;
+
+    #Print a simple html beginning to output
+    print $filehandleHtml <<"END";
+<html>
+  <head>
+    <title> 
+      $filename
+    </title>
+  </head>
+
+    <body>
+        <pre>
+END
+    say {$filehandleHtml} join( "\r", @$html_formatted_text_ref );
+
+    #say {$filehandleHtml} $line;
     #Close out the file with very basic html ending
     print $filehandleHtml <<"END";
         </pre>
     </body>
 </html>
 END
-    close $filehandle;
-    close $filehandleHtml;
 
-    ### %foundPointers
-    ### %foundPointees
-    ### %pointeeSeen
+    close $filehandleHtml;
 }
