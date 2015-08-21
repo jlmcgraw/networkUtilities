@@ -212,7 +212,7 @@ sub main {
 
     # Maximum number of worker threads
     # BUG TODO Adjust this dynamically based on number of CPUs
-    my $thread_limit = 3;
+    my $thread_limit = 4;
 
     #Create $thread_limit worker threads calling "annotate_file"
     my @thr = map {
@@ -600,8 +600,11 @@ sub parallel_process_hosts {
     my $q = Thread::Queue->new();
 
     # Queue up all of the hosts for the threads
-    foreach my $host_ip ( keys %{ $found_networks_and_hosts_ref->{'hosts'} } )
-    {
+    # Make an array of existing keys to avoid warnings about hash iterator
+    my @host_keys = keys %{ $found_networks_and_hosts_ref->{'hosts'} };
+    for my $host_ip (@host_keys) {
+
+        # foreach  my $host_ip ( keys %{ $found_networks_and_hosts_ref->{'hosts'} } ){
         #Don't work on this host again if we already have
         next
             unless $found_networks_and_hosts_ref->{'hosts'}{$host_ip}
@@ -634,9 +637,11 @@ sub parallel_process_hosts {
     ## found_networks_and_hosts: %found_networks_and_hosts;
 
     #Substitute info we found back into the lines of the config
-    foreach
-        my $host_key ( keys %{ $found_networks_and_hosts_ref->{'hosts'} } )
-    {
+    #Use the previously created array of keys
+
+    for my $host_key (@host_keys) {
+
+        # foreach  my $host_key ( keys %{ $found_networks_and_hosts_ref->{'hosts'} } )    {
 
         #Get the info we found for this host
         my $host_name
@@ -672,9 +677,11 @@ sub parallel_process_networks {
     # $q->enqueue($_) for keys %{ $found_networks_and_hosts_ref->{'networks'} };
 
     # Queue up all of the networks for the threads
-    foreach my $network_key (
-        keys %{ $found_networks_and_hosts_ref->{'networks'} } )
-    {
+    # Make an array of existing keys to avoid warnings about hash iterator
+    my @network_keys = keys %{ $found_networks_and_hosts_ref->{'networks'} };
+    for my $network_key (@network_keys) {
+
+        # foreach  my $network_key ( keys %{ $found_networks_and_hosts_ref->{'networks'} } ){
         #Don't work on this network again if we already have
         next
             if
@@ -708,9 +715,12 @@ sub parallel_process_networks {
     ## found_networks_and_hosts: %found_networks_and_hosts;
 
     #Substitute info we found back into the lines of the ACL
-    foreach my $network_key (
-        keys %{ $found_networks_and_hosts_ref->{'networks'} } )
-    {
+    #Use the previously created array of keys
+
+    for my $network_key (@network_keys) {
+
+        # foreach my $network_key (
+        # keys %{ $found_networks_and_hosts_ref->{'networks'} } )    {
 
         #Get the info we found for this network
         my $number_of_hosts
