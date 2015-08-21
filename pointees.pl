@@ -49,7 +49,7 @@
     /ixsm,
     },
 
-'service_policy' => {
+    'service_policy' => {
     1 => qr/ (?<unique_id> 
                                 ^ \s* 
                                 policy-map \s+ 
@@ -74,7 +74,7 @@
                     /ixsm,
     },
 
-'route_map' => {
+    'route_map' => {
     1 => qr/ (?<unique_id> 
                                 ^ \s*
                                 route-map \s+ 
@@ -100,25 +100,24 @@
                                 (?: permit | deny) \s+
                     /ixsm,
     },
-    
-'prefix_list' => {
+
+    'prefix_list' => {
     1 =>
         qr/(?<unique_id> ^ \s* ip \s+ prefix-list \s+ (?<pointed_at> $valid_cisco_name) )/ixsm,
 
     },
-    
-'community_list' => { 
+
+    'community_list' => {
     1 =>
         qr/(?<unique_id> ^ \s* ip \s+ community-list \s+ (?:standard|extended) \s+ (?<pointed_at> $valid_cisco_name) )/ixsm,
-    2 =>
-        qr/(?<unique_id> ^ \s*
+    2 => qr/(?<unique_id> ^ \s*
                         ip \s+ 
                         extcommunity-list \s+ 
                         (?:standard|extended) \s+
                         (?<pointed_at> $valid_cisco_name) )/ixsm,
     },
-    
-'as_path_access_list' => {
+
+    'as_path_access_list' => {
     1 => qr/(?<unique_id> ^ \s*
                         ip \s+
                         as-path \s+ 
@@ -127,22 +126,22 @@
 
     },
 
-'interface' => {
-        #NXOS,
+    'interface' => {
+
+    #NXOS,
     1 => qr/(?<unique_id> ^ \s* 
                             interface \s+ 
                             port-channel
                             (?<pointed_at> $valid_cisco_name) 
             )/ixsm,
-   
-    2 =>
-        qr/(?<unique_id> ^ \s* 
+
+    2 => qr/(?<unique_id> ^ \s* 
                             interface \s+ 
                             (?<pointed_at> $valid_cisco_name) 
             )/ixsm,
     },
 
-'track' => {
+    'track' => {
     1 => qr/(?<unique_id>^ \s*
                          track \s+
                         (?<pointed_at> $valid_cisco_name )
@@ -271,7 +270,7 @@
             (\s+|$)
             /ixsm,
     },
-     'template_peer_policy' => {
+    'template_peer_policy' => {
     1 => qr/(?<unique_id>
                         ^ \s*
                         template \s+
@@ -280,8 +279,8 @@
             )
             (\s+|$)
             /ixsm,
-    }, 
-     'template_peer_session' => {
+    },
+    'template_peer_session' => {
     1 => qr/(?<unique_id>
                         ^ \s*
                         template \s+
@@ -290,4 +289,4 @@
             )
             (\s+|$)
             /ixsm,
-    }, 
+    },

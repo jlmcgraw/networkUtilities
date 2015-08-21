@@ -45,7 +45,8 @@
                 (?<points_to> $list_of_pointees_ref->{"acl"}) 
                 $
                 /ixsm,
-    #IOS: ip access-group 
+
+    #IOS: ip access-group
     11 => qr /^ \s* 
                 ip \s+ 
                 access-group  \s+ 
@@ -62,7 +63,7 @@
                 /ixsm,
 
     },
-    
+
     'service_policy' => {
     1 =>
         qr/^ \s* service-policy \s+ (?: input|output) \s+ (?<points_to> $list_of_pointees_ref->{"service_policy"})/ixsm,
@@ -125,8 +126,16 @@
             route-map \s+ 
             (?<points_to> $list_of_pointees_ref->{"route_map"} )
             /ixsm,
+
     8 =>
         qr/^ \s* neighbor \s+ $RE{net}{IPv4} \s+ default-originate \s+ route-map \s+ (?<points_to> $list_of_pointees_ref->{"route_map"})/ixsm,
+
+    9 => qr/^ \s* 
+            import \s+ 
+            ipv4 \s+ 
+            unicast \s+ 
+            map \s+ 
+            (?<points_to> $list_of_pointees_ref->{"route_map"})/ixsm,
     },
     'prefix_list' => {
     1 =>
@@ -146,8 +155,8 @@
                                                                                          #separated by whitespace
            /ixsm,
     },
-    'community_list'      => {
-        1 => qr/^ \s* 
+    'community_list' => {
+    1 => qr/^ \s* 
             match \s+ 
             extcommunity \s+ 
             (?<points_to> $list_of_pointees_ref->{"community_list"}) 
@@ -158,7 +167,7 @@
     'as_path_access_list' => {
     1 =>
         qr/^ \s* neighbor \s+ $RE{net}{IPv4} \s+ filter-list \s+ (?<points_to> $list_of_pointees_ref->{"as_path_access_list"}) \s+ (?:in|out)$/ixsm,
-    
+
     2 => qr/^ \s* 
             match \s+ 
             as-path \s+ 
@@ -314,7 +323,7 @@
         /ixsm,
 
     },
-'template_peer_policy' => {
+    'template_peer_policy' => {
     1 => qr/
         inherit \s+
         peer-policy \s+
@@ -322,7 +331,7 @@
         /ixsm,
 
     },
-'template_peer_session' => {
+    'template_peer_session' => {
     1 => qr/
         inherit \s+
         peer-session \s+
