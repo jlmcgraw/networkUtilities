@@ -49,6 +49,7 @@ use Benchmark qw(:hireswallclock);
 use Getopt::Std;
 use FindBin '$Bin';
 use vars qw/ %opt /;
+use Config;
 
 # use Data::Dumper;
 #Look into using this so users don't need to install modules
@@ -127,6 +128,18 @@ unless ( getopts( "$opt_string", \%opt ) ) {
 my ( $should_link_externally, $should_reformat_numbers )
     = ( $opt{e}, $opt{h} );
 
+#Hold a copy of the original ARGV so we can pass it instead of globbed version to create_host_info_hashes
+my @ARGV_unmodified;
+
+#Expand wildcards on command line since windows doesn't do it for us
+if ( $Config{archname} =~ m/win/ix ) {
+
+    #Expand wildcards on command line
+    say "Expanding wildcards for Windows";
+    @ARGV_unmodified = @ARGV;
+    @ARGV = map {glob} @ARGV;
+}
+
 #Call main routine
 exit main(@ARGV);
 
@@ -165,8 +178,15 @@ sub main {
         if ( !-e $Bin . 'host_info_hash.stored' ) {
             say "Creating host_info_hash";
 
-            my $status = system( $Bin . "create_host_info_hashes.pl @ARGV" );
-
+            #Pass the unglobbed command line under Windows so command line isn't too long
+            my $status;
+            if ( $Config{archname} =~ m/win/ix ) {
+                $status = system( $Bin
+                        . "create_host_info_hashes.pl @ARGV_unmodified" );
+            }
+            else {
+                $status = system( $Bin . "create_host_info_hashes.pl @ARGV" );
+            }
             if ( ( $status >>= 8 ) != 0 ) {
                 die "Failed to run " . $Bin . "create_host_info_hashes.pl $!";
             }

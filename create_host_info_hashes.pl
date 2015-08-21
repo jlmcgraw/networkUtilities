@@ -38,6 +38,7 @@ use Getopt::Std;
 use FindBin '$Bin';
 use vars qw/ %opt /;
 use Data::Dumper;
+use Config;
 
 #Look into using this so users don't need to install modules
 use lib "$FindBin::Bin/lib";
@@ -75,7 +76,7 @@ $Data::Dumper::Sortkeys = sub {
 };
 
 #Use this to not print warnings
-no if $] >= 5.018, warnings => "experimental";
+#no if $] >= 5.018, warnings => "experimental";
 
 #Define the valid command line options
 my $opt_string = 'hv';
@@ -91,6 +92,14 @@ if ( $arg_num < 1 ) {
 unless ( getopts( "$opt_string", \%opt ) ) {
     usage();
     exit(1);
+}
+
+#Expand wildcards on command line since windows doesn't do it for us
+if ( $Config{archname} =~ m/win/ix ) {
+
+    #Expand wildcards on command line
+    say "Expanding wildcards for Windows";
+    @ARGV = map {glob} @ARGV;
 }
 
 #Call main routine
@@ -207,8 +216,8 @@ sub find_pointees {
 
         #Match it against our hash of pointees regexes
         foreach my $pointeeType ( sort keys %{$pointee_regex_ref} ) {
-            foreach
-                my $pointeeKey2 ( keys $pointee_regex_ref->{"$pointeeType"} )
+            foreach my $pointeeKey2 (
+                keys %{ $pointee_regex_ref->{"$pointeeType"} } )
             {
                 if ( $line
                     =~ $pointee_regex_ref->{"$pointeeType"}{"$pointeeKey2"} )
@@ -243,7 +252,7 @@ sub calculate_subnets {
 
     #For every IP address we found
     foreach my $ip_address_key (
-        sort keys $pointees_seen_ref->{$filename}{'ip_address'} )
+        sort keys %{ $pointees_seen_ref->{$filename}{'ip_address'} } )
     {
 
         #Split out IP address and interface components

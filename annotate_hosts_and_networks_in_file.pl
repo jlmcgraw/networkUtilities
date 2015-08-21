@@ -126,7 +126,12 @@ unless ( getopts( "$opt_string", \%opt ) ) {
 my $ping_method = 'tcp';
 
 #Set ping method depending on OS
+#Expand wildcards on command line since windows doesn't do it for us
 if ( $Config{archname} =~ m/win/ix ) {
+
+    #Expand wildcards on command line
+    say "Expanding wildcards for Windows";
+    @ARGV = map {glob} @ARGV;
 
     #     print "$Config{osname}\n";
     #     print "$Config{archname}\n";
@@ -183,6 +188,10 @@ if ( -e $Bin . "/$known_networks_filename" ) {
 }
 
 ##Smart_comment known_networks_ref: $known_networks_ref
+
+if ( $Config{archname} =~ m/win/ix ) {
+
+}
 
 #Call main routine
 exit main(@ARGV);
