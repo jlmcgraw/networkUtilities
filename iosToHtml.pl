@@ -555,7 +555,7 @@ sub config_to_html {
                             {
 
                                 #Don't list ourself as a peer
-                                if ( $filename =~ $peer_file ) {
+                                if ( $filename =~ quotemeta $peer_file ) {
                                     next;
                                 }
 

@@ -1067,6 +1067,8 @@ sub list2ranges {
 
 sub format_number_list {
 
+    #Create a range from a list of numbers
+    #eg 1-5 instead of 1,2,3,4,5
     #From http://perl.plover.com/qotw/r/solution/006
     my @output;
     while (@_) {
