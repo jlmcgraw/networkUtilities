@@ -61,6 +61,12 @@
                 (?<points_to> $list_of_pointees_ref->{"acl"}) 
                 (?: \s+ | $)
                 /ixsm,
+    13 => qr /^ \s* 
+                match (?: \s+ not )? \s+ 
+                access-group \s+ 
+                (?<points_to> $list_of_pointees_ref->{"acl"}) 
+                $
+                /ixsm,
 
     },
 
