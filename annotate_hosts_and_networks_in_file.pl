@@ -202,69 +202,108 @@ sub main {
     $found_networks_and_hosts{'hosts'}    = &share( {} );
     $found_networks_and_hosts{'networks'} = &share( {} );
 
-    #Loop through every file provided on command line
-    foreach my $filename (@ARGV) {
+    # A new empty queue
+    my $q = Thread::Queue->new();
 
-        #Note which file we're working on
-        say $filename;
+    # Queue up all of the files for the threads
+    $q->enqueue($_) for @ARGV;
+    $q->end();
+    say $q->pending() . " files queued";
 
-        #Open the input file
-        open my $filehandle, '<', $filename or die $!;
+    # Maximum number of worker threads
+    # BUG TODO Adjust this dynamically based on number of CPUs
+    my $thread_limit = 3;
 
-        #Read in the whole file
-        my @array_of_lines = <$filehandle>
-            or die $!;    # Reads all lines into array
+    #Create $thread_limit worker threads calling "annotate_file"
+    my @thr = map {
+        threads->create(
+            sub {
+                while ( defined( my $filename = $q->dequeue_nb() ) ) {
+                    annotate_file( $filename, \%found_networks_and_hosts, );
+                }
+            }
+        );
+    } 1 .. $thread_limit;
 
-        #Remove newlines from whole array
-        chomp(@array_of_lines);
+    # terminate all of the threads in @thr
+    $_->join() for @thr;
 
-        #Process each line of the file separately
-        foreach my $line (@array_of_lines) {
+    return 0;
+}
 
-            #Remove linefeeds
-            $line =~ s/\R//g;
+sub annotate_file {
 
-            #Find hosts and networks in this line
-            my ( $hosts_in_line_ref, $nets_in_line_ref )
-                = find_hosts_and_nets_in_line($line);
+    # One of these threads for every file
+    # #Loop through every file provided on command line
+    # foreach my $filename (@ARGV)
+    my ( $filename, $found_networks_and_hosts_ref )
+        = validate_pos( @_, { type => SCALAR }, { type => HASHREF }, );
 
-            #Populate the shared hash with that info (while sharing each new key)
-            add_found_hosts_to_shared_hash( $hosts_in_line_ref,
-                \%found_networks_and_hosts );
+    # Get the thread id. Allows each thread to be identified.
+    my $id = threads->tid();
 
-            #Populate the shared hash with that info (while sharing each new key)
-            add_found_networks_to_shared_hash( $nets_in_line_ref,
-                \%found_networks_and_hosts );
+    say "Thread $id: $filename";
 
-        }
+    #Note which file we're working on
+    # say $filename;
 
-        ##Smart_Comments found_networks_and_hosts: %found_networks_and_hosts
-        #         print Dumper \%found_networks_and_hosts;
+    #Open the input file
+    open my $filehandle, '<', $filename or die $!;
 
-        #Make one long string out of the array
-        #This is probably unecessary but I haven't bothered to change code yet
-        my $scalar_of_lines = join "\n", @array_of_lines;
+    #Read in the whole file
+    my @array_of_lines = <$filehandle>
+        or die $!;    # Reads all lines into array
 
-        #Do we want to see things that were mentioned multiple times?
-        show_duplicates( \%found_networks_and_hosts )
-            if $should_show_duplicates;
+    #Remove newlines from whole array
+    chomp(@array_of_lines);
 
-        #Gather info about each found host and annotate original text with that info
-        parallel_process_hosts( \%found_networks_and_hosts,
-            \$scalar_of_lines );
+    #Process each line of the file separately
+    foreach my $line (@array_of_lines) {
 
-        #Gather info about each found network and annotate original text with that info
-        parallel_process_networks( \%found_networks_and_hosts,
-            \$scalar_of_lines );
+        #Remove linefeeds
+        $line =~ s/\R//g;
 
-        #Print out the annotated ACL
-        # say $scalar_of_lines;
+        #Find hosts and networks in this line
+        my ( $hosts_in_line_ref, $nets_in_line_ref )
+            = find_hosts_and_nets_in_line($line);
 
-        #Very basic HTML output
-        open my $filehandleHtml, '>', $filename . '-tested.html' or die $!;
+        #Populate the shared hash with that info (while sharing each new key)
+        add_found_hosts_to_shared_hash( $hosts_in_line_ref,
+            $found_networks_and_hosts_ref );
 
-        #Print a simple html beginning to output
-        print $filehandleHtml <<"END";
+        #Populate the shared hash with that info (while sharing each new key)
+        add_found_networks_to_shared_hash( $nets_in_line_ref,
+            $found_networks_and_hosts_ref );
+
+    }
+
+    ##Smart_Comments found_networks_and_hosts: %found_networks_and_hosts
+    #         print Dumper \%found_networks_and_hosts;
+
+    #Make one long string out of the array
+    #This is probably unecessary but I haven't bothered to change code yet
+    my $scalar_of_lines = join "\n", @array_of_lines;
+
+    #Do we want to see things that were mentioned multiple times?
+    show_duplicates($found_networks_and_hosts_ref)
+        if $should_show_duplicates;
+
+    #Gather info about each found host and annotate original text with that info
+    parallel_process_hosts( $found_networks_and_hosts_ref,
+        \$scalar_of_lines );
+
+    #Gather info about each found network and annotate original text with that info
+    parallel_process_networks( $found_networks_and_hosts_ref,
+        \$scalar_of_lines );
+
+    #Print out the annotated ACL
+    # say $scalar_of_lines;
+
+    #Very basic HTML output
+    open my $filehandleHtml, '>', $filename . '-annotated.html' or die $!;
+
+    #Print a simple html beginning to output
+    print $filehandleHtml <<"END";
 <html>
  <head>
   <title>
@@ -275,19 +314,17 @@ sub main {
   <pre>
 END
 
-        #The html-ized output
-        say {$filehandleHtml} $scalar_of_lines;
+    #The html-ized output
+    say {$filehandleHtml} $scalar_of_lines;
 
-        #Close out the file with very basic html ending
-        print $filehandleHtml <<"END";
+    #Close out the file with very basic html ending
+    print $filehandleHtml <<"END";
   </pre>
  </body>
 </html>
 END
-        close $filehandleHtml;
+    close $filehandleHtml;
 
-    }
-    return 0;
 }
 
 sub find_hosts_and_nets_in_line {
@@ -450,7 +487,7 @@ sub add_found_networks_to_shared_hash {
             $nets_in_line_ref->{$network_and_mask_as_found}{'normalized'} );
 
         my ( $all_possible_matches_ref, $ranged_possible_matches_ref, @one,
-            $number_of_hosts );
+            $number_of_hosts, $range );
 
         #Does this look like a subnet mask?
         if ( is_subnet_mask($mask) ) {
@@ -463,6 +500,8 @@ sub add_found_networks_to_shared_hash {
 
                 #This is the number of hosts in that subnet
                 $number_of_hosts = $acl_subnet->num();
+                $range           = $acl_subnet->range();
+                push( @one, $range );
 
                 #These are other bits of information about this subnet we may
                 # want to save at some point
@@ -472,16 +511,19 @@ sub add_found_networks_to_shared_hash {
                 # $network_masklen = $subnet->masklen;
                 # $ip_addr_bigint  = $subnet->bigint();
                 # $isRfc1918         = $acl_subnet->is_rfc1918();
-                # $range           = $subnet->range();
+
             }
-            else { say "Couldn't create $address/$mask"; }
+            else {
+                $number_of_hosts = "0";
+                say "Couldn't create $address/$mask";
+            }
 
         }
         else {
             #We're guessing this is a wildcard mask
             #Get a list of all addresses that match this host/wildcard_mask combination
             ( $all_possible_matches_ref, $ranged_possible_matches_ref )
-                = list_of_matches_acl( $address, $mask );
+                = list_of_matches_wildcard( $address, $mask );
 
             #Save that array reference to another array
             #We'll use ranges for now
@@ -571,7 +613,7 @@ sub parallel_process_hosts {
     $q->end();
 
     #How many hosts we queued
-    say $q->pending() . " hosts queued";
+    say $q->pending() . " hosts queued" if $q->pending();
 
     #Create $max_threads worker threads calling "process_hosts_thread"
     my @thr = map {
@@ -645,7 +687,7 @@ sub parallel_process_networks {
     $q->end();
 
     #How many networks did we queue
-    say $q->pending() . " networks queued";
+    say $q->pending() . " networks queued" if $q->pending();
 
     #Create $max_threads worker threads calling "process_networks_thread"
     my @thr = map {
@@ -835,16 +877,18 @@ sub process_networks_thread {
                     "Network w/ wildcard mask: Couldn't create subnet for $known_network";
             }
         }
-        $found_networks_and_hosts_ref->{'networks'}{$network_key}{'tested'}
-            = 1;
+
     }
     else {
 
         say
             "Network w/ wildcard mask: Couldn't create subnet for $network mask $network_mask";
         $found_networks_and_hosts_ref->{'networks'}{$network_key}{'status'}
-            = "NON_CONTIGUOUS_MASK";
+            = "BAD_MASK";
     }
+
+    #We've done all our work for this network, let's mark it so it won't get processed again
+    $found_networks_and_hosts_ref->{'networks'}{$network_key}{'tested'} = 1;
 
     #Test how many of this network's hosts respond
     #......
@@ -882,7 +926,7 @@ sub hostname {
     return $hostname || "[" . $addr . "]";
 }
 
-sub list_of_matches_acl {
+sub list_of_matches_wildcard {
 
     #Generate a list of all hosts that would match this network/wildcard_mask pair
     #
