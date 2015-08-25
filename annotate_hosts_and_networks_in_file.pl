@@ -1107,7 +1107,7 @@ sub show_duplicates {
         = validate_pos( @_, { type => HASHREF }, );
 
     say "Duplicates:";
-    for my $key ( keys %{ sort $found_networks_and_hosts_ref->{'hosts'} } ) {
+    for my $key ( sort keys %{  $found_networks_and_hosts_ref->{'hosts'} } ) {
         if ( $found_networks_and_hosts_ref->{'hosts'}{$key}{'count'} > 1 ) {
             say $key;
         }
