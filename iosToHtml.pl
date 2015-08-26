@@ -174,24 +174,25 @@ sub main {
     #Try to retrieve host_info_hash if user wants to try linking between files
     if ($should_link_externally) {
 
-        #This hash must be pre-created by create_host_info_hashes.pl
-        if ( !-e $Bin . 'host_info_hash.stored' ) {
-            say "Creating host_info_hash";
+        #Let's recreate this every time
+        #         #This hash must be pre-created by create_host_info_hashes.pl
+        #         if ( !-e $Bin . 'host_info_hash.stored' ) {
+        say "Creating host_info_hash";
 
-            #Pass the unglobbed command line under Windows so command line isn't too long
-            my $status;
-            if ( $Config{archname} =~ m/win/ix ) {
-                $status = system( $Bin
-                        . "create_host_info_hashes.pl @ARGV_unmodified" );
-            }
-            else {
-                $status = system( $Bin . "create_host_info_hashes.pl @ARGV" );
-            }
-            if ( ( $status >>= 8 ) != 0 ) {
-                die "Failed to run " . $Bin . "create_host_info_hashes.pl $!";
-            }
-
+        #Pass the unglobbed command line under Windows so command line isn't too long
+        my $status;
+        if ( $Config{archname} =~ m/win/ix ) {
+            $status = system( $Bin
+                    . "create_host_info_hashes.pl @ARGV_unmodified" );
         }
+        else {
+            $status = system( $Bin . "create_host_info_hashes.pl @ARGV" );
+        }
+        if ( ( $status >>= 8 ) != 0 ) {
+            die "Failed to run " . $Bin . "create_host_info_hashes.pl $!";
+        }
+
+        #         }
         say "Loading host_info_hash";
         $host_info_ref = retrieve( $Bin . 'host_info_hash.stored' )
             or die "Unable to open host_info_hash";
@@ -445,6 +446,10 @@ sub config_to_html {
                     if ( !$pointeeSeen{$pointeeType}{$unique_id} ) {
                         $pointeeSeen{$pointeeType}{$unique_id}
                             = "$pointed_at";
+
+                        #                         Trying some different formatting
+                        $line
+                            =~ s/ (\s+) $pointed_at ( \s+ | $ ) /$1<i>$pointed_at<\/i>$2/ixg;
 
                         #Add a break <br> to make this stand out from text above it
                         #Add underline/italic to destination line
@@ -721,6 +726,7 @@ END
     #Close out the file with very basic html ending
     print $filehandleHtml <<"END";
         </pre>
+        <a style="position: fixed; top:10px;right:10px;color: white;background-color: Blue;text-decoration:none" href="#" title="Click to go to top">$filename</a>
     </body>
 </html>
 END

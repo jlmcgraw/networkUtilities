@@ -60,12 +60,12 @@
                     \s* $
                     /ixsm,
 
-    #NXOS
+    #NXOS & ASA
     2 => qr/ (?<unique_id> 
                                 ^ \s* 
                                 policy-map \s+
                                 type \s+
-                                (?: queuing | qos) \s+
+                                (?: queuing | qos | inspect) \s+
                                 (?<pointed_at> 
                                     (?: $valid_cisco_name) 
                                 ) 
@@ -140,7 +140,6 @@
                             (?<pointed_at> $valid_cisco_name) 
             )/ixsm,
     },
-
     'track' => {
     1 => qr/(?<unique_id>^ \s*
                          track \s+
@@ -148,7 +147,6 @@
             )/ixsm,
 
     },
-
     'vrf' => {
     1 => qr/(?<unique_id>
                         ^ \s*
@@ -228,6 +226,16 @@
                     (?<pointed_at> $valid_cisco_name) )
                     /ixsm,
 
+    #ASA
+    4 => qr/(?<unique_id> 
+                    ^ \s*
+                    class-map \s+
+                    type \s+
+                    (?: inspect | urlfilter ) \s+
+                    (?: $valid_cisco_name \s+)?
+                    (?: match-any | match-all) \s+
+                    (?<pointed_at> $valid_cisco_name) )
+                    /ixsm,
     },
     'aaa_group' => {
     1 => qr/(?<unique_id>
@@ -286,6 +294,63 @@
                         template \s+
                         peer-session \s+
                         (?<pointed_at> $valid_cisco_name)
+            )
+            (\s+|$)
+            /ixsm,
+    },
+
+    #ASA or ACE?
+    'parameter_map' => {
+    1 => qr/(?<unique_id>
+                        ^ \s*
+                        parameter-map \s+
+                        type \s+ 
+                        (?: (urlfpolicy \s+ local) | ( urlfpolicy \s+ trend) | urlf-glob  | protocol-info | regex) \s+
+                        (?<pointed_at> $valid_cisco_name)
+            )
+            (\s+|$)
+            /ixsm,
+    },
+    'crypto_pki' => {
+    1 => qr/(?<unique_id>
+                        ^ \s*
+                        crypto \s+
+                        pki \s+
+                        certificate \s+
+                        chain \s+
+                        (?<pointed_at> $valid_cisco_name)
+            )
+            (\s+|$)
+            /ixsm,
+    },
+    'dhcp_pool' => {
+    1 => qr/(?<unique_id>
+                        ^ \s*
+                        ip \s+
+                        dhcp \s+
+                        pool \s+
+                        (?<pointed_at> $valid_cisco_name)
+            )
+            (\s+|$)
+            /ixsm,
+    },
+    'ip_inspect' => {
+    1 => qr/(?<unique_id>
+                        ^ \s*
+                        ip \s+
+                        inspect \s+
+                        name \s+
+                        (?<pointed_at> $valid_cisco_name) \s+
+                        (?:tcp | udp)
+            )
+            (\s+|$)
+            /ixsm,
+    },
+    'pix_nameif' => {
+    1 => qr/(?<unique_id>
+                        ^ \s*
+                        nameif \s+
+                        (?<pointed_at> (?: inside | outside ))
             )
             (\s+|$)
             /ixsm,

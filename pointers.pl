@@ -67,7 +67,15 @@
                 (?<points_to> $list_of_pointees_ref->{"acl"}) 
                 $
                 /ixsm,
-
+    14 => qr /^ \s*
+                ip \s+ 
+                nat \s+
+                (?: (inside | outside) \s+)?
+                source \s+
+                list \s+
+                (?<points_to> $list_of_pointees_ref->{"acl"})
+                (\s*|$)
+                /ixsm,
     },
 
     'service_policy' => {
@@ -182,29 +190,42 @@
 
     },
     'interface' => {
-    1 =>
-        qr/source-interface \s+ (?<points_to> $list_of_pointees_ref->{"interface"}) /ixsm,
-    2 =>
-        qr/ntp \s+ source \s+ (?<points_to> $list_of_pointees_ref->{"interface"}) /ixsm,
-    3 =>
-        qr/^ \s* no \s+ passive-interface \s+ (?<points_to> $list_of_pointees_ref->{"interface"}) /ixsm,
-    4 =>
-        qr/snmp-server \s+ trap-source \s+ (?<points_to> $list_of_pointees_ref->{"interface"}) /ixsm,
-    5 =>
-        qr/^ \s* ip \s+ flow-export \s+ source \s+ (?<points_to> $list_of_pointees_ref->{"interface"}) /ixsm,
-    6 =>
-        qr/^ \s* neighbor \s+ $RE{net}{IPv4} \s+ update-source \s+ (?<points_to> $list_of_pointees_ref->{"interface"}) $/ixsm,
-    7 =>
-        qr/^ \s* update-source \s+ (?<points_to> $list_of_pointees_ref->{"interface"}) $/ixsm,
-    8 => qr/^ \s* 
-                (?: source | destination ) \s+ 
-                interface \s+ 
-                (?<points_to> $list_of_pointees_ref->{"interface"}) 
-                /ixsm,
-    9 => qr/^ \s* 
-                channel-group \s+ 
-                (?<points_to> $list_of_pointees_ref->{"interface"}) 
-                /ixsm,
+
+    #     1 =>
+    #         qr/source-interface \s+ (?<points_to> $list_of_pointees_ref->{"interface"}) /ixsm,
+    #     2 =>
+    #         qr/ntp \s+ source \s+ (?<points_to> $list_of_pointees_ref->{"interface"}) /ixsm,
+    #     3 =>
+    #         qr/^ \s* no \s+ passive-interface \s+ (?<points_to> $list_of_pointees_ref->{"interface"}) /ixsm,
+    #     4 =>
+    #         qr/snmp-server \s+ trap-source \s+ (?<points_to> $list_of_pointees_ref->{"interface"}) /ixsm,
+    #     5 =>
+    #         qr/^ \s* ip \s+ flow-export \s+ source \s+ (?<points_to> $list_of_pointees_ref->{"interface"}) /ixsm,
+    #     6 =>
+    #         qr/^ \s* neighbor \s+ $RE{net}{IPv4} \s+ update-source \s+ (?<points_to> $list_of_pointees_ref->{"interface"}) $/ixsm,
+    #     7 =>
+    #         qr/^ \s* update-source \s+ (?<points_to> $list_of_pointees_ref->{"interface"}) $/ixsm,
+    #     8 => qr/^ \s*
+    #                 (?: source | destination ) \s+
+    #                 interface \s+
+    #                 (?<points_to> $list_of_pointees_ref->{"interface"})
+    #                 /ixsm,
+    #     9 => qr/^ \s*
+    #                 channel-group \s+
+    #                 (?<points_to> $list_of_pointees_ref->{"interface"})
+    #                 /ixsm,
+
+    #Should I do these meta ones that matches so much? Or use the more specific ones above
+    10 => qr/[\S]+ 
+            \s+
+            (?:source|interface) \s+ 
+            (?<points_to> $list_of_pointees_ref->{"interface"}) 
+            /ixsm,
+
+    11 => qr/[\S]+ 
+            (?:source|interface) \s+ 
+            (?<points_to> $list_of_pointees_ref->{"interface"}) 
+            /ixsm,
     },
 
     'track' => {
@@ -287,6 +308,24 @@
         (\s*|$)
         /ixsm,
 
+    #ASA
+    3 => qr/ ^ \s*
+        match \s+
+        class-map \s+
+        (?<points_to> (?: $list_of_pointees_ref->{"class"}) )
+        (\s*|$)
+        /ixsm,
+
+    #ASA
+    4 => qr/ ^ \s*
+        class \s+
+        type \s+
+        (?: inspect ) \s+
+        (?: $valid_cisco_name \s+ )?
+        (?<points_to> (?: $list_of_pointees_ref->{"class"}) )
+        (\s*|$)
+        /ixsm,
+
     },
 
     'aaa_group' => {
@@ -344,4 +383,50 @@
         (?<points_to> (?: $list_of_pointees_ref->{"template_peer_session"}) )
         /ixsm,
 
+    },
+    'parameter_map' => {
+    1 => qr/^ \s*
+        match \s+
+        (?: url-keyword | server-domain ) \s+
+        urlf-glob \s+
+        (?<points_to> (?: $list_of_pointees_ref->{"parameter_map"}) )
+        /ixsm,
+    },
+    'crypto_pki' => {
+    1 => qr/^ \s*
+                        crypto \s+
+                        pki \s+ 
+                        trustpoint \s+
+        (?<points_to> (?: $list_of_pointees_ref->{"crypto_pki"}) )
+        /ixsm,
+    },
+    'dhcp_pool' => {
+    1 => qr/^ \s*
+                        crypto \s+
+                        pki \s+ 
+                        trustpoint \s+
+        (?<points_to> (?: $list_of_pointees_ref->{"dhcp_pool"}) )
+        /ixsm,
+    },
+    'ip_inspect' => {
+    1 => qr/^ \s*
+                        ip \s+
+                        inspect \s+ 
+                        (?<points_to> (?: $list_of_pointees_ref->{"ip_inspect"}) ) \s+
+                        (?: in | out)
+        /ixsm,
+    },
+    'pix_nameif' => {
+
+    #This is me being lazy.
+    #Match anything with inside|outside, not proceeded by nameif
+    #If we've seen a pix named interface
+    #This may be a terrible idea
+    #PIX
+    1 => qr/
+                        (?<!nameif)
+                        (?: \s+ )
+                        (?<points_to> (?: $list_of_pointees_ref->{"pix_nameif"}) )
+                        (?: \s+ | $ )
+        /ixsm,
     },

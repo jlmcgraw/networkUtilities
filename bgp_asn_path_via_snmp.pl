@@ -85,7 +85,7 @@ my $OID_sysUpTime = '1.3.6.1.2.1.1.3.0';
 my $bgpLocalAs    = '1.3.6.1.2.1.15.2.0';
 
 my ( $session, $error ) = Net::SNMP->session(
-    -hostname  => $hostname || 'localhost',
+    -hostname  => $hostname  || 'localhost',
     -community => $community || 'public',
 );
 

@@ -33,7 +33,7 @@ sub main {
     #Check that the first line looks like it's from NCM
     my $firstLine = <>;
     die "Not a valid Solarwinds NCM output file"
-      unless ( $firstLine =~ /SolarWinds Network Configuration Manager/ );
+        unless ( $firstLine =~ /SolarWinds Network Configuration Manager/ );
 
     my %aclHash = ();
     my $aclName;
@@ -45,8 +45,7 @@ sub main {
     while (<>) {
 
         #Find the current ACL name/number
-        if (
-            $_ =~ /
+        if ($_ =~ /
             ^
                 \s*
                     (?:Extended | Standard )?       #
@@ -61,7 +60,7 @@ sub main {
                 \s*
             $
             /ix
-          )
+            )
         {
             $aclName = $+{aclName};
         }
@@ -76,7 +75,7 @@ sub main {
             \s+ 
             (?<aclName>[\w\-_]+)
             /ix
-          )
+            )
         {
             $aclName = $+{aclName};
         }
@@ -105,7 +104,7 @@ sub main {
                 \s*                                         # zero or more whitespace
             $
             /ix
-          )
+            )
         {
             $aclEntry = $+{aclEntry};
 
@@ -119,18 +118,18 @@ sub main {
 
             #If there is a aclEntryHitCount, add it to the running total
             #otherwise just add 0
-            
+
             #How many different times have we seen this ACL line
             $aclHash{"$aclName"}{"$aclEntry"}{"devicesUsedOn"} += 1;
-            
+
             if ($aclEntryHitCount) {
 
                 #Use this version for less detail per entry
                 #                 $aclHash{"$aclName"}{"$aclEntry"} += $aclEntryHitCount;
 
                 #Use this version instead if you want to see line numbers and hits per line #
-                $aclHash{"$aclName"}{"$aclEntry"}{"totalHits"} +=
-                  $aclEntryHitCount;
+                $aclHash{"$aclName"}{"$aclEntry"}{"totalHits"}
+                    += $aclEntryHitCount;
 
                 #                 $aclHash{ "$aclName" }{ "$aclEntry" }{ "lineNumbersUsed" }{ "$aclLineNumber" } += $aclEntryHitCount;
                 $aclHash{"$aclName"}{"$aclEntry"}{"devicesWithHits"} += 1;

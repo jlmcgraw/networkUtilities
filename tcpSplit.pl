@@ -65,7 +65,7 @@ sub main {
 
         #What we want to call the new capture file
         my $filename = $flowHashReference->{$conversationDataKey}{id} . "-"
-          . $conversationDataKey;
+            . $conversationDataKey;
 
         #Construct the tcpdump command to only emit the packets for this
         #conversation
@@ -139,8 +139,7 @@ sub identifyTcpConversations {
 
     #Go through each line of the output
     for ( split /^/, $tcpdumpOutput ) {
-        if (
-            m/
+        if (m/
                 \A
                     $timeStampRegex
                 \s+
@@ -156,32 +155,30 @@ sub identifyTcpConversations {
                     [\.]
                     (?<dst_port> \d+ )
             /xms
-          )
+            )
         {
             #             say "$+{src_ip} $+{src_port} $+{dst_ip} $+{dst_port}";
 
             #Add a new stream entry only if an entry for either direction doesn't exist
-            if (
-                (
-                    !exists $streams{
+            if ((   !exists $streams{
                         "$+{dst_ip}:$+{dst_port}-$+{src_ip}:$+{src_port}"}
                 )
-                && (
-                    !exists $streams{
+                && (!exists $streams{
                         "$+{src_ip}:$+{src_port}-$+{dst_ip}:$+{dst_port}"} )
-              )
+                )
             {
                 #Found a new stream so increment counter
                 $streamCounter++;
 
                 #Add a hash for it
-                $streams{"$+{src_ip}:$+{src_port}-$+{dst_ip}:$+{dst_port}"} = {
+                $streams{"$+{src_ip}:$+{src_port}-$+{dst_ip}:$+{dst_port}"}
+                    = {
                     id       => $streamCounter,
                     src_ip   => $+{src_ip},
                     src_port => $+{src_port},
                     dst_ip   => $+{dst_ip},
                     dst_port => $+{dst_port},
-                };
+                    };
             }
 
         }
@@ -197,8 +194,8 @@ sub identifyTcpConversations {
 sub mySystem {
 
     #Execute an external command
-    my ($myExternalCommand) =
-      validate_pos( @_, { type => SCALAR } );
+    my ($myExternalCommand)
+        = validate_pos( @_, { type => SCALAR } );
 
     #Remove linefeeds from the command (done so that I could break up long commands for legibility
     $myExternalCommand =~ s/\R//g;
@@ -210,7 +207,7 @@ sub mySystem {
 
     croak "External command:
         $myExternalCommand \n Return code was $retval"
-      if ( $retval != 0 );
+        if ( $retval != 0 );
 
     return $externalCommandOutput;
 }

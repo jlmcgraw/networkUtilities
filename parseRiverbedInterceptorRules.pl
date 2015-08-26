@@ -108,11 +108,14 @@ sub main {
         my @inpathRuleElements;
 
         state $section;
-        
+
         given ($line) {
-            when (/^
+            when (
+                /^
                     \#\# \s+ (?<section>[\w \s]+)
-                    /ismx) {
+                    /ismx
+                )
+            {
                 $section = $+{section};
                 ### section: $section
             }
@@ -130,21 +133,22 @@ sub main {
                     enforce-fillup \s+ (?<enforce_fillup> no ) \s+
                     rulenum \s+ (?<rulenum> (?:start | \d+ ) )
                     /ismx
-              )
+                )
             {
                 ### Matched: $line
                 ### Found redirection rule
-                my $action                     = 'redirect';
-                my $local_steelhead_inpath_ip  = $+{local_steelhead_inpath_ip};
-                my $remote_steelhead_inpath_ip = $+{remote_steelhead_inpath_ip};
-                my $source_subnet              = $+{source_subnet};
-                my $destination_subnet         = $+{destination_subnet};
-                my $destination_port           = $+{destination_port};
-                my $description                = $+{description};
-                my $vlan                       = $+{vlan};
-                my $fair_peering               = $+{fair_peering};
-                my $enforce_fillup             = $+{enforce_fillup};
-                my $rulenum                    = $+{rulenum};
+                my $action                    = 'redirect';
+                my $local_steelhead_inpath_ip = $+{local_steelhead_inpath_ip};
+                my $remote_steelhead_inpath_ip
+                    = $+{remote_steelhead_inpath_ip};
+                my $source_subnet      = $+{source_subnet};
+                my $destination_subnet = $+{destination_subnet};
+                my $destination_port   = $+{destination_port};
+                my $description        = $+{description};
+                my $vlan               = $+{vlan};
+                my $fair_peering       = $+{fair_peering};
+                my $enforce_fillup     = $+{enforce_fillup};
+                my $rulenum            = $+{rulenum};
 
                 ### $action:                      $action
                 ### $local_steelhead_inpath_ip:   $local_steelhead_inpath_ip
@@ -159,20 +163,21 @@ sub main {
                 ### $rulenum:                     $rulenum
 
                 $load_balance_rule{$rulenum}{action} = $action;
-                $load_balance_rule{$rulenum}{local_steelhead_inpath_ip} =
-                  $+{local_steelhead_inpath_ip};
-                $load_balance_rule{$rulenum}{remote_steelhead_inpath_ip} =
-                  $+{remote_steelhead_inpath_ip};
-                $load_balance_rule{$rulenum}{source_subnet} = $+{source_subnet};
-                $load_balance_rule{$rulenum}{destination_subnet} =
-                  $+{destination_subnet};
-                $load_balance_rule{$rulenum}{destination_port} =
-                  $+{destination_port};
+                $load_balance_rule{$rulenum}{local_steelhead_inpath_ip}
+                    = $+{local_steelhead_inpath_ip};
+                $load_balance_rule{$rulenum}{remote_steelhead_inpath_ip}
+                    = $+{remote_steelhead_inpath_ip};
+                $load_balance_rule{$rulenum}{source_subnet}
+                    = $+{source_subnet};
+                $load_balance_rule{$rulenum}{destination_subnet}
+                    = $+{destination_subnet};
+                $load_balance_rule{$rulenum}{destination_port}
+                    = $+{destination_port};
                 $load_balance_rule{$rulenum}{description}  = $+{description};
                 $load_balance_rule{$rulenum}{vlan}         = $+{vlan};
                 $load_balance_rule{$rulenum}{fair_peering} = $+{fair_peering};
-                $load_balance_rule{$rulenum}{enforce_fillup} =
-                  $+{enforce_fillup};
+                $load_balance_rule{$rulenum}{enforce_fillup}
+                    = $+{enforce_fillup};
                 $load_balance_rule{$rulenum}{rulenum} = $+{rulenum};
 
             }
@@ -187,22 +192,23 @@ sub main {
                     vlan \s+ (?<vlan> -1 ) \s+
                     rulenum \s+ (?<rulenum> (?:start | \d+ ) )
                     /ismx
-              )
+                )
             {
 
                 ### Matched: $line
                 ### Found passthrough rule
-                my $action                     = 'pass';
-                my $local_steelhead_inpath_ip  = $+{local_steelhead_inpath_ip};
-                my $remote_steelhead_inpath_ip = $+{remote_steelhead_inpath_ip};
-                my $source_subnet              = $+{source_subnet};
-                my $destination_subnet         = $+{destination_subnet};
-                my $destination_port           = $+{destination_port};
-                my $description                = $+{description};
-                my $vlan                       = $+{vlan};
-                my $fair_peering               = $+{fair_peering};
-                my $enforce_fillup             = $+{enforce_fillup};
-                my $rulenum                    = $+{rulenum};
+                my $action                    = 'pass';
+                my $local_steelhead_inpath_ip = $+{local_steelhead_inpath_ip};
+                my $remote_steelhead_inpath_ip
+                    = $+{remote_steelhead_inpath_ip};
+                my $source_subnet      = $+{source_subnet};
+                my $destination_subnet = $+{destination_subnet};
+                my $destination_port   = $+{destination_port};
+                my $description        = $+{description};
+                my $vlan               = $+{vlan};
+                my $fair_peering       = $+{fair_peering};
+                my $enforce_fillup     = $+{enforce_fillup};
+                my $rulenum            = $+{rulenum};
 
                 ### $action:                      $action
                 ### $local_steelhead_inpath_ip:   $local_steelhead_inpath_ip
@@ -217,20 +223,21 @@ sub main {
                 ### $rulenum:                     $rulenum
 
                 $load_balance_rule{$rulenum}{action} = $action;
-                $load_balance_rule{$rulenum}{local_steelhead_inpath_ip} =
-                  $+{local_steelhead_inpath_ip};
-                $load_balance_rule{$rulenum}{remote_steelhead_inpath_ip} =
-                  $+{remote_steelhead_inpath_ip};
-                $load_balance_rule{$rulenum}{source_subnet} = $+{source_subnet};
-                $load_balance_rule{$rulenum}{destination_subnet} =
-                  $+{destination_subnet};
-                $load_balance_rule{$rulenum}{destination_port} =
-                  $+{destination_port};
+                $load_balance_rule{$rulenum}{local_steelhead_inpath_ip}
+                    = $+{local_steelhead_inpath_ip};
+                $load_balance_rule{$rulenum}{remote_steelhead_inpath_ip}
+                    = $+{remote_steelhead_inpath_ip};
+                $load_balance_rule{$rulenum}{source_subnet}
+                    = $+{source_subnet};
+                $load_balance_rule{$rulenum}{destination_subnet}
+                    = $+{destination_subnet};
+                $load_balance_rule{$rulenum}{destination_port}
+                    = $+{destination_port};
                 $load_balance_rule{$rulenum}{description}  = $+{description};
                 $load_balance_rule{$rulenum}{vlan}         = $+{vlan};
                 $load_balance_rule{$rulenum}{fair_peering} = $+{fair_peering};
-                $load_balance_rule{$rulenum}{enforce_fillup} =
-                  $+{enforce_fillup};
+                $load_balance_rule{$rulenum}{enforce_fillup}
+                    = $+{enforce_fillup};
                 $load_balance_rule{$rulenum}{rulenum} = $+{rulenum};
 
             }
@@ -245,21 +252,22 @@ sub main {
                     description \s+ " (?<description> .*? ) " \s+
                     rulenum \s+ (?<rulenum> (?:start | \d+ ) )
                     /ismx
-              )
+                )
             {
                 ### Found inpath rule
                 ### Matched: $line
-                my $action                     = $+{action};
-                my $local_steelhead_inpath_ip  = $+{local_steelhead_inpath_ip};
-                my $remote_steelhead_inpath_ip = $+{remote_steelhead_inpath_ip};
-                my $source_subnet              = $+{source_subnet};
-                my $destination_subnet         = $+{destination_subnet};
-                my $destination_port           = $+{destination_port};
-                my $description                = $+{description};
-                my $vlan                       = $+{vlan};
-                my $fair_peering               = $+{fair_peering};
-                my $enforce_fillup             = $+{enforce_fillup};
-                my $rulenum                    = $+{rulenum};
+                my $action                    = $+{action};
+                my $local_steelhead_inpath_ip = $+{local_steelhead_inpath_ip};
+                my $remote_steelhead_inpath_ip
+                    = $+{remote_steelhead_inpath_ip};
+                my $source_subnet      = $+{source_subnet};
+                my $destination_subnet = $+{destination_subnet};
+                my $destination_port   = $+{destination_port};
+                my $description        = $+{description};
+                my $vlan               = $+{vlan};
+                my $fair_peering       = $+{fair_peering};
+                my $enforce_fillup     = $+{enforce_fillup};
+                my $rulenum            = $+{rulenum};
 
                 ### $action:                      $action
                 ### $local_steelhead_inpath_ip:   $local_steelhead_inpath_ip
@@ -274,17 +282,18 @@ sub main {
                 ### $rulenum:                     $rulenum
 
                 $inpath_rule{$rulenum}{action} = $action;
-                $inpath_rule{$rulenum}{local_steelhead_inpath_ip} =
-                  $+{local_steelhead_inpath_ip};
-                $inpath_rule{$rulenum}{remote_steelhead_inpath_ip} =
-                  $+{remote_steelhead_inpath_ip};
+                $inpath_rule{$rulenum}{local_steelhead_inpath_ip}
+                    = $+{local_steelhead_inpath_ip};
+                $inpath_rule{$rulenum}{remote_steelhead_inpath_ip}
+                    = $+{remote_steelhead_inpath_ip};
                 $inpath_rule{$rulenum}{source_subnet} = $+{source_subnet};
-                $inpath_rule{$rulenum}{destination_subnet} =
-                  $+{destination_subnet};
-                $inpath_rule{$rulenum}{destination_port} = $+{destination_port};
-                $inpath_rule{$rulenum}{description}      = $+{description};
-                $inpath_rule{$rulenum}{vlan}             = $+{vlan};
-                $inpath_rule{$rulenum}{rulenum}          = $+{rulenum};
+                $inpath_rule{$rulenum}{destination_subnet}
+                    = $+{destination_subnet};
+                $inpath_rule{$rulenum}{destination_port}
+                    = $+{destination_port};
+                $inpath_rule{$rulenum}{description} = $+{description};
+                $inpath_rule{$rulenum}{vlan}        = $+{vlan};
+                $inpath_rule{$rulenum}{rulenum}     = $+{rulenum};
 
             }
             when (
@@ -297,7 +306,7 @@ sub main {
                     vlan \s+ (?<vlan> (?:all) ) \s+
                     rulenum \s+ (?<rulenum> (?:start | \d+ ) )
                     /ismx
-              )
+                )
             {
                 my $action      = $+{action};
                 my $subnet_a    = $+{subnet_a};
@@ -313,11 +322,13 @@ sub main {
                 ### $vlan:                        $vlan
                 ### $rulenum:                     $rulenum
 
-                $inpath_hardware_assist_rule{$rulenum}{action}   = $action;
-                $inpath_hardware_assist_rule{$rulenum}{subnet_a} = $+{subnet_a};
-                $inpath_hardware_assist_rule{$rulenum}{subnet_b} = $+{subnet_b};
-                $inpath_hardware_assist_rule{$rulenum}{description} =
-                  $+{description};
+                $inpath_hardware_assist_rule{$rulenum}{action} = $action;
+                $inpath_hardware_assist_rule{$rulenum}{subnet_a}
+                    = $+{subnet_a};
+                $inpath_hardware_assist_rule{$rulenum}{subnet_b}
+                    = $+{subnet_b};
+                $inpath_hardware_assist_rule{$rulenum}{description}
+                    = $+{description};
                 $inpath_hardware_assist_rule{$rulenum}{vlan}    = $+{vlan};
                 $inpath_hardware_assist_rule{$rulenum}{rulenum} = $+{rulenum};
 
@@ -325,8 +336,8 @@ sub main {
 
             default {
                 say "Didn't match: $line"
-                  if $line =~
-                  /^ \s* (?:in-path \s+ rule | load \s+ balance | in-path \s+ hw-assist) \s+ /x;
+                    if $line
+                    =~ /^ \s* (?:in-path \s+ rule | load \s+ balance | in-path \s+ hw-assist) \s+ /x;
             }
 
         }
@@ -334,15 +345,15 @@ sub main {
     }
 
     # Create a new Excel workbook
-    my $workbook =
-      Spreadsheet::WriteExcel->new('Riverbed_interceptor_rules.xls');
+    my $workbook
+        = Spreadsheet::WriteExcel->new('Riverbed_interceptor_rules.xls');
 
     # Add worksheets
-    my $worksheet_load_balance_rule =
-      $workbook->add_worksheet('load_balance_rule');
+    my $worksheet_load_balance_rule
+        = $workbook->add_worksheet('load_balance_rule');
     my $worksheet_inpath_rule = $workbook->add_worksheet('inpath_rule');
-    my $worksheet_inpath_hardware_assist_rule =
-      $workbook->add_worksheet('inpath_hardware_assist_rule');
+    my $worksheet_inpath_hardware_assist_rule
+        = $workbook->add_worksheet('inpath_hardware_assist_rule');
 
     foreach my $key ( sort keys %load_balance_rule ) {
         my $row;

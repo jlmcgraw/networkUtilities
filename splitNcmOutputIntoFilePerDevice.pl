@@ -29,12 +29,12 @@ sub main {
         say "Usage: $0 < fileWithOutputFromNcm";
         exit 1;
     }
-    
+
     #Check that the first line looks like it's from NCM
     my $firstLine = <>;
     die "Not a valid Solarwinds NCM output file"
-      unless ( $firstLine =~ /SolarWinds Network Configuration Manager/ );
-      
+        unless ( $firstLine =~ /SolarWinds Network Configuration Manager/ );
+
     my $hostName;
     my $ipAddress;
     my $fileName;
@@ -51,8 +51,7 @@ sub main {
     while (<>) {
 
         #Find the current hostname
-        if (
-            $_ =~ /
+        if ($_ =~ /
             ^ 
             \s+
             (?<hostName>.*?)
@@ -63,7 +62,7 @@ sub main {
             \s*
             $
             /ix
-          )
+            )
         {
             $hostName  = $+{hostName};
             $ipAddress = $+{ipAddress};

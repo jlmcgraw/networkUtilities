@@ -36,23 +36,25 @@
 use Modern::Perl '2014';
 use autodie;
 use Smart::Comments;
+
 #use Number::Bytes::Human qw(format_bytes);
 use Data::Dumper;
-        $Data::Dumper::Sortkeys = sub {
+$Data::Dumper::Sortkeys = sub {
 
-            #Get all the keys for this hash
-            my $keys   = join '', keys %{ $_[0] };
+    #Get all the keys for this hash
+    my $keys = join '', keys %{ $_[0] };
 
-            #Are they only numbers?
-            if ( $keys =~ /^[[:alnum:]]+$/ ) {
-                #Sort keys numerically
-                return [ sort { $a <=> $b or $a cmp $b } keys %{ $_[0] } ];
-            }
-            else {
-                #Values is not all numeric so sort by keys alphabetically
-                return [ sort { lc $a cmp lc $b } keys %{ $_[0] } ];
-            }
-        };
+    #Are they only numbers?
+    if ( $keys =~ /^[[:alnum:]]+$/ ) {
+
+        #Sort keys numerically
+        return [ sort { $a <=> $b or $a cmp $b } keys %{ $_[0] } ];
+    }
+    else {
+        #Values is not all numeric so sort by keys alphabetically
+        return [ sort { lc $a cmp lc $b } keys %{ $_[0] } ];
+    }
+};
 use Params::Validate qw(:all);
 use Getopt::Std;
 use vars qw/ %opt /;
@@ -84,7 +86,7 @@ sub main {
     determineDesiredSorting();
 
     #Read each line, one at a time, of all files specified on command line or stdin
-    while (<>) {                            ### Evaluating [===|    ] % done
+    while (<>) {    ### Evaluating [===|    ] % done
         my $line = $_;
 
         #Don't reinitialize these variables each time through the loop
@@ -125,7 +127,7 @@ sub main {
                     \s+ (?<fifth> \d+)?             #This value is optional
                     \s*
                      $/ix
-              )
+                )
             {
                 ### Found new COS/DSCP markings line...
                 #Get the lower and upper bounds of the COS/DSCP for this line
@@ -150,23 +152,23 @@ sub main {
                 }
 
                 #Save it into the hash
-                $data{  $markingType . ":"
-                      . $markingDirection
-                      . " ( Tag -> Packets )" }{$first} += $+{first};
-                $data{  $markingType . ":"
-                      . $markingDirection
-                      . " ( Tag -> Packets )" }{$second} += $+{second};
-                $data{  $markingType . ":"
-                      . $markingDirection
-                      . " ( Tag -> Packets )" }{$third} += $+{third};
-                $data{  $markingType . ":"
-                      . $markingDirection
-                      . " ( Tag -> Packets )" }{$fourth} += $+{fourth}
-                  if $+{fourth};
-                $data{  $markingType . ":"
-                      . $markingDirection
-                      . " ( Tag -> Packets )" }{$fifth} += $+{fifth}
-                  if $+{fifth};
+                $data{    $markingType . ":"
+                        . $markingDirection
+                        . " ( Tag -> Packets )" }{$first} += $+{first};
+                $data{    $markingType . ":"
+                        . $markingDirection
+                        . " ( Tag -> Packets )" }{$second} += $+{second};
+                $data{    $markingType . ":"
+                        . $markingDirection
+                        . " ( Tag -> Packets )" }{$third} += $+{third};
+                $data{    $markingType . ":"
+                        . $markingDirection
+                        . " ( Tag -> Packets )" }{$fourth} += $+{fourth}
+                    if $+{fourth};
+                $data{    $markingType . ":"
+                        . $markingDirection
+                        . " ( Tag -> Packets )" }{$fifth} += $+{fifth}
+                    if $+{fifth};
             }
 
             #Queue entries
@@ -181,7 +183,7 @@ sub main {
                      \s+ (?<threshold3>\d+) 
                      \s*
                      $/ix
-              )
+                )
             {
                 ### Found new queue and its thresholds...
                 #The queue number
@@ -203,21 +205,24 @@ sub main {
                 #                 $data{ $queueType . ":" . $queueAction . " (queue - threshold)" }{$queueNumber}
                 #                   {"threshold3"} += $threshold3;
 
-                $data{  $queueType . ":"
-                      . $queueAction
-                      . " (queue - threshold)" }{ $queueNumber . "-1" } +=
-                  $threshold1;
-                $data{  $queueType . ":"
-                      . $queueAction
-                      . " (queue - threshold)" }{ $queueNumber . "-2" } +=
-                  $threshold2;
-                $data{  $queueType . ":"
-                      . $queueAction
-                      . " (queue - threshold)" }{ $queueNumber . "-3" } +=
-                  $threshold3;
+                $data{    $queueType . ":"
+                        . $queueAction
+                        . " (queue - threshold)" }{ $queueNumber . "-1" }
+                    += $threshold1;
+                $data{    $queueType . ":"
+                        . $queueAction
+                        . " (queue - threshold)" }{ $queueNumber . "-2" }
+                    += $threshold2;
+                $data{    $queueType . ":"
+                        . $queueAction
+                        . " (queue - threshold)" }{ $queueNumber . "-3" }
+                    += $threshold3;
 
             }
-            when (/^(?<interfaceType>FastEthernet|GigabitEthernet|Ethernet) \s* (?<interfaceNumber> [ \d \/ ]+)$/ix) {
+            when (
+                /^(?<interfaceType>FastEthernet|GigabitEthernet|Ethernet) \s* (?<interfaceNumber> [ \d \/ ]+)$/ix
+                )
+            {
                 ### Found new interface...
                 #We've begun processing output for another interface
                 $interfaceCount++;
@@ -226,9 +231,10 @@ sub main {
                 #eg 10Mb, 10Gig, etc etc etc
 
                 #Clear information for every new interface
-                $currentInterface = $markingType = $markingDirection =
-                  $queueType      = $queueAction = undef;
-#                 say $line;
+                $currentInterface = $markingType = $markingDirection
+                    = $queueType = $queueAction = undef;
+
+                #                 say $line;
             }
 
             default {
@@ -302,7 +308,8 @@ sub usage {
 sub determineDesiredSorting {
 
     #How does the user want to sort the display?
-    my $shouldSortByValue = $opt{s};                ### $shouldSortByValue is: $shouldSortByValue
+    my $shouldSortByValue
+        = $opt{s};    ### $shouldSortByValue is: $shouldSortByValue
     if ($shouldSortByValue) {
 
         #Provide a routine for Data::dumper to sort by hash VALUES
@@ -316,7 +323,10 @@ sub determineDesiredSorting {
             if ( $values =~ /^[[:alnum:]]+$/ ) {
 
                 #Sort by values numerically
-                return [ sort { $_[0]->{$b} <=> $_[0]->{$a} } keys %{ $_[0] } ];
+                return [
+                    sort { $_[0]->{$b} <=> $_[0]->{$a} }
+                        keys %{ $_[0] }
+                ];
             }
             else {
                 #Values is not all numeric so sort by keys alphabetically

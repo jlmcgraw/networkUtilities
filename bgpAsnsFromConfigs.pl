@@ -62,8 +62,7 @@ sub main {
             $bgpNetwork, $bgpNetworkMask, $hostName );
 
         #Find bgp config section
-        if (
-            $_ =~ /
+        if ($_ =~ /
             ^
                 \s*
                     router 
@@ -74,7 +73,7 @@ sub main {
                 \s*
             $
             /ix
-          )
+            )
         {
             $asNumber = $bgpNeighbor = $remoteAsn = undef;
             $asNumber = $+{asNumber};
@@ -91,7 +90,7 @@ sub main {
                 \s+ 
                     (?<hostName> [\w-]+ )
             /ix
-          )
+            )
         {
             $hostName = $+{hostName};
 
@@ -108,7 +107,7 @@ sub main {
                 \s+
                     (?:rip | eigrp | ospf | isis)
             /ix
-          )
+            )
         {
             #Clear variables on a new section of cisco config
             $asNumber = $bgpNeighbor = $remoteAsn = undef;
@@ -120,7 +119,7 @@ sub main {
                 !
             $
             /ix
-          )
+            )
         {
             #Clear variables between config files in a long stream
             $asNumber = $bgpNeighbor = $remoteAsn = undef;
@@ -130,7 +129,7 @@ sub main {
             $_ =~ /
                 XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
             /ix
-          )
+            )
         {
             #Clear variables between files
             $asNumber = $bgpNeighbor = $remoteAsn = $hostName = undef;
@@ -151,7 +150,7 @@ sub main {
                 \s*                                         # zero or more whitespace
             $
             /ix
-          )
+            )
         {
             if ($asNumber) {
                 $remoteAsn         = $+{remoteAsn};
@@ -160,8 +159,8 @@ sub main {
 
                 #How many different times have we seen this ASN
                 $asnHash{$asNumber}{"devicesUsedOn"} += 1;
-                $asnHash{$asNumber}{"neighbors"}{$bgpNeighbor}{"remoteAsn"} =
-                  $remoteAsn;
+                $asnHash{$asNumber}{"neighbors"}{$bgpNeighbor}{"remoteAsn"}
+                    = $remoteAsn;
 
                 #Add an entry for the remote asn
                 #How many different times have we seen the remote ASN
@@ -185,14 +184,14 @@ sub main {
                 \s*                                         # zero or more whitespace
             $
             /ix
-          )
+            )
         {
             $bgpNetwork     = $+{bgpNetwork};
             $bgpNetworkMask = $+{bgpNetworkMask};
 
             if ($asNumber) {
                 $asnHash{$asNumber}{"networks"}
-                  { $bgpNetwork . " " . $bgpNetworkMask } = 1;
+                    { $bgpNetwork . " " . $bgpNetworkMask } = 1;
             }
 
         }
@@ -207,10 +206,11 @@ sub main {
     #say Dumper \%asnHash;
 
     #Our GraphViz object
-    my $asnGraph =
-      GraphViz->new(    directed => 1, 
-                        layout => 'sfdp', 
-                        overlap => 'scalexy' );
+    my $asnGraph = GraphViz->new(
+        directed => 1,
+        layout   => 'sfdp',
+        overlap  => 'scalexy'
+    );
 
     #For every ASN we found...
     while ( my ( $bgpAsn, $bgpAsnHashRef ) = each %asnHash ) {
@@ -250,8 +250,8 @@ sub main {
         #print Dumper $bgpAsnHashRef;
 
         #Add edges for all neighbor ASNs of this AS
-        while ( my ( $neighborKey, $neighborHashReference ) =
-            each %{ $bgpAsnHashRef->{"neighbors"} } )
+        while ( my ( $neighborKey, $neighborHashReference )
+            = each %{ $bgpAsnHashRef->{"neighbors"} } )
 
         {
             #Debuggery
@@ -264,16 +264,17 @@ sub main {
 
             #Uncomment to not include iBGP peers
             #if ( ( $bgpAsn && $remoteAsn ) && ( $bgpAsn != $remoteAsn ) ) {
-                $asnGraph->add_edge( $bgpAsn => $remoteAsn );
+            $asnGraph->add_edge( $bgpAsn => $remoteAsn );
+
             #}
         }
 
     }
 
-#     #Save the graphiz objects
-#     open my $out_file_txt, '>', "twAsn.dot" or croak $!;
-#     print $out_file_txt $asnGraph->as_text;
-#     close $out_file_txt;
+    #     #Save the graphiz objects
+    #     open my $out_file_txt, '>', "twAsn.dot" or croak $!;
+    #     print $out_file_txt $asnGraph->as_text;
+    #     close $out_file_txt;
 
     open my $out_file_png, '>', "twAsn.png" or croak $!;
     print $out_file_png $asnGraph->as_png;
