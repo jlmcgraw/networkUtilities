@@ -1,0 +1,21 @@
+# Index created by AutoSplit for blib/lib/NetAddr/IP.pm
+#    (file acts as timestamp)
+package NetAddr::IP;
+sub do_prefix  ($$$);
+sub prefix ($);
+sub nprefix ($);
+sub wildcard ($);
+sub _compact_v6  ($);
+sub _compV6  ($);
+sub short ($);
+sub canon ($);
+sub _splitplan  ;
+sub _splitref  ;
+sub hostenum  ($);
+sub compactref ($);
+sub coalesce 
+;
+sub re  ($);
+sub re6 ($);
+sub mod_version  ;
+1;

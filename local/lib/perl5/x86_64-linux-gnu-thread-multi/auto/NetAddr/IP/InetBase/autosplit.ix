@@ -1,0 +1,13 @@
+# Index created by AutoSplit for ../../blib/lib/NetAddr/IP/InetBase.pm
+#    (file acts as timestamp)
+package NetAddr::IP::InetBase;
+sub inet_ntoa  ;
+sub ipv6_aton  ;
+sub ipv6_ntoa  ;
+sub inet_any2n ($);
+sub inet_n2dx ($);
+sub inet_n2ad ($);
+sub _inet_pton  ;
+sub _inet_ntop  ;
+sub _packzeros  ;
+1;

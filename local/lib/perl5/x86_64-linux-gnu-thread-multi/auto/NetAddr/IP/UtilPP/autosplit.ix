@@ -1,0 +1,30 @@
+# Index created by AutoSplit for ../../blib/lib/NetAddr/IP/UtilPP.pm
+#    (file acts as timestamp)
+package NetAddr::IP::UtilPP;
+sub _deadlen  ;
+sub hasbits  ;
+sub _128x2  ;
+sub _128x10  ;
+sub shiftleft  ;
+sub slowadd128  ;
+sub _sa128  ;
+sub addconst  ;
+sub add128  ;
+sub sub128  ;
+sub notcontiguous  ;
+sub ipv4to6  ;
+sub mask4to6  ;
+sub ipanyto6  ;
+sub maskanyto6  ;
+sub ipv6to4  ;
+sub bin2bcd  ;
+sub bcd2bin  ;
+sub comp128  ;
+sub bin2bcdn  ;
+sub _bin2bcdn  ;
+sub bcdn2txt  ;
+sub bcdn2bin  ;
+sub _bcd2bin  ;
+sub _bcdcheck  ;
+sub simple_pack  ;
+1;

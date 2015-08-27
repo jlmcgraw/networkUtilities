@@ -1,0 +1,198 @@
+=head2 Thu Aug 27 10:31:53 2015: C<Module> L<CPAN::Meta|CPAN::Meta>
+
+=over 4
+
+=item *
+
+C<installed into: /home/jlmcgraw/Documents/myPrograms/networkUtilities/local/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 2.150005>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Thu Aug 27 10:32:00 2015: C<Module> L<Number::Bytes::Human|Number::Bytes::Human>
+
+=over 4
+
+=item *
+
+C<installed into: /home/jlmcgraw/Documents/myPrograms/networkUtilities/local/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.09>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Thu Aug 27 10:32:11 2015: C<Module> L<Try::Tiny|Try::Tiny>
+
+=over 4
+
+=item *
+
+C<installed into: /home/jlmcgraw/Documents/myPrograms/networkUtilities/local/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.22>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Thu Aug 27 10:32:15 2015: C<Module> L<Module::Implementation|Module::Implementation>
+
+=over 4
+
+=item *
+
+C<installed into: /home/jlmcgraw/Documents/myPrograms/networkUtilities/local/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.09>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Thu Aug 27 10:32:31 2015: C<Module> L<Clone|Clone>
+
+=over 4
+
+=item *
+
+C<installed into: /home/jlmcgraw/Documents/myPrograms/networkUtilities/local/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.38>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Thu Aug 27 10:32:33 2015: C<Module> L<Hash::Merge|Hash::Merge>
+
+=over 4
+
+=item *
+
+C<installed into: /home/jlmcgraw/Documents/myPrograms/networkUtilities/local/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.200>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Thu Aug 27 10:33:17 2015: C<Module> L<NetAddr::IP|NetAddr::IP>
+
+=over 4
+
+=item *
+
+C<installed into: /home/jlmcgraw/Documents/myPrograms/networkUtilities/local/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 4.078>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Thu Aug 27 10:33:20 2015: C<Module> L<Number::Format|Number::Format>
+
+=over 4
+
+=item *
+
+C<installed into: /home/jlmcgraw/Documents/myPrograms/networkUtilities/local/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 1.75>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Thu Aug 27 10:33:26 2015: C<Module> L<Regexp::Common|Regexp::Common>
+
+=over 4
+
+=item *
+
+C<installed into: /home/jlmcgraw/Documents/myPrograms/networkUtilities/local/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 2013031301>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
