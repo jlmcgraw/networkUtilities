@@ -376,8 +376,11 @@ sub config_to_html {
     my $id = threads->tid();
     say "Thread $id: $filename";
 
-    #     #Say the current filename just as a progress indicator
-    #     say $filename;
+    #Find the hostname
+    my ($hostname) = map { /^ \s* hostname \s+ (\S+) \b/ix ? $1 : () } @array_of_lines;
+
+    #If we didn't find a name set a default
+    $hostname //= 'no name' ;
 
     #Read each line, one at a time, of this file
     foreach my $line (@array_of_lines) {
@@ -712,7 +715,7 @@ sub config_to_html {
     }
 
     #Output as a web page
-    output_as_html( $filename, \@html_formatted_text );
+    output_as_html( $filename, \@html_formatted_text, $hostname );
 
     close $filehandle;
 
@@ -722,8 +725,8 @@ sub config_to_html {
 }
 
 sub output_as_html {
-    my ( $filename, $html_formatted_text_ref )
-        = validate_pos( @_, { type => SCALAR }, { type => ARRAYREF }, );
+    my ( $filename, $html_formatted_text_ref, $hostname )
+        = validate_pos( @_, { type => SCALAR }, { type => ARRAYREF },  { type => SCALAR },);
 
     open my $filehandleHtml, '>', $filename . '.html' or die $!;
 
@@ -735,7 +738,11 @@ sub output_as_html {
       $filename
     </title>
   </head>
-
+        <style>
+            :target{
+                background-color: #ffa
+            }
+        </style>
     <body>
         <pre>
 END
@@ -745,7 +752,7 @@ END
     #Close out the file with very basic html ending
     print $filehandleHtml <<"END";
         </pre>
-        <a style="position: fixed; top:10px;right:10px;color: white;background-color: Blue;text-decoration:none" href="#" title="Click to go to top">$filename</a>
+        <a style="position: fixed; top:10px;right:10px;color: white;background-color: Blue;text-decoration:none" href="#" title="Click to go to top">$hostname ($filename)</a>
     </body>
 </html>
 END
