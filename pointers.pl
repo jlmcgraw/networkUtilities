@@ -197,6 +197,9 @@
     #         qr/ntp \s+ source \s+ (?<points_to> $list_of_pointees_ref->{"interface"}) /ixsm,
     #     3 =>
     #         qr/^ \s* no \s+ passive-interface \s+ (?<points_to> $list_of_pointees_ref->{"interface"}) /ixsm,
+    3 =>
+        qr/^ \s* (?:no \s+)? passive-interface \s+ (?<points_to> $list_of_pointees_ref->{"interface"}) /ixsm,
+
     #     4 =>
     #         qr/snmp-server \s+ trap-source \s+ (?<points_to> $list_of_pointees_ref->{"interface"}) /ixsm,
     #     5 =>
@@ -210,12 +213,13 @@
     #                 interface \s+
     #                 (?<points_to> $list_of_pointees_ref->{"interface"})
     #                 /ixsm,
-    #     9 => qr/^ \s*
-    #                 channel-group \s+
-    #                 (?<points_to> $list_of_pointees_ref->{"interface"})
-    #                 /ixsm,
+    #BUG This points to a number, not the proper "Port-Channel#" name of the interface
+    9 => qr/^ \s*
+                    channel-group \s+
+                    (?<points_to> $list_of_pointees_ref->{"interface"})
+                    /ixsm,
 
-    #Should I do these meta ones that matches so much? Or use the more specific ones above
+    #Should I do these meta ones that match so much? Or use the more specific ones above
     10 => qr/[\S]+ 
             \s+
             (?:source|interface) \s+ 
@@ -227,7 +231,6 @@
             (?<points_to> $list_of_pointees_ref->{"interface"}) 
             /ixsm,
     },
-
     'track' => {
     1 => qr/^ \s*
                     (?: standby | vrrp ) \s+
@@ -236,12 +239,11 @@
                     (?<points_to> $list_of_pointees_ref->{"track"} )
         /isxm,
     },
-
     'vrf' => {
     1 => qr/^ \s*
                     ip \s+
                     vrf \s+
-                    forwarding \s+
+                    (?: forwarding | receive) \s+
                     (?<points_to> (?: $list_of_pointees_ref->{"vrf"}) )
                     (\s+|$)
         /ixsm,
@@ -267,8 +269,14 @@
                     (?<points_to> (?: $list_of_pointees_ref->{"vrf"}) )
                     (\s+|$)
         /ixsm,
+        5 => qr/        \s+
+                    address-family \s+
+                    (?:ipv4 | ipv6) \s+
+                    vrf \s+
+                    (?<points_to> (?: $list_of_pointees_ref->{"vrf"}) )
+                    (\s+|$)
+        /ixsm,
     },
-
     'key_chain' => {
 
     #Make this guy have to have some alphanumeric in front of him
@@ -279,7 +287,6 @@
         /ixsm,
 
     },
-
     'ip_sla' => {
     1 => qr/ ^ \s*
         ip \s+
@@ -289,7 +296,6 @@
         /ixsm,
 
     },
-
     'class' => {
 
     #NXOS
@@ -327,7 +333,6 @@
         /ixsm,
 
     },
-
     'aaa_group' => {
     1 => qr/ ^ \s*
         aaa \s+
@@ -338,7 +343,6 @@
         /ixsm,
 
     },
-
     'routing_process' => {
     1 => qr/ ^ \s*
         router \s+
@@ -346,7 +350,6 @@
         /ixsm,
 
     },
-
     'object_group' => {
 
     #BUG TODO: Catch both
@@ -422,11 +425,13 @@
     #Match anything with inside|outside, not proceeded by nameif
     #If we've seen a pix named interface
     #This may be a terrible idea
+    #BUG is matching lines with whitespace when run against non-pix config
     #PIX
-    1 => qr/
+    1 => qr/            [\S]+
                         (?<!nameif)
                         (?: \s+ )
-                        (?<points_to> (?: $list_of_pointees_ref->{"pix_nameif"}) )
+                        (?: inside|outside)
+                        #(?<points_to> (?: $list_of_pointees_ref->{"pix_nameif"}) )
                         (?: \s+ | $ )
         /ixsm,
     },

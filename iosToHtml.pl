@@ -21,9 +21,10 @@
 #-------------------------------------------------------------------------------
 
 #TODO
-#   Make this work as CGI
+#   How to handle cases where pointer doesn't match pointee?
+#       eg: channel-group 20 -> Etherchannel20
+        
 #   Hightlight missing pointees in red?
-#   Maybe should regenerate overall host info hash each run?
 #   Yes, I'm reading through the file twice.  I haven't reached the point
 #       of really trying to optimize anything
 #   Add a unit to numbers we make human readable?
@@ -34,6 +35,8 @@
 #       eg: standby 1 track 1 decrement 10
 
 #DONE
+#   Maybe should regenerate overall host info hash each run?
+#   Make this work as CGI
 #   Match a list of referenced items which correct link for each
 #        match ip address prefix-list LIST1 LIST3 LIST3
 
@@ -267,12 +270,12 @@ sub construct_lists_of_pointees {
 
         my @list_of_pointees;
 
-        foreach my $pointeeKey2 (
+        foreach my $rule_number (
             sort keys %{ $pointees_seen_ref->{"$pointeeType"} } )
         {
             #Add this label to our list
             push( @list_of_pointees,
-                $pointees_seen_ref->{"$pointeeType"}{"$pointeeKey2"} );
+                $pointees_seen_ref->{"$pointeeType"}{"$rule_number"} );
 
         }
 
@@ -306,11 +309,11 @@ sub find_pointees {
 
         #Match it against our hash of pointees regexes
         foreach my $pointeeType ( sort keys %{$pointee_regex_ref} ) {
-            foreach my $pointeeKey2 (
-                keys %{ $pointee_regex_ref->{"$pointeeType"} } )
+            foreach my $rule_number (
+                sort keys %{ $pointee_regex_ref->{"$pointeeType"} } )
             {
                 if ( $line
-                    =~ $pointee_regex_ref->{"$pointeeType"}{"$pointeeKey2"} )
+                    =~ $pointee_regex_ref->{"$pointeeType"}{"$rule_number"} )
                 {
                     my $unique_id  = $+{unique_id};
                     my $pointed_at = $+{pointed_at};
@@ -382,27 +385,42 @@ sub config_to_html {
 
         #Remove linefeeds
         $line =~ s/\R//gx;
+        
+        #Remove trailing whitespace
+        $line =~ s/\s+$//gx;
 
         #Save the current amount of indentation of this line
         #to make stuff we might insert line up right (eg PEERS)
         my ($current_indent_level) = $line =~ m/^(\s*)/ixsm;
 
         #Match $line against our hash of POINTERS regexes
+        #add HTML link to matching lines
         foreach my $pointerType ( sort keys %pointers ) {
             foreach
-                my $pointerKey2 ( sort keys %{ $pointers{"$pointerType"} } )
+                my $rule_number ( sort keys %{ $pointers{"$pointerType"} } )
             {
 
                 #The while allows multiple pointers in one line
                 while (
-                    $line =~ m/$pointers{"$pointerType"}{"$pointerKey2"}/g )
+                    $line =~ m/$pointers{"$pointerType"}{"$rule_number"}/g )
                 {
                     #Save what we captured
-                    my $unique_id = $+{unique_id};
+#                     my $unique_id = $+{unique_id};
                     my $points_to = $+{points_to};
 
+                    unless ($points_to) {
+                        #say "Null points_to:";
+                        #say $pointers{"$pointerType"}{"$rule_number"};
+                        #say "\t$line";
+                        #say "\tpointer_type: $pointerType | rule: $rule_number";
+                        next;
+                    }
+#                     #Save what we found for debugging
+#                     $foundPointers{"$line"}
+#                         .= $points_to;
                     #Save what we found for debugging
-                    $foundPointers{"$line"} .= $points_to;
+                    $foundPointers{"$line"}
+                        = "Points_to: $points_to | pointerType: $pointerType | RuleNumber: $rule_number";
 
                     #Points_to can be a list!
                     #See pointers->prefix_list->2 for an example
@@ -428,12 +446,13 @@ sub config_to_html {
         }
 
         #Match $line against our hash of POINTEES regexes
+        #add HTML anchor to matching lines
         foreach my $pointeeType ( sort keys %{$pointees_ref} ) {
-            foreach my $pointeeKey2 (
+            foreach my $rule_number (
                 sort keys %{ $pointees_ref->{"$pointeeType"} } )
             {
                 if ( $line
-                    =~ m/$pointees_ref->{"$pointeeType"}{"$pointeeKey2"}/ )
+                    =~ m/$pointees_ref->{"$pointeeType"}{"$rule_number"}/ )
                 {
                     my $unique_id  = $+{unique_id};
                     my $pointed_at = $+{pointed_at};
