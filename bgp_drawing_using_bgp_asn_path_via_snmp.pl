@@ -89,7 +89,8 @@ sub main {
             
 #             say "scaling: $scaling_number, host: $host_count, peer: $peer_count";
         
-#             my $color = $colors{$scaling_number} // 'gray';
+#           #BUG TODO: Need to do a better job of knowing $scaling_number min/max
+            #and mapping that to 1-9
             #Use the ylorrd9 color scheme, (http://graphviz.org/content/color-names#brewer)
             #Map our number into a range 1-9
             my $color = ((nearest_ceil (10, $scaling_number) ) / 10) + 1;
