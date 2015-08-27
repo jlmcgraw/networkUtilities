@@ -40,8 +40,8 @@ use vars qw/ %opt /;
 use Data::Dumper;
 use Config;
 
-#Look into using this so users don't need to install modules
-use lib "$FindBin::Bin/lib";
+# #Look into using this so users don't need to install modules
+use lib "$FindBin::Bin/local/lib/perl5";
 
 #Additional modules
 use Modern::Perl '2014';

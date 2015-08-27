@@ -55,8 +55,8 @@ use vars qw/ %opt /;
 use Config;
 
 # use Data::Dumper;
-#Look into using this so users don't need to install modules
-use lib "$FindBin::Bin/lib";
+# # #Look into using this so users don't need to install modules
+use lib "$FindBin::Bin/local/lib/perl5";
 
 #Additional modules
 use Modern::Perl '2014';
@@ -189,7 +189,8 @@ sub main {
                     . "create_host_info_hashes.pl @ARGV_unmodified" );
         }
         else {
-            $status = system( $Bin . "create_host_info_hashes.pl @ARGV" );
+            $status = system( $Bin . 'create_host_info_hashes.pl',
+                map {"$_"} @ARGV );
         }
         if ( ( $status >>= 8 ) != 0 ) {
             die "Failed to run " . $Bin . "create_host_info_hashes.pl $!";
@@ -197,13 +198,14 @@ sub main {
 
         #         }
         say "Loading host_info_hash";
-        $host_info_ref = retrieve( $Bin . 'host_info_hash.stored' )
+        $host_info_ref = retrieve( "$Bin" . 'host_info_hash.stored' )
             or die "Unable to open host_info_hash";
     }
 
     # A new empty queue
     my $q = Thread::Queue->new();
 
+    ## @ARGV
     # Queue up all of the files for the threads
     $q->enqueue($_) for @ARGV;
     $q->end();

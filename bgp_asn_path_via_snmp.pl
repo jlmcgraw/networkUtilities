@@ -31,7 +31,7 @@ use Getopt::Long;
 use FindBin '$Bin';
 
 #Use a local lib directory so users don't need to install modules
-use lib "$FindBin::Bin/lib";
+use lib "$FindBin::Bin/local/lib/perl5";
 use Params::Validate qw(:all);
 use Storable qw(nstore store retrieve);
 use Data::Dumper;

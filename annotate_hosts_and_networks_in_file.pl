@@ -74,7 +74,7 @@ $Data::Dumper::Sortkeys = sub {
 };
 
 #Use a local lib directory so users don't need to install modules
-use lib "$FindBin::Bin/lib";
+use lib "$FindBin::Bin/local/lib/perl5";
 
 #Additional modules
 use Modern::Perl '2014';
