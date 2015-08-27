@@ -6,5 +6,5 @@ requires 'Number::Format';
 requires 'Params::Validate';
 requires 'Hash::Merge';
 requires 'Smart::Comments';
-requires 'GraphViz';
 requires 'IO::Interactive';
+requires 'Net::SNMP';
