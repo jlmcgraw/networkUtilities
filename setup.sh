@@ -11,7 +11,13 @@ sudo apt-get \
 #Set up current user to capture network data            
 sudo adduser $USER wireshark
 
-#Install various perl libraries
+#Install Carton dependency manager
+cpanm Carton
+
+#update local libraries
+carton install   
+
+#or globally install various perl libraries
 sudo apt-get \
         install \
             libmodern-perl-perl \

@@ -1,5 +1,12 @@
 #Some small network related scripts
-    Look at setup.sh for how to install dependencies etc.
+	To get started:
+		#Install Carton dependency manager
+		cpanm Carton
+
+		#update local libraries
+		carton install    
+
+	Look at setup.sh for how to install dependencies etc.
 
 ##annotate_hosts_and_networks_in_file.pl
 	Parse a text file (router config, ACL etc etc) containing host and/or wildcard mask entries
