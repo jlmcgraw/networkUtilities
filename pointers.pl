@@ -271,7 +271,7 @@
         /ixsm,
         5 => qr/        \s+
                     address-family \s+
-                    (?:ipv4 | ipv6) \s+
+                    (?:ipv4 | ipv6 | CLNS | VPNv4 | L2VPN ) \s+
                     vrf \s+
                     (?<points_to> (?: $list_of_pointees_ref->{"vrf"}) )
                     (\s+|$)
