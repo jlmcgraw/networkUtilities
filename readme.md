@@ -6,15 +6,18 @@
 		#update local libraries
 		carton install    
 
-	Look at setup.sh for how to install dependencies etc.
+	Look at setup.sh for how to add wireshark user, globally install 
+	dependencies etc.
 
 ##annotate_hosts_and_networks_in_file.pl
-	Parse a text file (router config, ACL etc etc) containing host and/or wildcard mask entries
-	and test reachability for each host and network mentioned in it.  Create
-	simple HTML output with in-line color coded anotations for everything found (status, host count etc)
+	Parse a text file (router config, ACL etc etc) containing host and/or 
+	wildcard mask entries and test reachability for each host and network 
+	mentioned in it.  Create simple HTML output with in-line color coded 
+	anotations for everything found (status, host count etc)
+
 	Can use a list of known BGP networks (see bgp_asn_path_via_snmp.pl) to test
 	whether a network is specifically known 
-	Still a work in progress
+
 
 ##iosToHtml.pl
 	Convert an IOS config file into very basic HTML, creating links between 
@@ -34,7 +37,8 @@
 	Delete "host_info_hash.stored" to recreate it for new or additional files
 
 ##tcpSplit.pl
-	Splits an input pcap capture file into a separate file for each stream using tcpdump
+	Splits an input pcap capture file into a separate file for each stream using
+	tcpdump
 	Much faster than extractTcpStreams.sh
 
 ##tcpStatistics.sh
