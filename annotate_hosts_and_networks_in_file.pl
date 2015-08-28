@@ -89,23 +89,6 @@ use Smart::Comments -ENV;
 #Use this to not print warnings
 #no if $] >= 5.018, warnings => "experimental";
 
-if ( exists $ENV{GATEWAY_INTERFACE} ) {
-    say "Called from CGI";
-    print <<"EOF";
-<HTML>
-
-<HEAD>
-<TITLE>Hello, world!</TITLE>
-</HEAD>
-
-<BODY>
-<H1>Hello, world!</H1>
-</BODY>
-
-</HTML>
-EOF
-}
-
 #Define the valid command line options
 my $opt_string = 'dp:t:';
 my $arg_num    = scalar @ARGV;
@@ -165,7 +148,7 @@ if ( $opt{t} ) {
 my $should_show_duplicates = $opt{d};
 
 #Where known networks are stored (created by bgp_asn_path_via_snmp.pl)
-my $known_networks_filename = 'known_networks.stored';
+my $known_networks_filename = "$FindBin::Bin/known_networks.stored";
 
 #a hash reference for those networks
 my $known_networks_ref;

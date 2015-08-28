@@ -430,8 +430,7 @@
     1 => qr/            [\S]+
                         (?<!nameif)
                         (?: \s+ )
-                        (?: inside|outside)
-                        #(?<points_to> (?: $list_of_pointees_ref->{"pix_nameif"}) )
+                        (?<points_to> (?: $list_of_pointees_ref->{"pix_nameif"}) )
                         (?: \s+ | $ )
         /ixsm,
     },
