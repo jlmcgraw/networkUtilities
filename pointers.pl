@@ -82,6 +82,11 @@
                 (?<points_to> $list_of_pointees_ref->{"acl"}) 
                 $
                 /ixsm,
+    16 => qr /^ \s* 
+                access-group \s+ 
+                (?<points_to> $list_of_pointees_ref->{"acl"})  \s+
+                (?: in | out ) \s+
+                /ixsm,
     },
 
     'service_policy' => {

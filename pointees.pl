@@ -354,9 +354,9 @@
     1 => qr/(?<unique_id>
                         ^ \s*
                         nameif \s+
-                        (?<pointed_at> (?: inside | outside ))
+                        (?<pointed_at> $valid_cisco_name )
             )
-            (\s+|$)
+            $
             /ixsm,
     },
     'ace_context' => {
