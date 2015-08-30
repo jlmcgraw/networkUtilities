@@ -76,17 +76,32 @@
                 (?<points_to> $list_of_pointees_ref->{"acl"})
                 (\s*|$)
                 /ixsm,
+    15 => qr /^ \s* 
+                access-group \s+ 
+                (?: input | output) \s+
+                (?<points_to> $list_of_pointees_ref->{"acl"}) 
+                $
+                /ixsm,
     },
 
     'service_policy' => {
-    1 =>
-        qr/^ \s* service-policy \s+ (?: input|output) \s+ (?<points_to> $list_of_pointees_ref->{"service_policy"})/ixsm,
+    1 => qr/^ \s*
+            service-policy \s+ 
+            (?: input|output) \s+ 
+            (?<points_to> $list_of_pointees_ref->{"service_policy"})
+            /ixsm,
     2 =>
         qr/^ \s* service-policy \s+ (?<points_to> $list_of_pointees_ref->{"service_policy"})$/ixsm,
 
     #NXOS
-    3 =>
-        qr/^ \s* service-policy \s+ type \s+ (?: queuing) \s+ (?: input | output) \s (?<points_to> $list_of_pointees_ref->{"service_policy"})$/ixsm,
+    3 => qr/^ \s* 
+            service-policy \s+ 
+            type \s+ 
+            (?: queuing | qos  | network-qos ) \s+
+            (?: (?:input | output) \s+ )?
+            (?<points_to> $list_of_pointees_ref->{"service_policy"})
+            $
+            /ixsm,
     },
 
     'route_map' => {
@@ -230,6 +245,14 @@
             (?:source|interface) \s+ 
             (?<points_to> $list_of_pointees_ref->{"interface"}) 
             /ixsm,
+
+    #     #BUG TODO Testing working with "points_to" that has spaces in it
+    #     #Remove the (?-x:.....) modifier
+    #
+    #     11 => qr/[\S]+
+    #             (?:source|interface) \s+
+    #             (?<points_to> (?-x:$list_of_pointees_ref->{"interface"}))
+    #             /ixsm,
     },
     'track' => {
     1 => qr/^ \s*
@@ -269,7 +292,7 @@
                     (?<points_to> (?: $list_of_pointees_ref->{"vrf"}) )
                     (\s+|$)
         /ixsm,
-        5 => qr/        \s+
+    5 => qr/        \s+
                     address-family \s+
                     (?:ipv4 | ipv6 | CLNS | VPNv4 | L2VPN ) \s+
                     vrf \s+
@@ -309,7 +332,7 @@
     2 => qr/ ^ \s*
         class \s+
         type \s+
-        (?: queuing) \s+
+        (?: queuing | network-qos ) \s+
         (?<points_to> (?: $list_of_pointees_ref->{"class"}) )
         (\s*|$)
         /ixsm,
@@ -348,7 +371,11 @@
         router \s+
         (?<points_to> (?: $list_of_pointees_ref->{"routing_process"}) )
         /ixsm,
-
+    2 => qr/ ^ \s*
+            ip \s+
+            router \s+
+            (?<points_to> (?: $list_of_pointees_ref->{"routing_process"}) )
+            /ixsm,
     },
     'object_group' => {
 
@@ -433,4 +460,46 @@
                         (?<points_to> (?: $list_of_pointees_ref->{"pix_nameif"}) )
                         (?: \s+ | $ )
         /ixsm,
+    },
+    'ace_context' => {
+    1 => qr/            
+            ^ \s* 
+            associate-context \s+ 
+            (?<points_to> (?: $list_of_pointees_ref->{"ace_context"}) )
+            \s* $
+            /ixsm,
+    },
+    'ace_resource_class' => {
+    1 => qr/            
+            ^ \s* 
+            member \s+ 
+            (?<points_to> (?: $list_of_pointees_ref->{"ace_resource_class"}) )
+            \s* $
+            /ixsm,
+    },
+    'nxos_zoneset' => {
+    1 => qr/            
+            ^ \s* 
+            zoneset \s+
+            activate \s+ 
+            name \s+ 
+            (?<points_to> (?: $list_of_pointees_ref->{"nxos_zoneset"}) )
+            /ixsm,
+    },
+    'nxos_zoneset_member' => {
+    1 => qr/            
+            ^ \s* 
+            member \s+ 
+            (?<points_to> (?: $list_of_pointees_ref->{"nxos_zoneset_member"}) )
+            \s* $
+            /ixsm,
+    },
+    'nxos_role' => {
+    1 => qr/            
+            ^ \s* 
+            username \s+ 
+            .*?
+            role \s+
+            (?<points_to> (?: $list_of_pointees_ref->{"nxos_role"}) )
+            /ixsm,
     },

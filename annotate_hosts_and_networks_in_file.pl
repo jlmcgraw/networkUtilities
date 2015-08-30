@@ -287,14 +287,16 @@ sub annotate_file {
 
     #Print a simple html beginning to output
     print $filehandleHtml <<"END";
+<!DOCTYPE html>
 <html>
- <head>
-  <title>
-  $filename
-  </title>
- </head>
- <body>
-  <pre>
+    <head>
+        <meta charset="UTF-8">
+        <title>
+        $filename
+        </title>
+    </head>
+    <body>
+        <pre>
 END
 
     #The html-ized output
@@ -302,8 +304,8 @@ END
 
     #Close out the file with very basic html ending
     print $filehandleHtml <<"END";
-  </pre>
- </body>
+        </pre>
+    </body>
 </html>
 END
     close $filehandleHtml;

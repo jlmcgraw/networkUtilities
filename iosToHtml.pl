@@ -23,7 +23,7 @@
 #TODO
 #   How to handle cases where pointer doesn't match pointee?
 #       eg: channel-group 20 -> Etherchannel20
-        
+
 #   Hightlight missing pointees in red?
 #   Yes, I'm reading through the file twice.  I haven't reached the point
 #       of really trying to optimize anything
@@ -207,8 +207,20 @@ sub main {
 
     ## @ARGV
     # Queue up all of the files for the threads
-    $q->enqueue($_) for @ARGV;
+    #     $q->enqueue($_) for @ARGV;
+    foreach my $file (@ARGV) {
+        if ( -e $file ) {
+            $q->enqueue($file);
+        }
+        else {
+            say "$file does not exist";
+        }
+    }
     $q->end();
+
+    #Return if there's no files to process
+    return 0 unless $q->pending();
+
     say $q->pending() . " files queued";
 
     # Maximum number of worker threads
@@ -379,10 +391,11 @@ sub config_to_html {
     say "Thread $id: $filename";
 
     #Find the hostname
-    my ($hostname) = map { /^ \s* hostname \s+ (\S+) \b/ix ? $1 : () } @array_of_lines;
+    my ($hostname)
+        = map { /^ \s* hostname \s+ (\S+) \b/ix ? $1 : () } @array_of_lines;
 
     #If we didn't find a name set a default
-    $hostname //= 'no name' ;
+    $hostname //= 'no name';
 
     #Read each line, one at a time, of this file
     foreach my $line (@array_of_lines) {
@@ -390,7 +403,7 @@ sub config_to_html {
 
         #Remove linefeeds
         $line =~ s/\R//gx;
-        
+
         #Remove trailing whitespace
         $line =~ s/\s+$//gx;
 
@@ -410,19 +423,21 @@ sub config_to_html {
                     $line =~ m/$pointers{"$pointerType"}{"$rule_number"}/g )
                 {
                     #Save what we captured
-#                     my $unique_id = $+{unique_id};
+                    #                     my $unique_id = $+{unique_id};
                     my $points_to = $+{points_to};
 
                     unless ($points_to) {
+
                         #say "Null points_to:";
                         #say $pointers{"$pointerType"}{"$rule_number"};
                         #say "\t$line";
                         #say "\tpointer_type: $pointerType | rule: $rule_number";
                         next;
                     }
-#                     #Save what we found for debugging
-#                     $foundPointers{"$line"}
-#                         .= $points_to;
+
+                    #                     #Save what we found for debugging
+                    #                     $foundPointers{"$line"}
+                    #                         .= $points_to;
                     #Save what we found for debugging
                     $foundPointers{"$line"}
                         = "Points_to: $points_to | pointerType: $pointerType | RuleNumber: $rule_number";
@@ -430,6 +445,19 @@ sub config_to_html {
                     #Points_to can be a list!
                     #See pointers->prefix_list->2 for an example
                     #Split it up and create a link for each element
+
+                    #                     #Trying a hack here to work with identifiers that have spaces in them
+                    #                     #Remove ?-x from pointers->interface->#11
+                    #                     #Set pointees->interface->#2 back to $valid_cisco_name
+                    #                     my @fields;
+                    #
+                    #                     if ($pointerType =~ /interface/ix) {
+                    #                         push @fields, $points_to;
+                    #                     }
+                    #                     else {
+                    #                         @fields = split( '\s+', $points_to );
+                    #                     }
+
                     my @fields = split( '\s+', $points_to );
 
                     foreach my $label (@fields) {
@@ -444,6 +472,11 @@ sub config_to_html {
                         #Insert the link back into the line
                         #Link point needs to be surrounded by whitespace or end of line
                         $line =~ s/(\s+) $label (\s+|$)/$1$linkText$2/gx;
+
+                        #                         #Notice the (?-x:$label)
+                        #                         #That's disabling ignoring spaces just for the $label part
+                        #                         #Handles identifiers with spaces in them
+                        #                         $line =~ s/(\s+) (?-x:$label) (\s+|$)/$1$linkText$2/gx;
                     }
 
                 }
@@ -727,19 +760,25 @@ sub config_to_html {
 }
 
 sub output_as_html {
-    my ( $filename, $html_formatted_text_ref, $hostname )
-        = validate_pos( @_, { type => SCALAR }, { type => ARRAYREF },  { type => SCALAR },);
+    my ( $filename, $html_formatted_text_ref, $hostname ) = validate_pos(
+        @_,
+        { type => SCALAR },
+        { type => ARRAYREF },
+        { type => SCALAR },
+    );
 
     open my $filehandleHtml, '>', $filename . '.html' or die $!;
 
     #Print a simple html beginning to output
     print $filehandleHtml <<"END";
+<!DOCTYPE html>
 <html>
-  <head>
-    <title> 
-      $filename
-    </title>
-  </head>
+    <head>
+        <meta charset="UTF-8">
+        <title> 
+            $filename
+        </title>
+    </head>
         <style>
             :target{
                 background-color: #ffa

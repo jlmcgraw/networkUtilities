@@ -42,26 +42,27 @@ exit main(@ARGV);
 sub main {
 
     my $asn_info_ref = retrieve( $Bin . '/bgp_asns.stored' )
-        or die "Unable to open bgp_asns.stored.  Run bgp_asn_path_via_snmp.pl against an SNMP enabled BGP router";
+        or die
+        "Unable to open bgp_asns.stored.  Run bgp_asn_path_via_snmp.pl against an SNMP enabled BGP router";
 
     #Our GraphViz object
     my $asnGraph = GraphViz->new(
-        directed => 0,
-        layout   => 'sfdp',
-        overlap  => 'scalexy',
-        splines => 'true',
+        directed    => 0,
+        layout      => 'sfdp',
+        overlap     => 'scalexy',
+        splines     => 'true',
         colorscheme => 'ylorrd9',
     );
     my %colors = (
-        0 => 'gray',
-        5 => 'blue',
+        0  => 'gray',
+        5  => 'blue',
         10 => 'green',
         15 => 'yellow',
         20 => 'orange',
         25 => 'red',
-        60 => 'indigo',);
+        60 => 'indigo',
+    );
 
-    
     for my $asn ( sort keys %{$asn_info_ref} ) {
 
         #Add all hosts in the AS to the AS node label
@@ -78,35 +79,35 @@ sub main {
         #Create a node for this ASN
         #Make it bigger relative to number of hosts advertised or number of peers
 
-            my $host_count =  $asn_info_ref->{$asn}{'host_count'} // 1;
-            $host_count = nearest_ceil( 5, log10( $host_count )**1.9 );
-            
-            my $peer_count = $asn_info_ref->{$asn}{'peer_count'} // 1;
-            
-            $peer_count = nearest_ceil (5, $peer_count / 25 + 10);
+        my $host_count = $asn_info_ref->{$asn}{'host_count'} // 1;
+        $host_count = nearest_ceil( 5, log10($host_count)**1.9 );
 
-            my $scaling_number = $host_count >= $peer_count ? $host_count : $peer_count;
-            
-#             say "scaling: $scaling_number, host: $host_count, peer: $peer_count";
-        
-#           #BUG TODO: Need to do a better job of knowing $scaling_number min/max
-            #and mapping that to 1-9
-            #Use the ylorrd9 color scheme, (http://graphviz.org/content/color-names#brewer)
-            #Map our number into a range 1-9
-            my $color = ((nearest_ceil (10, $scaling_number) ) / 10) + 1;
-            say $color;
-            
-            $asnGraph->add_node(
-                $asn,
-                label    => "$label",
-                shape    => 'ellipse',
-                style    => 'filled',
-                fontsize => $scaling_number,
-                rank     => $scaling_number,
-                color    => "$color",
-                 colorscheme => 'ylorrd9',
-            );
-        
+        my $peer_count = $asn_info_ref->{$asn}{'peer_count'} // 1;
+
+        $peer_count = nearest_ceil( 5, $peer_count / 25 + 10 );
+
+        my $scaling_number
+            = $host_count >= $peer_count ? $host_count : $peer_count;
+
+        #             say "scaling: $scaling_number, host: $host_count, peer: $peer_count";
+
+        #           #BUG TODO: Need to do a better job of knowing $scaling_number min/max
+        #and mapping that to 1-9
+        #Use the ylorrd9 color scheme, (http://graphviz.org/content/color-names#brewer)
+        #Map our number into a range 1-9
+        my $color = ( ( nearest_ceil( 10, $scaling_number ) ) / 10 ) + 1;
+        say $color;
+
+        $asnGraph->add_node(
+            $asn,
+            label       => "$label",
+            shape       => 'ellipse',
+            style       => 'filled',
+            fontsize    => $scaling_number,
+            rank        => $scaling_number,
+            color       => "$color",
+            colorscheme => 'ylorrd9',
+        );
 
         #Add edges for all neighbor ASNs of this AS
         while ( my ( $neighborAsn, $neighborHashReference )

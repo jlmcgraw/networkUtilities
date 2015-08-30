@@ -64,7 +64,8 @@
                                 ^ \s* 
                                 policy-map \s+
                                 type \s+
-                                (?: queuing | qos | inspect) \s+
+                                (?: queuing | qos | inspect | control-plane | management | network-qos) \s+
+                                (?: first-match \s+)? 
                                 (?<pointed_at> 
                                     (?: $valid_cisco_name) 
                                 ) 
@@ -123,19 +124,25 @@
     'interface' => {
 
     #NXOS,
-            1 => qr/(?<unique_id> ^ \s*
-                                interface \s+
-                                port-channel
-                                (?<pointed_at> $valid_cisco_name)
-                )/ixsm,
-                
+    #Put this longer match first so we can match on just the #
+    1 => qr/(?<unique_id> ^ \s*
+                        interface \s+
+                        port-channel
+                        (?<pointed_at> $valid_cisco_name)
+        )/ixsm,
+
     2 => qr/(?<unique_id> ^ \s* 
                             interface \s+
-                            (?<pointed_at> $valid_cisco_name) 
+                            (?<pointed_at> $valid_cisco_name)
             )/ixsm,
 
-
-
+    #     #BUG TODO Change .*? back to $valid_cisco_name if we have problems
+    #     #Testing working with "pointed_at" that has spaces in it
+    #     2 => qr/(?<unique_id> ^ \s*
+    #                             interface \s+
+    #                             (?<pointed_at> .*?)
+    #                             $
+    #             )/ixsm,
     },
     'track' => {
     1 => qr/(?<unique_id>^ \s*
@@ -209,8 +216,8 @@
                     ^ \s*
                     class-map \s+
                     type \s+
-                    (?: control-plane | qos) \s+
-                    (?: match-any | match-all) \s+
+                    (?: control-plane | qos | management) \s+
+                    (?: match-any | match-all \s+)? 
                     (?<pointed_at> $valid_cisco_name) )
                     /ixsm,
 
@@ -350,5 +357,50 @@
                         (?<pointed_at> (?: inside | outside ))
             )
             (\s+|$)
+            /ixsm,
+    },
+    'ace_context' => {
+    1 => qr/(?<unique_id>
+                        ^ \s*
+                        context \s+
+                        (?<pointed_at> $valid_cisco_name )
+            )
+            $
+            /ixsm,
+    },
+    'ace_resource_class' => {
+    1 => qr/(?<unique_id>
+                        ^ \s*
+                        resource-class \s+
+                        (?<pointed_at> $valid_cisco_name )
+            )
+            $
+            /ixsm,
+    },
+    'nxos_zoneset' => {
+    1 => qr/(?<unique_id>
+                        ^ \s*
+                        zoneset \s+
+                        name \s+
+                        (?<pointed_at> $valid_cisco_name )
+            )
+            /ixsm,
+    },
+    'nxos_zoneset_member' => {
+    1 => qr/(?<unique_id>
+                        ^ \s*
+                        zone \s+
+                        name \s+
+                        (?<pointed_at> $valid_cisco_name )
+            )
+            /ixsm,
+    },
+    'nxos_role' => {
+    1 => qr/(?<unique_id>
+                        ^ \s*
+                        role \s+
+                        name \s+
+                        (?<pointed_at> $valid_cisco_name )
+            )
             /ixsm,
     },
