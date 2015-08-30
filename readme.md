@@ -9,6 +9,18 @@
 	Look at setup.sh for how to add wireshark user, globally install 
 	dependencies etc.
 
+##iosToHtml.pl
+	Convert an IOS/NXOS/ACE/ASA config file into very basic HTML, creating links 
+	between commands referencing lists and that list (e.g. access lists, 
+	route maps, prefix lists, service-policies etc etc).  
+
+	Very useful for trying to follow complex configurations
+
+	It's best to start with all of your configuration files in one directory
+
+	e.g.:
+		./iosToHtml.pl -e -h ./sample_configs/*.cfg
+
 ##annotate_hosts_and_networks_in_file.pl
 	Parse a text file (router config, ACL etc etc) containing host and/or 
 	wildcard mask entries and test reachability for each host and network 
@@ -17,19 +29,6 @@
 
 	Can use a list of known BGP networks (see bgp_asn_path_via_snmp.pl) to test
 	whether a network is specifically known 
-
-
-##iosToHtml.pl
-	Convert an IOS config file into very basic HTML, creating links between 
-	commands referencing lists and that list (eg access lists, route maps, 
-	prefix lists etc etc).  
-
-	Very useful for trying to follow complex configurations
-
-	It's best to start with all of your configuration files in one directory
-
-	e.g.:
-		./iosToHtml.pl -e -h ./sample_configs/*.cfg
 
 ##create_host_info_hashes.pl
 	Create a hash used by iosToHtml.pl to allow linking between configurations
