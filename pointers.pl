@@ -87,6 +87,12 @@
                 (?<points_to> $list_of_pointees_ref->{"acl"})  \s+
                 (?: in | out ) \s+
                 /ixsm,
+    17 => qr /^ \s* 
+                crypto \s+
+                .*?
+                address \s+
+                (?<points_to> $list_of_pointees_ref->{"acl"})
+                /ixsm,
     },
 
     'service_policy' => {
@@ -313,7 +319,6 @@
         (?<points_to> (?: $list_of_pointees_ref->{"key_chain"}) )
         (\s+|$)
         /ixsm,
-
     },
     'ip_sla' => {
     1 => qr/ ^ \s*
@@ -322,7 +327,6 @@
         schedule \s+
         (?<points_to> (?: $list_of_pointees_ref->{"ip_sla"}) )
         /ixsm,
-
     },
     'class' => {
 
@@ -387,7 +391,7 @@
     #BUG TODO: Catch both
     #access-list outside_access_in extended permit tcp object-group Support_Network any object-group Support_Ports
     1 =>
-        qr/ \w+ \s*             #Make this guy have to have some alphanumeric in front of him
+        qr/ \S+ \s*             #Make this guy have to have some alphanumeric in front of him
         object-group \s+
         (?<points_to> (?: $list_of_pointees_ref->{"object_group"}) )
         /ixsm,
@@ -453,16 +457,13 @@
     },
     'pix_nameif' => {
 
-    #This is me being lazy.
-    #Match anything with inside|outside, not proceeded by nameif
-    #If we've seen a pix named interface
-    #This may be a terrible idea
     #BUG is matching lines with whitespace when run against non-pix config
-    #PIX
+    #BUG if some other group name matches an interface name
+    #   Incomplete workaround by making interface name case-sensitive (?-i)
     1 => qr/            [\S]+
                         (?<!nameif)
                         (?: \s+ )
-                        (?<points_to> (?: $list_of_pointees_ref->{"pix_nameif"}) )
+                        (?<points_to> (?-i: $list_of_pointees_ref->{"pix_nameif"}) )
                         (?: \s+ | $ )
         /ixsm,
     },

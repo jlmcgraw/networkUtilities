@@ -216,17 +216,8 @@
                     ^ \s*
                     class-map \s+
                     type \s+
-                    (?: control-plane | qos | management) \s+
-                    (?: match-any | match-all \s+)? 
-                    (?<pointed_at> $valid_cisco_name) )
-                    /ixsm,
-
-    #NXOS
-    3 => qr/(?<unique_id> 
-                    ^ \s*
-                    class-map \s+
-                    type \s+
-                    (?: network-qos | queuing ) \s+
+                    (?: control-plane | qos | management | network-qos | queuing ) \s+
+                    (?: (?: match-any | match-all) \s+)?
                     (?<pointed_at> $valid_cisco_name) )
                     /ixsm,
 

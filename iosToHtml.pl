@@ -316,7 +316,6 @@ sub find_pointees {
     my %foundPointees = ();
 
     foreach my $line (@$array_of_lines_ref) {
-        chomp $line;
 
         #Remove linefeeds
         $line =~ s/\R//gx;
@@ -369,6 +368,9 @@ sub config_to_html {
     my @array_of_lines = <$filehandle>
         or die $!;    # Reads all lines into array
 
+    #chomp the whole array in one fell swoop
+    chomp @array_of_lines;
+
     my @html_formatted_text;
 
     #Find all pointees (things that are pointed TO) in the file
@@ -399,7 +401,6 @@ sub config_to_html {
 
     #Read each line, one at a time, of this file
     foreach my $line (@array_of_lines) {
-        chomp $line;
 
         #Remove linefeeds
         $line =~ s/\R//gx;
@@ -426,6 +427,7 @@ sub config_to_html {
                     #                     my $unique_id = $+{unique_id};
                     my $points_to = $+{points_to};
 
+                    #abort if $points_to isn't defined
                     unless ($points_to) {
 
                         #say "Null points_to:";
@@ -435,9 +437,6 @@ sub config_to_html {
                         next;
                     }
 
-                    #                     #Save what we found for debugging
-                    #                     $foundPointers{"$line"}
-                    #                         .= $points_to;
                     #Save what we found for debugging
                     $foundPointers{"$line"}
                         = "Points_to: $points_to | pointerType: $pointerType | RuleNumber: $rule_number";
@@ -504,19 +503,31 @@ sub config_to_html {
                         $pointeeSeen{$pointeeType}{$unique_id}
                             = "$pointed_at";
 
-                        #                         Trying some different formatting
-                        $line
-                            =~ s/ (\s+) $pointed_at ( \s+ | $ ) /$1<i>$pointed_at<\/i>$2/ixg;
+                        #                         my $anchor_text = '<a name="'
+                        #                             . $pointeeType . '_'
+                        #                             . $pointed_at . '">'
+                        #                             . $pointed_at
+                        #                             . '</a>';
 
-                        #Add a break <br> to make this stand out from text above it
-                        #Add underline/italic to destination line
-                        #along with the anchor for links to refer to
+                        #                         #Add the section anchor
+                        #                         $line
+                        #                             =~ s/ (\s+) $pointed_at ( \s+ | $ ) /$1$anchor_text$2/ixg;
+
+                        #Add a span for what's actually pointed at
+                        #See "output_as_html" to adjust styling via cs
                         $line
-                            = '<br>' . '<b>'
-                            . '<a name="'
+                            =~ s/ (\s+) $pointed_at ( \s+ | $ ) /$1<span class="pointed_at">$pointed_at<\/span>$2/ixg;
+
+                        #Add a span for links to refer to
+                        #See "output_as_html" to adjust styling via css
+                        $line
+                            = '<br>'
+                            . '<span id="'
                             . $pointeeType . '_'
-                            . $pointed_at . '">'
-                            . $line . '</a>' . '</b>';
+                            . $pointed_at . '" '
+                            . 'class="pointee"' . '>'
+                            . $line
+                            . '</span>';
 
                     }
                 }
@@ -773,17 +784,26 @@ sub output_as_html {
     print $filehandleHtml <<"END";
 <!DOCTYPE html>
 <html>
+
     <head>
         <meta charset="UTF-8">
         <title> 
             $filename
         </title>
-    </head>
         <style>
             :target{
-                background-color: #ffa
-            }
+                background-color: #ffa;
+                }
+            .pointee {
+                font-weight: bold;
+                }
+            .pointed_at {
+                border-style: solid;
+                border-width: 1px;
+                border-color: red;
+                }
         </style>
+    </head>
     <body>
         <pre>
 END
