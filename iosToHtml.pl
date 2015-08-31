@@ -90,24 +90,6 @@ use Smart::Comments -ENV;
 #     }
 # };
 
-#Are running as CGI?
-if ( exists $ENV{GATEWAY_INTERFACE} ) {
-    say "Called from CGI";
-    print <<"EOF";
-<HTML>
-
-<HEAD>
-<TITLE>Testing</TITLE>
-</HEAD>
-
-<BODY>
-<H1>Hello, world!</H1>
-</BODY>
-
-</HTML>
-EOF
-}
-
 #Use this to not print warnings
 # no if $] >= 5.018, warnings => "experimental";
 
