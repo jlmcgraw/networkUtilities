@@ -163,7 +163,7 @@ my $ipv4AddressRegex = qr/$ipOctetRegex\.
 			  $ipOctetRegex/mx;
 
 #Load a hash of our known networks, if it exists
-if ( -e $Bin . "/$known_networks_filename" ) {
+if ( -e "/$known_networks_filename" ) {
     say "Loading $known_networks_filename ...";
 
     #Read in hash from 'storable' format
