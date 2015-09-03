@@ -769,7 +769,7 @@ sub output_as_html {
 
     <head>
         <meta charset="UTF-8">
-        <title> 
+        <title>     
             $filename
         </title>
         <style>
@@ -780,9 +780,7 @@ sub output_as_html {
                 font-weight: bold;
                 }
             .pointed_at {
-                border-style: solid;
-                border-width: 1px;
-                border-color: red;
+                font-style: italic;
                 }
         </style>
     </head>

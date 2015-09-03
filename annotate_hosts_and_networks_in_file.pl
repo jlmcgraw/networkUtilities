@@ -305,6 +305,7 @@ END
     #Close out the file with very basic html ending
     print $filehandleHtml <<"END";
         </pre>
+        <a style="position: fixed; top:10px;right:10px;color: white;background-color: Blue;text-decoration:none" href="#" title="Click to go to top">$filename</a>
     </body>
 </html>
 END
