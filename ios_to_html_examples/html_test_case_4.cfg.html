@@ -16,12 +16,238 @@
             .pointed_at {
                 font-style: italic;
                 }
+            .to_top_label{
+                position: fixed; 
+                top:10px;
+                right:10px;
+                color: white;
+                background-color: Blue;
+                text-decoration:none
+                }
+            div.floating-menu {
+                position:fixed;
+                top:10px;
+                right:10px;
+                background:#fff4c8;
+                padding:5px;
+                z-index:100;
+                }
+            div.floating-menu a, div.floating-menu h3, div.floating-menu h4 {
+                text-align: right;
+                text-decoration:none;
+                display:block;
+                margin:0 0.5em;
+                }
+            div.floating-menu a:hover {
+                color: grey;
+                }
+                
         </style>
     </head>
     <body>
         <pre>
-Current configuration : 5242 bytes!version 12.4no service padservice timestamps debug datetime msecservice timestamps log datetime msecservice password-encryption!hostname GenXXX!boot-start-markerboot-end-marker!enable secret 5 <REMOVED>enable password 7 <REMOVED>!aaa new-model!!aaa authentication login default localaaa authorization exec default local!!aaa session-id common!!!crypto pki trustpoint <a href="#crypto_pki_TP-self-signed-1309454855">TP-self-signed-1309454855</a>enrollment selfsignedsubject-name cn=IOS-Self-Signed-Certificate-1309454855revocation-check nonersakeypair TP-self-signed-1309454855!!<br><span id="crypto_pki_TP-self-signed-1309454855" class="pointee">crypto pki certificate chain <span class="pointed_at">TP-self-signed-1309454855</span></span>certificate self-signed 01<REMOVED>quit!dot11 ssid Genxxxvlan 1authentication openauthentication key-management wpawpa-psk ascii 7 <REMOVED>!dot11 ssid GenXXXGuestvlan 20authentication openauthentication key-management wpaguest-modewpa-psk ascii 7 <REMOVED>!no ip dhcp use vrf connectedip dhcp excluded-address 192.168.1.1 192.168.1.100ip dhcp excluded-address 192.168.2.1 192.168.2.100!<br><span id="dhcp_pool_Internal-net" class="pointee">ip dhcp pool <span class="pointed_at">Internal-net</span></span>import allnetwork 192.168.1.0 255.255.255.0default-router 192.168.1.1domain-name <REMOVED>lease 4!<br><span id="dhcp_pool_VLAN20" class="pointee">ip dhcp pool <span class="pointed_at">VLAN20</span></span>import allnetwork 192.168.2.0 255.255.255.0default-router 192.168.2.1domain-name <REMOVED>lease 4!!ip cef<br><span id="ip_inspect_MYFW" class="pointee">ip inspect name <span class="pointed_at">MYFW</span> tcp</span><br><span id="ip_inspect_MYFW" class="pointee">ip inspect name <span class="pointed_at">MYFW</span> udp</span>no ip domain lookupip domain name genXXX.local!!!username roger privilege 15 password 7 <REMOVED>archivelog confighidekeys!!!bridge irb!!<br><span id="interface_FastEthernet0" class="pointee">interface <span class="pointed_at">FastEthernet0</span></span>spanning-tree portfast!<br><span id="interface_FastEthernet1" class="pointee">interface <span class="pointed_at">FastEthernet1</span></span>spanning-tree portfast!<br><span id="interface_FastEthernet2" class="pointee">interface <span class="pointed_at">FastEthernet2</span></span>spanning-tree portfast!<br><span id="interface_FastEthernet3" class="pointee">interface <span class="pointed_at">FastEthernet3</span></span>spanning-tree portfast!<br><span id="interface_FastEthernet4" class="pointee">interface <span class="pointed_at">FastEthernet4</span></span>ip address dhcpip access-group <a href="#acl_Internet-inbound-ACL">Internet-inbound-ACL</a> inip inspect <a href="#ip_inspect_MYFW">MYFW</a> outip nat outsideip virtual-reassemblyip tcp adjust-mss 1460duplex autospeed autono cdp enable!<br><span id="interface_Dot11Radio0" class="pointee">interface <span class="pointed_at">Dot11Radio0</span></span>no ip addressno dot11 extension aironet!encryption vlan 1 mode ciphers tkip!encryption vlan 20 mode ciphers tkip!ssid GenXXX!ssid GenXXXGuest!speed basic-1.0 basic-2.0 basic-5.5 6.0 9.0 basic-11.0 12.0 18.0 24.0 36.0 48.054.0channel 2437station-role rootno cdp enable!<br><span id="interface_Dot11Radio0.1" class="pointee">interface <span class="pointed_at">Dot11Radio0.1</span></span>encapsulation dot1Q 1 nativebridge-group 1bridge-group 1 subscriber-loop-controlbridge-group 1 spanning-disabledbridge-group 1 block-unknown-sourceno bridge-group 1 source-learningno bridge-group 1 unicast-flooding!<br><span id="interface_Dot11Radio0.20" class="pointee">interface <span class="pointed_at">Dot11Radio0.20</span></span>description Guest wireless LAN - routed WLANencapsulation dot1Q 20ip address 192.168.2.1 255.255.255.0ip access-group Guest-ACL inip inspect <a href="#ip_inspect_MYFW">MYFW</a> outip nat insideip virtual-reassembly!<br><span id="interface_Vlan1" class="pointee">interface <span class="pointed_at">Vlan1</span></span>description Internal Networkno ip addressip nat insideip virtual-reassemblybridge-group 1bridge-group 1 spanning-disabled!<br><span id="interface_BVI1" class="pointee">interface <span class="pointed_at">BVI1</span></span>description Bridge to Internal Networkip address 192.168.1.1 255.255.255.0ip nat insideip virtual-reassembly!ip route 0.0.0.0 0.0.0.0 dhcp!ip http serverip http secure-serverip nat inside source list <a href="#acl_1">1</a> interface <a href="#interface_FastEthernet4">FastEthernet4</a> overload!<br><span id="acl_Internet-inbound-ACL" class="pointee">ip access-list extended <span class="pointed_at">Internet-inbound-ACL</span></span>permit udp any eq bootps any eq bootpcpermit icmp any any echopermit icmp any any echo-replypermit icmp any any traceroutepermit gre any anypermit esp any any!<br><span id="acl_1" class="pointee">access-list <span class="pointed_at">1</span> permit 192.168.1.0 0.0.0.255</span>access-list 1 permit 192.168.2.0 0.0.0.255!control-plane!bridge 1 route ip!line con 0password 7 <REMOVED>no modem enableline aux 0line vty 0 4password 7 <REMOVED>!scheduler max-task-time 5000end
+Current configuration : 5242 bytes
+!
+version 12.4
+no service pad
+service timestamps debug datetime msec
+service timestamps log datetime msec
+service password-encryption
+!
+hostname GenXXX
+!
+boot-start-marker
+boot-end-marker
+!
+enable secret 5 <REMOVED>
+enable password 7 <REMOVED>
+!
+aaa new-model
+!
+!
+aaa authentication login default local
+aaa authorization exec default local
+!
+!
+aaa session-id common
+!
+!
+!
+crypto pki trustpoint <a href="#crypto_pki_TP-self-signed-1309454855">TP-self-signed-1309454855</a>
+enrollment selfsigned
+subject-name cn=IOS-Self-Signed-Certificate-1309454855
+revocation-check none
+rsakeypair TP-self-signed-1309454855
+!
+!
+<br><span id="crypto_pki_TP-self-signed-1309454855" class="pointee">crypto pki certificate chain <span class="pointed_at">TP-self-signed-1309454855</span></span>
+certificate self-signed 01
+<REMOVED>
+quit
+!
+dot11 ssid Genxxx
+vlan 1
+authentication open
+authentication key-management wpa
+wpa-psk ascii 7 <REMOVED>
+!
+dot11 ssid GenXXXGuest
+vlan 20
+authentication open
+authentication key-management wpa
+guest-mode
+wpa-psk ascii 7 <REMOVED>
+!
+no ip dhcp use vrf connected
+ip dhcp excluded-address 192.168.1.1 192.168.1.100
+ip dhcp excluded-address 192.168.2.1 192.168.2.100
+!
+<br><span id="dhcp_pool_Internal-net" class="pointee">ip dhcp pool <span class="pointed_at">Internal-net</span></span>
+import all
+network 192.168.1.0 255.255.255.0
+default-router 192.168.1.1
+domain-name <REMOVED>
+lease 4
+!
+<br><span id="dhcp_pool_VLAN20" class="pointee">ip dhcp pool <span class="pointed_at">VLAN20</span></span>
+import all
+network 192.168.2.0 255.255.255.0
+default-router 192.168.2.1
+domain-name <REMOVED>
+lease 4
+!
+!
+ip cef
+<br><span id="ip_inspect_MYFW" class="pointee">ip inspect name <span class="pointed_at">MYFW</span> tcp</span>
+<br><span id="ip_inspect_MYFW" class="pointee">ip inspect name <span class="pointed_at">MYFW</span> udp</span>
+no ip domain lookup
+ip domain name genXXX.local
+!
+!
+!
+username roger privilege 15 password 7 <REMOVED>
+archive
+log config
+hidekeys
+!
+!
+!
+bridge irb
+!
+!
+<br><span id="interface_FastEthernet0" class="pointee">interface <span class="pointed_at">FastEthernet0</span></span>
+spanning-tree portfast
+!
+<br><span id="interface_FastEthernet1" class="pointee">interface <span class="pointed_at">FastEthernet1</span></span>
+spanning-tree portfast
+!
+<br><span id="interface_FastEthernet2" class="pointee">interface <span class="pointed_at">FastEthernet2</span></span>
+spanning-tree portfast
+!
+<br><span id="interface_FastEthernet3" class="pointee">interface <span class="pointed_at">FastEthernet3</span></span>
+spanning-tree portfast
+!
+<br><span id="interface_FastEthernet4" class="pointee">interface <span class="pointed_at">FastEthernet4</span></span>
+ip address dhcp
+ip access-group <a href="#acl_Internet-inbound-ACL">Internet-inbound-ACL</a> in
+ip inspect <a href="#ip_inspect_MYFW">MYFW</a> out
+ip nat outside
+ip virtual-reassembly
+ip tcp adjust-mss 1460
+duplex auto
+speed auto
+no cdp enable
+!
+<br><span id="interface_Dot11Radio0" class="pointee">interface <span class="pointed_at">Dot11Radio0</span></span>
+no ip address
+no dot11 extension aironet
+!
+encryption vlan 1 mode ciphers tkip
+!
+encryption vlan 20 mode ciphers tkip
+!
+ssid GenXXX
+!
+ssid GenXXXGuest
+!
+speed basic-1.0 basic-2.0 basic-5.5 6.0 9.0 basic-11.0 12.0 18.0 24.0 36.0 48.0
+54.0
+channel 2437
+station-role root
+no cdp enable
+!
+<br><span id="interface_Dot11Radio0.1" class="pointee">interface <span class="pointed_at">Dot11Radio0.1</span></span>
+encapsulation dot1Q 1 native
+bridge-group 1
+bridge-group 1 subscriber-loop-control
+bridge-group 1 spanning-disabled
+bridge-group 1 block-unknown-source
+no bridge-group 1 source-learning
+no bridge-group 1 unicast-flooding
+!
+<br><span id="interface_Dot11Radio0.20" class="pointee">interface <span class="pointed_at">Dot11Radio0.20</span></span>
+description Guest wireless LAN - routed WLAN
+encapsulation dot1Q 20
+ip address 192.168.2.1 255.255.255.0
+ip access-group Guest-ACL in
+ip inspect <a href="#ip_inspect_MYFW">MYFW</a> out
+ip nat inside
+ip virtual-reassembly
+!
+<br><span id="interface_Vlan1" class="pointee">interface <span class="pointed_at">Vlan1</span></span>
+description Internal Network
+no ip address
+ip nat inside
+ip virtual-reassembly
+bridge-group 1
+bridge-group 1 spanning-disabled
+!
+<br><span id="interface_BVI1" class="pointee">interface <span class="pointed_at">BVI1</span></span>
+description Bridge to Internal Network
+ip address 192.168.1.1 255.255.255.0
+ip nat inside
+ip virtual-reassembly
+!
+ip route 0.0.0.0 0.0.0.0 dhcp
+!
+ip http server
+ip http secure-server
+ip nat inside source list <a href="#acl_1">1</a> interface <a href="#interface_FastEthernet4">FastEthernet4</a> overload
+!
+<br><span id="acl_Internet-inbound-ACL" class="pointee">ip access-list extended <span class="pointed_at">Internet-inbound-ACL</span></span>
+permit udp any eq bootps any eq bootpc
+permit icmp any any echo
+permit icmp any any echo-reply
+permit icmp any any traceroute
+permit gre any any
+permit esp any any
+!
+<br><span id="acl_1" class="pointee">access-list <span class="pointed_at">1</span> permit 192.168.1.0 0.0.0.255</span>
+access-list 1 permit 192.168.2.0 0.0.0.255
+!
+control-plane
+!
+bridge 1 route ip
+!
+line con 0
+password 7 <REMOVED>
+no modem enable
+line aux 0
+line vty 0 4
+password 7 <REMOVED>
+!
+scheduler max-task-time 5000
+end
         </pre>
-        <a style="position: fixed; top:10px;right:10px;color: white;background-color: Blue;text-decoration:none" href="#" title="Click to go to top">GenXXX (./ios_to_html_examples/html_test_case_4.cfg)</a>
+        <div class="floating-menu">
+    <h3>GenXXX (html_test_case_4.cfg)</h3>
+    <a href="#">Top</a>
+    <h4>Beginning of Sections</h4>
+<a href="#acl_Internet-inbound-ACL">Acl</a>
+<a href="#crypto_pki_TP-self-signed-1309454855">Crypto_pki</a>
+<a href="#dhcp_pool_Internal-net">Dhcp_pool</a>
+<a href="#interface_FastEthernet0">Interface</a>
+<a href="#ip_inspect_MYFW">Ip_inspect</a>
+</div>
     </body>
 </html>

@@ -48,7 +48,7 @@
     )
     /ixsm,
     },
-    'service_policy' => {
+    'policy_map' => {
     1 => qr/ (?<unique_id> 
                                 ^ \s* 
                                 policy-map \s+ 
@@ -196,6 +196,7 @@
                         ^ \s*
                         ip \s+
                         sla \s+
+                        (?!responder)
                         (?<pointed_at> $valid_cisco_name)
                     )
                     $

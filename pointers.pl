@@ -95,14 +95,14 @@
                 /ixsm,
     },
 
-    'service_policy' => {
+    'policy_map' => {
     1 => qr/^ \s*
             service-policy \s+ 
             (?: input|output) \s+ 
-            (?<points_to> $list_of_pointees_ref->{"service_policy"})
+            (?<points_to> $list_of_pointees_ref->{"policy_map"})
             /ixsm,
     2 =>
-        qr/^ \s* service-policy \s+ (?<points_to> $list_of_pointees_ref->{"service_policy"})$/ixsm,
+        qr/^ \s* service-policy \s+ (?<points_to> $list_of_pointees_ref->{"policy_map"})$/ixsm,
 
     #NXOS
     3 => qr/^ \s* 
@@ -110,7 +110,7 @@
             type \s+ 
             (?: queuing | qos  | network-qos ) \s+
             (?: (?:input | output) \s+ )?
-            (?<points_to> $list_of_pointees_ref->{"service_policy"})
+            (?<points_to> $list_of_pointees_ref->{"policy_map"})
             $
             /ixsm,
     },
@@ -175,6 +175,9 @@
             ipv4 \s+ 
             unicast \s+ 
             map \s+ 
+            (?<points_to> $list_of_pointees_ref->{"route_map"})/ixsm,
+    10 => qr/\s+
+            advertise-map \s+ 
             (?<points_to> $list_of_pointees_ref->{"route_map"})/ixsm,
     },
     'prefix_list' => {

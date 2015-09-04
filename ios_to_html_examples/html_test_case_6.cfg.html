@@ -16,12 +16,561 @@
             .pointed_at {
                 font-style: italic;
                 }
+            .to_top_label{
+                position: fixed; 
+                top:10px;
+                right:10px;
+                color: white;
+                background-color: Blue;
+                text-decoration:none
+                }
+            div.floating-menu {
+                position:fixed;
+                top:10px;
+                right:10px;
+                background:#fff4c8;
+                padding:5px;
+                z-index:100;
+                }
+            div.floating-menu a, div.floating-menu h3, div.floating-menu h4 {
+                text-align: right;
+                text-decoration:none;
+                display:block;
+                margin:0 0.5em;
+                }
+            div.floating-menu a:hover {
+                color: grey;
+                }
+                
         </style>
     </head>
     <body>
         <pre>
-Using 16191 out of 262136 bytes!version 12.4no service padservice timestamps debug datetime msecservice timestamps log datetime msecno service password-encryption!hostname <REMOVED>!boot-start-markerboot-end-marker!logging message-counter sysloglogging buffered 51200 warningsenable secret 5 <REMOVED>!aaa new-model!!aaa authentication login default localaaa authorization exec default local!!aaa session-id commonclock timezone PCTime -5clock summer-time PCTime date Apr 6 2003 2:00 Oct 26 2003 2:00!crypto pki trustpoint <a href="#crypto_pki_TP-self-signed-3499699271">TP-self-signed-3499699271</a> enrollment selfsigned subject-name cn=IOS-Self-Signed-Certificate-3499699271 revocation-check none rsakeypair TP-self-signed-3499699271!!<br><span id="crypto_pki_TP-self-signed-3499699271" class="pointee">crypto pki certificate chain <span class="pointed_at">TP-self-signed-3499699271</span></span> certificate self-signed 01 nvram:IOS-Self-Sig#D.cerip source-routeip dhcp excluded-address 10.10.10.1 10.10.10.74!<br><span id="dhcp_pool_ccp-pool" class="pointee">ip dhcp pool <span class="pointed_at">ccp-pool</span></span>   import all   network 10.10.10.0 255.255.255.0   default-router 10.10.10.1   dns-server #dns servers were here#   lease infinite!!ip cefip domain name <REMOVED>ip name-serverip name-serverip port-map user-protocol--2 port udp 53322ip port-map user-protocol--3 port udp 80ip port-map user-protocol--1 port tcp 53322!!<br><span id="parameter_map_ccp-regex-nonascii" class="pointee">parameter-map type regex <span class="pointed_at">ccp-regex-nonascii</span></span> pattern [^\x00-\x80]<br><span id="parameter_map_msn-servers" class="pointee">parameter-map type protocol-info <span class="pointed_at">msn-servers</span></span> server name messenger.hotmail.com server name gateway.messenger.hotmail.com server name webmessenger.msn.com<br><span id="parameter_map_aol-servers" class="pointee">parameter-map type protocol-info <span class="pointed_at">aol-servers</span></span> server name login.oscar.aol.com server name toc.oscar.aol.com server name oam-d09a.blue.aol.com<br><span id="parameter_map_yahoo-servers" class="pointee">parameter-map type protocol-info <span class="pointed_at">yahoo-servers</span></span> server name scs.msg.yahoo.com server name scsa.msg.yahoo.com server name scsb.msg.yahoo.com server name scsc.msg.yahoo.com server name scsd.msg.yahoo.com server name cs16.msg.dcn.yahoo.com server name cs19.msg.dcn.yahoo.com server name cs42.msg.dcn.yahoo.com server name cs53.msg.dcn.yahoo.com server name cs54.msg.dcn.yahoo.com server name ads1.vip.scd.yahoo.com server name radio1.launch.vip.dal.yahoo.com server name in1.msg.vip.re2.yahoo.com server name data1.my.vip.sc5.yahoo.com server name address1.pim.vip.mud.yahoo.com server name edit.messenger.yahoo.com server name messenger.yahoo.com server name http.pager.yahoo.com server name privacy.yahoo.com server name csa.yahoo.com server name csb.yahoo.com server name csc.yahoo.com!!username admin privilege 15 secret 5 <REMOVED>username rbarbrow privilege 15 secret 5 <REMOVED>!!!archive log config  hidekeys!!!<br><span id="class_sdm-nat-http-4" class="pointee">class-map type inspect match-all <span class="pointed_at">sdm-nat-http-4</span></span> match access-group <a href="#acl_112">112</a> match protocol http<br><span id="class_sdm-nat-user-protocol--2-4" class="pointee">class-map type inspect match-all <span class="pointed_at">sdm-nat-user-protocol--2-4</span></span> match access-group <a href="#acl_114">114</a> match protocol user-protocol--2<br><span id="class_sdm-nat-user-protocol--2-5" class="pointee">class-map type inspect match-all <span class="pointed_at">sdm-nat-user-protocol--2-5</span></span> match access-group <a href="#acl_116">116</a> match protocol user-protocol--2<br><span id="class_sdm-nat-http-5" class="pointee">class-map type inspect match-all <span class="pointed_at">sdm-nat-http-5</span></span> match access-group <a href="#acl_117">117</a> match protocol http<br><span id="class_sdm-nat-user-protocol--1-5" class="pointee">class-map type inspect match-all <span class="pointed_at">sdm-nat-user-protocol--1-5</span></span> match access-group <a href="#acl_115">115</a> match protocol user-protocol--1<br><span id="class_sdm-nat-user-protocol--1-4" class="pointee">class-map type inspect match-all <span class="pointed_at">sdm-nat-user-protocol--1-4</span></span> match access-group <a href="#acl_113">113</a> match protocol user-protocol--1<br><span id="class_sdm-nat-user-protocol--3-1" class="pointee">class-map type inspect match-all <span class="pointed_at">sdm-nat-user-protocol--3-1</span></span> match access-group <a href="#acl_107">107</a> match protocol user-protocol--3<br><span id="class_sdm-nat-user-protocol--1-3" class="pointee">class-map type inspect match-all <span class="pointed_at">sdm-nat-user-protocol--1-3</span></span> match access-group <a href="#acl_108">108</a> match protocol user-protocol--1<br><span id="class_ccp-app-imap" class="pointee">class-map type inspect imap match-any <span class="pointed_at">ccp-app-imap</span></span> match  invalid-command<br><span id="class_sdm-nat-user-protocol--2-1" class="pointee">class-map type inspect match-all <span class="pointed_at">sdm-nat-user-protocol--2-1</span></span> match access-group <a href="#acl_103">103</a> match protocol user-protocol--2<br><span id="class_sdm-nat-http-1" class="pointee">class-map type inspect match-all <span class="pointed_at">sdm-nat-http-1</span></span> match access-group <a href="#acl_102">102</a> match protocol http<br><span id="class_sdm-nat-user-protocol--1-2" class="pointee">class-map type inspect match-all <span class="pointed_at">sdm-nat-user-protocol--1-2</span></span> match access-group <a href="#acl_104">104</a> match protocol user-protocol--1<br><span id="class_sdm-nat-user-protocol--1-1" class="pointee">class-map type inspect match-all <span class="pointed_at">sdm-nat-user-protocol--1-1</span></span> match access-group <a href="#acl_101">101</a> match protocol user-protocol--1<br><span id="class_sdm-nat-user-protocol--2-2" class="pointee">class-map type inspect match-all <span class="pointed_at">sdm-nat-user-protocol--2-2</span></span> match access-group <a href="#acl_106">106</a> match protocol user-protocol--2<br><span id="class_sdm-nat-http-2" class="pointee">class-map type inspect match-all <span class="pointed_at">sdm-nat-http-2</span></span> match access-group <a href="#acl_105">105</a> match protocol http<br><span id="class_sdm-nat-user-protocol--3-2" class="pointee">class-map type inspect match-all <span class="pointed_at">sdm-nat-user-protocol--3-2</span></span> match access-group <a href="#acl_111">111</a> match protocol user-protocol--3<br><span id="class_sdm-nat-user-protocol--2-3" class="pointee">class-map type inspect match-all <span class="pointed_at">sdm-nat-user-protocol--2-3</span></span> match access-group <a href="#acl_110">110</a> match protocol user-protocol--2<br><span id="class_sdm-nat-http-3" class="pointee">class-map type inspect match-all <span class="pointed_at">sdm-nat-http-3</span></span> match access-group <a href="#acl_109">109</a> match protocol http<br><span id="class_CCP-Voice-permit" class="pointee">class-map type inspect match-any <span class="pointed_at">CCP-Voice-permit</span></span> match protocol h323 match protocol skinny match protocol sip<br><span id="class_ccp-cls-insp-traffic" class="pointee">class-map type inspect match-any <span class="pointed_at">ccp-cls-insp-traffic</span></span> match protocol cuseeme match protocol dns match protocol ftp match protocol h323 match protocol https match protocol icmp match protocol imap match protocol pop3 match protocol netshow match protocol shell match protocol realmedia match protocol rtsp match protocol smtp extended match protocol sql-net match protocol streamworks match protocol tftp match protocol vdolive match protocol tcp match protocol udp<br><span id="class_ccp-insp-traffic" class="pointee">class-map type inspect match-all <span class="pointed_at">ccp-insp-traffic</span></span> match class-map <a href="#class_ccp-cls-insp-traffic">ccp-cls-insp-traffic</a><br><span id="class_ccp-app-yahoo-otherservices" class="pointee">class-map type inspect ymsgr match-any <span class="pointed_at">ccp-app-yahoo-otherservices</span></span> match  service any<br><span id="class_ccp-app-msn-otherservices" class="pointee">class-map type inspect msnmsgr match-any <span class="pointed_at">ccp-app-msn-otherservices</span></span> match  service any<br><span id="class_ccp-cls-icmp-access" class="pointee">class-map type inspect match-any <span class="pointed_at">ccp-cls-icmp-access</span></span> match protocol icmp match protocol tcp match protocol udp<br><span id="class_ccp-cls-protocol-im" class="pointee">class-map type inspect match-any <span class="pointed_at">ccp-cls-protocol-im</span></span> match protocol ymsgr yahoo-servers match protocol msnmsgr msn-servers match protocol aol aol-servers<br><span id="class_ccp-app-aol-otherservices" class="pointee">class-map type inspect aol match-any <span class="pointed_at">ccp-app-aol-otherservices</span></span> match  service any<br><span id="class_ccp-protocol-pop3" class="pointee">class-map type inspect match-all <span class="pointed_at">ccp-protocol-pop3</span></span> match protocol pop3<br><span id="class_ccp-app-pop3" class="pointee">class-map type inspect pop3 match-any <span class="pointed_at">ccp-app-pop3</span></span> match  invalid-command<br><span id="class_ccp-app-msn" class="pointee">class-map type inspect msnmsgr match-any <span class="pointed_at">ccp-app-msn</span></span> match  service text-chat<br><span id="class_ccp-app-yahoo" class="pointee">class-map type inspect ymsgr match-any <span class="pointed_at">ccp-app-yahoo</span></span> match  service text-chat<br><span id="class_ccp-protocol-im" class="pointee">class-map type inspect match-all <span class="pointed_at">ccp-protocol-im</span></span> match class-map <a href="#class_ccp-cls-protocol-im">ccp-cls-protocol-im</a><br><span id="class_ccp-icmp-access" class="pointee">class-map type inspect match-all <span class="pointed_at">ccp-icmp-access</span></span> match class-map <a href="#class_ccp-cls-icmp-access">ccp-cls-icmp-access</a><br><span id="class_ccp-invalid-src" class="pointee">class-map type inspect match-all <span class="pointed_at">ccp-invalid-src</span></span> match access-group <a href="#acl_100">100</a><br><span id="class_ccp-app-httpmethods" class="pointee">class-map type inspect http match-any <span class="pointed_at">ccp-app-httpmethods</span></span> match  request method bcopy match  request method bdelete match  request method bmove match  request method bpropfind match  request method bproppatch match  request method connect match  request method copy match  request method delete match  request method edit match  request method getattribute match  request method getattributenames match  request method getproperties match  request method index match  request method lock match  request method mkcol match  request method mkdir match  request method move match  request method notify match  request method options match  request method poll match  request method propfind match  request method proppatch match  request method put match  request method revadd match  request method revlabel match  request method revlog match  request method revnum match  request method save match  request method search match  request method setattribute match  request method startrev match  request method stoprev match  request method subscribe match  request method trace match  request method unedit match  request method unlock match  request method unsubscribe<br><span id="class_ccp-http-blockparam" class="pointee">class-map type inspect http match-any <span class="pointed_at">ccp-http-blockparam</span></span> match  request port-misuse im match  request port-misuse p2p match  request port-misuse tunneling match  req-resp protocol-violation<br><span id="class_ccp-protocol-imap" class="pointee">class-map type inspect match-all <span class="pointed_at">ccp-protocol-imap</span></span> match protocol imap<br><span id="class_ccp-app-aol" class="pointee">class-map type inspect aol match-any <span class="pointed_at">ccp-app-aol</span></span> match  service text-chat<br><span id="class_ccp-protocol-http" class="pointee">class-map type inspect match-all <span class="pointed_at">ccp-protocol-http</span></span> match protocol http<br><span id="class_ccp-http-allowparam" class="pointee">class-map type inspect http match-any <span class="pointed_at">ccp-http-allowparam</span></span> match  request port-misuse tunneling!!<br><span id="service_policy_ccp-permit-icmpreply" class="pointee">policy-map type inspect <span class="pointed_at">ccp-permit-icmpreply</span></span> class type inspect <a href="#class_ccp-icmp-access">ccp-icmp-access</a> class class-default  pass<br><span id="service_policy_sdm-pol-NATOutsideToInside-1" class="pointee">policy-map type inspect <span class="pointed_at">sdm-pol-NATOutsideToInside-1</span></span> class type inspect <a href="#class_sdm-nat-user-protocol--1-1">sdm-nat-user-protocol--1-1</a>  inspect class type inspect <a href="#class_sdm-nat-http-1">sdm-nat-http-1</a>  inspect class type inspect <a href="#class_sdm-nat-user-protocol--2-1">sdm-nat-user-protocol--2-1</a>  inspect class type inspect <a href="#class_sdm-nat-user-protocol--1-2">sdm-nat-user-protocol--1-2</a>  inspect class type inspect <a href="#class_sdm-nat-http-2">sdm-nat-http-2</a>  inspect class type inspect <a href="#class_sdm-nat-user-protocol--2-2">sdm-nat-user-protocol--2-2</a>  inspect class type inspect <a href="#class_sdm-nat-user-protocol--3-1">sdm-nat-user-protocol--3-1</a>  inspect class type inspect <a href="#class_sdm-nat-user-protocol--1-3">sdm-nat-user-protocol--1-3</a>  inspect class type inspect <a href="#class_sdm-nat-http-3">sdm-nat-http-3</a>  inspect class type inspect <a href="#class_sdm-nat-user-protocol--2-3">sdm-nat-user-protocol--2-3</a>  inspect class type inspect <a href="#class_sdm-nat-user-protocol--3-2">sdm-nat-user-protocol--3-2</a>  inspect class type inspect <a href="#class_sdm-nat-http-4">sdm-nat-http-4</a>  inspect class type inspect <a href="#class_sdm-nat-user-protocol--1-4">sdm-nat-user-protocol--1-4</a>  inspect class type inspect <a href="#class_sdm-nat-user-protocol--2-4">sdm-nat-user-protocol--2-4</a>  inspect class type inspect <a href="#class_sdm-nat-user-protocol--1-5">sdm-nat-user-protocol--1-5</a>  inspect class type inspect <a href="#class_sdm-nat-user-protocol--2-5">sdm-nat-user-protocol--2-5</a>  inspect class type inspect <a href="#class_sdm-nat-http-5">sdm-nat-http-5</a>  inspect class class-default  droppolicy-map type inspect im ccp-action-app-im class type inspect aol <a href="#class_ccp-app-aol">ccp-app-aol</a>  log  allow class type inspect msnmsgr <a href="#class_ccp-app-msn">ccp-app-msn</a>  log  allow class type inspect ymsgr <a href="#class_ccp-app-yahoo">ccp-app-yahoo</a>  log  allow class type inspect aol <a href="#class_ccp-app-aol-otherservices">ccp-app-aol-otherservices</a>  log  reset class type inspect msnmsgr <a href="#class_ccp-app-msn-otherservices">ccp-app-msn-otherservices</a>  log  reset class type inspect ymsgr <a href="#class_ccp-app-yahoo-otherservices">ccp-app-yahoo-otherservices</a>  log  resetpolicy-map type inspect http ccp-action-app-http class type inspect http <a href="#class_ccp-http-blockparam">ccp-http-blockparam</a>  log  reset class type inspect http <a href="#class_ccp-app-httpmethods">ccp-app-httpmethods</a>  log  reset class type inspect http <a href="#class_ccp-http-allowparam">ccp-http-allowparam</a>  log  allowpolicy-map type inspect imap ccp-action-imap class type inspect imap <a href="#class_ccp-app-imap">ccp-app-imap</a>  logpolicy-map type inspect pop3 ccp-action-pop3 class type inspect pop3 <a href="#class_ccp-app-pop3">ccp-app-pop3</a>  log<br><span id="service_policy_ccp-inspect" class="pointee">policy-map type inspect <span class="pointed_at">ccp-inspect</span></span> class type inspect <a href="#class_ccp-invalid-src">ccp-invalid-src</a>  drop log class type inspect <a href="#class_ccp-protocol-http">ccp-protocol-http</a>  inspect  service-policy http ccp-action-app-http class type inspect <a href="#class_ccp-protocol-imap">ccp-protocol-imap</a>  inspect  service-policy imap ccp-action-imap class type inspect <a href="#class_ccp-protocol-pop3">ccp-protocol-pop3</a>  inspect  service-policy pop3 ccp-action-pop3 class type inspect <a href="#class_ccp-protocol-im">ccp-protocol-im</a>  inspect  service-policy im ccp-action-app-im class type inspect <a href="#class_ccp-insp-traffic">ccp-insp-traffic</a>  inspect class type inspect <a href="#class_CCP-Voice-permit">CCP-Voice-permit</a>  inspect class class-default  pass<br><span id="service_policy_ccp-permit" class="pointee">policy-map type inspect <span class="pointed_at">ccp-permit</span></span> class class-default  drop!zone security out-zonezone security in-zonezone-pair security ccp-zp-self-out source self destination out-zone service-policy type inspect ccp-permit-icmpreplyzone-pair security sdm-zp-NATOutsideToInside-1 source out-zone destination in-zone service-policy type inspect sdm-pol-NATOutsideToInside-1zone-pair security ccp-zp-in-out source in-zone destination out-zone service-policy type inspect ccp-inspectzone-pair security ccp-zp-out-self source out-zone destination self service-policy type inspect ccp-permit!!!<br><span id="interface_FastEthernet0" class="pointee">interface <span class="pointed_at">FastEthernet0</span></span>!<br><span id="interface_FastEthernet1" class="pointee">interface <span class="pointed_at">FastEthernet1</span></span>!<br><span id="interface_FastEthernet2" class="pointee">interface <span class="pointed_at">FastEthernet2</span></span>!<br><span id="interface_FastEthernet3" class="pointee">interface <span class="pointed_at">FastEthernet3</span></span>!<br><span id="interface_FastEthernet4" class="pointee">interface <span class="pointed_at">FastEthernet4</span></span> description <REMOVED> ip address <REMOVED> 255.255.255.224 ip nat outside ip virtual-reassembly zone-member security out-zone duplex auto speed auto!<br><span id="interface_wlan-ap0" class="pointee">interface <span class="pointed_at">wlan-ap0</span></span> description Service module interface to manage the embedded AP ip unnumbered Vlan1 arp timeout 0!<br><span id="interface_Wlan-GigabitEthernet0" class="pointee">interface <span class="pointed_at">Wlan-GigabitEthernet0</span></span> description <REMOVED>!<br><span id="interface_Vlan1" class="pointee">interface <span class="pointed_at">Vlan1</span></span> description <REMOVED> ip address 10.10.10.1 255.255.255.0 ip nat inside ip virtual-reassembly zone-member security in-zone ip tcp adjust-mss 1452!ip forward-protocol ndip route 0.0.0.0 0.0.0.0 FastEthernet4ip http serverip http access-class 23ip http authentication localip http secure-serverip http timeout-policy idle 60 life 86400 requests 10000!!ip nat pool websrv 10.10.10.60 10.10.10.60 netmask 255.255.255.0ip nat inside source list <a href="#acl_1">1</a> interface <a href="#interface_FastEthernet4">FastEthernet4</a> overloadip nat inside source static tcp 10.10.10.40 53322 interface <a href="#interface_FastEthernet4">FastEthernet4</a> 53322ip nat inside source static udp 10.10.10.40 53322 interface <a href="#interface_FastEthernet4">FastEthernet4</a> 53322ip nat inside source static tcp 10.10.10.60 80 interface <a href="#interface_FastEthernet4">FastEthernet4</a> 80ip nat inside source static tcp <REMOVED> 80 10.10.10.60 80 extendable!<br><span id="acl_web" class="pointee">ip access-list extended <span class="pointed_at">web</span></span> remark webservr remark CCP_ACL Category=2 permit ip any host 10.10.10.60!<br><span id="acl_1" class="pointee">access-list <span class="pointed_at">1</span> remark INSIDE_IF=Vlan1</span>access-list 1 remark CCP_ACL Category=2access-list 1 permit 10.10.10.0 0.0.0.255<br><span id="acl_23" class="pointee">access-list <span class="pointed_at">23</span> permit 10.10.10.0 0.0.0.7</span><br><span id="acl_100" class="pointee">access-list <span class="pointed_at">100</span> remark CCP_ACL Category=128</span>access-list 100 permit ip host 255.255.255.255 anyaccess-list 100 permit ip 127.0.0.0 0.255.255.255 anyaccess-list 100 permit ip  0.0.0.31 any<br><span id="acl_101" class="pointee">access-list <span class="pointed_at">101</span> remark CCP_ACL Category=0</span>access-list 101 permit ip any host 10.10.10.40<br><span id="acl_102" class="pointee">access-list <span class="pointed_at">102</span> remark CCP_ACL Category=0</span>access-list 102 permit ip any host 10.10.10.60<br><span id="acl_103" class="pointee">access-list <span class="pointed_at">103</span> remark CCP_ACL Category=0</span>access-list 103 permit ip any host 10.10.10.40<br><span id="acl_104" class="pointee">access-list <span class="pointed_at">104</span> remark CCP_ACL Category=0</span>access-list 104 permit ip any host 10.10.10.40<br><span id="acl_105" class="pointee">access-list <span class="pointed_at">105</span> remark CCP_ACL Category=0</span>access-list 105 permit ip any host 10.10.10.60<br><span id="acl_106" class="pointee">access-list <span class="pointed_at">106</span> remark CCP_ACL Category=0</span>access-list 106 permit ip any host 10.10.10.40<br><span id="acl_107" class="pointee">access-list <span class="pointed_at">107</span> remark CCP_ACL Category=0</span>access-list 107 permit ip any host 10.10.10.60<br><span id="acl_108" class="pointee">access-list <span class="pointed_at">108</span> remark CCP_ACL Category=0</span>access-list 108 permit ip any host 10.10.10.40<br><span id="acl_109" class="pointee">access-list <span class="pointed_at">109</span> remark CCP_ACL Category=0</span>access-list 109 permit ip any host 10.10.10.60<br><span id="acl_110" class="pointee">access-list <span class="pointed_at">110</span> remark CCP_ACL Category=0</span>access-list 110 permit ip any host 10.10.10.40<br><span id="acl_111" class="pointee">access-list <span class="pointed_at">111</span> remark CCP_ACL Category=0</span>access-list 111 permit ip any host 10.10.10.60<br><span id="acl_112" class="pointee">access-list <span class="pointed_at">112</span> remark CCP_ACL Category=0</span>access-list 112 permit ip any host 10.10.10.60<br><span id="acl_113" class="pointee">access-list <span class="pointed_at">113</span> remark CCP_ACL Category=0</span>access-list 113 permit ip any host 10.10.10.40<br><span id="acl_114" class="pointee">access-list <span class="pointed_at">114</span> remark CCP_ACL Category=0</span>access-list 114 permit ip any host 10.10.10.40<br><span id="acl_115" class="pointee">access-list <span class="pointed_at">115</span> remark CCP_ACL Category=0</span>access-list 115 permit ip any host 10.10.10.40<br><span id="acl_116" class="pointee">access-list <span class="pointed_at">116</span> remark CCP_ACL Category=0</span>access-list 116 permit ip any host 10.10.10.40<br><span id="acl_117" class="pointee">access-list <span class="pointed_at">117</span> remark CCP_ACL Category=0</span>access-list 117 permit ip any host 10.10.10.60no cdp run!!!!control-plane!banner exec ^C% Password expiration warning.-----------------------------------------------------------------------<REMOVED>-----------------------------------------------------------------------^Cbanner login ^C<REMOVED>-----------------------------------------------------------------------^C!line con 0 no modem enableline aux 0line 2 no activation-character no exec transport preferred none transport input allline vty 0 4 access-class <a href="#acl_23">23</a> in transport input telnet ssh!scheduler max-task-time 5000end
+Using 16191 out of 262136 bytes
+!
+version 12.4
+no service pad
+service timestamps debug datetime msec
+service timestamps log datetime msec
+no service password-encryption
+!
+hostname <REMOVED>
+!
+boot-start-marker
+boot-end-marker
+!
+logging message-counter syslog
+logging buffered 51200 warnings
+enable secret 5 <REMOVED>
+!
+aaa new-model
+!
+!
+aaa authentication login default local
+aaa authorization exec default local
+!
+!
+aaa session-id common
+clock timezone PCTime -5
+clock summer-time PCTime date Apr 6 2003 2:00 Oct 26 2003 2:00
+!
+crypto pki trustpoint <a href="#crypto_pki_TP-self-signed-3499699271">TP-self-signed-3499699271</a>
+ enrollment selfsigned
+ subject-name cn=IOS-Self-Signed-Certificate-3499699271
+ revocation-check none
+ rsakeypair TP-self-signed-3499699271
+!
+!
+<br><span id="crypto_pki_TP-self-signed-3499699271" class="pointee">crypto pki certificate chain <span class="pointed_at">TP-self-signed-3499699271</span></span>
+ certificate self-signed 01 nvram:IOS-Self-Sig#D.cer
+ip source-route
+ip dhcp excluded-address 10.10.10.1 10.10.10.74
+!
+<br><span id="dhcp_pool_ccp-pool" class="pointee">ip dhcp pool <span class="pointed_at">ccp-pool</span></span>
+   import all
+   network 10.10.10.0 255.255.255.0
+   default-router 10.10.10.1
+   dns-server #dns servers were here#
+   lease infinite
+!
+!
+ip cef
+ip domain name <REMOVED>
+ip name-server
+ip name-server
+ip port-map user-protocol--2 port udp 53322
+ip port-map user-protocol--3 port udp 80
+ip port-map user-protocol--1 port tcp 53322
+!
+!
+<br><span id="parameter_map_ccp-regex-nonascii" class="pointee">parameter-map type regex <span class="pointed_at">ccp-regex-nonascii</span></span>
+ pattern [^\x00-\x80]
+
+<br><span id="parameter_map_msn-servers" class="pointee">parameter-map type protocol-info <span class="pointed_at">msn-servers</span></span>
+ server name messenger.hotmail.com
+ server name gateway.messenger.hotmail.com
+ server name webmessenger.msn.com
+
+<br><span id="parameter_map_aol-servers" class="pointee">parameter-map type protocol-info <span class="pointed_at">aol-servers</span></span>
+ server name login.oscar.aol.com
+ server name toc.oscar.aol.com
+ server name oam-d09a.blue.aol.com
+
+<br><span id="parameter_map_yahoo-servers" class="pointee">parameter-map type protocol-info <span class="pointed_at">yahoo-servers</span></span>
+ server name scs.msg.yahoo.com
+ server name scsa.msg.yahoo.com
+ server name scsb.msg.yahoo.com
+ server name scsc.msg.yahoo.com
+ server name scsd.msg.yahoo.com
+ server name cs16.msg.dcn.yahoo.com
+ server name cs19.msg.dcn.yahoo.com
+ server name cs42.msg.dcn.yahoo.com
+ server name cs53.msg.dcn.yahoo.com
+ server name cs54.msg.dcn.yahoo.com
+ server name ads1.vip.scd.yahoo.com
+ server name radio1.launch.vip.dal.yahoo.com
+ server name in1.msg.vip.re2.yahoo.com
+ server name data1.my.vip.sc5.yahoo.com
+ server name address1.pim.vip.mud.yahoo.com
+ server name edit.messenger.yahoo.com
+ server name messenger.yahoo.com
+ server name http.pager.yahoo.com
+ server name privacy.yahoo.com
+ server name csa.yahoo.com
+ server name csb.yahoo.com
+ server name csc.yahoo.com
+
+!
+!
+username admin privilege 15 secret 5 <REMOVED>
+username rbarbrow privilege 15 secret 5 <REMOVED>
+!
+!
+!
+archive
+ log config
+  hidekeys
+!
+!
+!
+<br><span id="class_sdm-nat-http-4" class="pointee">class-map type inspect match-all <span class="pointed_at">sdm-nat-http-4</span></span>
+ match access-group <a href="#acl_112">112</a>
+ match protocol http
+<br><span id="class_sdm-nat-user-protocol--2-4" class="pointee">class-map type inspect match-all <span class="pointed_at">sdm-nat-user-protocol--2-4</span></span>
+ match access-group <a href="#acl_114">114</a>
+ match protocol user-protocol--2
+<br><span id="class_sdm-nat-user-protocol--2-5" class="pointee">class-map type inspect match-all <span class="pointed_at">sdm-nat-user-protocol--2-5</span></span>
+ match access-group <a href="#acl_116">116</a>
+ match protocol user-protocol--2
+<br><span id="class_sdm-nat-http-5" class="pointee">class-map type inspect match-all <span class="pointed_at">sdm-nat-http-5</span></span>
+ match access-group <a href="#acl_117">117</a>
+ match protocol http
+<br><span id="class_sdm-nat-user-protocol--1-5" class="pointee">class-map type inspect match-all <span class="pointed_at">sdm-nat-user-protocol--1-5</span></span>
+ match access-group <a href="#acl_115">115</a>
+ match protocol user-protocol--1
+<br><span id="class_sdm-nat-user-protocol--1-4" class="pointee">class-map type inspect match-all <span class="pointed_at">sdm-nat-user-protocol--1-4</span></span>
+ match access-group <a href="#acl_113">113</a>
+ match protocol user-protocol--1
+<br><span id="class_sdm-nat-user-protocol--3-1" class="pointee">class-map type inspect match-all <span class="pointed_at">sdm-nat-user-protocol--3-1</span></span>
+ match access-group <a href="#acl_107">107</a>
+ match protocol user-protocol--3
+<br><span id="class_sdm-nat-user-protocol--1-3" class="pointee">class-map type inspect match-all <span class="pointed_at">sdm-nat-user-protocol--1-3</span></span>
+ match access-group <a href="#acl_108">108</a>
+ match protocol user-protocol--1
+<br><span id="class_ccp-app-imap" class="pointee">class-map type inspect imap match-any <span class="pointed_at">ccp-app-imap</span></span>
+ match  invalid-command
+<br><span id="class_sdm-nat-user-protocol--2-1" class="pointee">class-map type inspect match-all <span class="pointed_at">sdm-nat-user-protocol--2-1</span></span>
+ match access-group <a href="#acl_103">103</a>
+ match protocol user-protocol--2
+<br><span id="class_sdm-nat-http-1" class="pointee">class-map type inspect match-all <span class="pointed_at">sdm-nat-http-1</span></span>
+ match access-group <a href="#acl_102">102</a>
+ match protocol http
+<br><span id="class_sdm-nat-user-protocol--1-2" class="pointee">class-map type inspect match-all <span class="pointed_at">sdm-nat-user-protocol--1-2</span></span>
+ match access-group <a href="#acl_104">104</a>
+ match protocol user-protocol--1
+<br><span id="class_sdm-nat-user-protocol--1-1" class="pointee">class-map type inspect match-all <span class="pointed_at">sdm-nat-user-protocol--1-1</span></span>
+ match access-group <a href="#acl_101">101</a>
+ match protocol user-protocol--1
+<br><span id="class_sdm-nat-user-protocol--2-2" class="pointee">class-map type inspect match-all <span class="pointed_at">sdm-nat-user-protocol--2-2</span></span>
+ match access-group <a href="#acl_106">106</a>
+ match protocol user-protocol--2
+<br><span id="class_sdm-nat-http-2" class="pointee">class-map type inspect match-all <span class="pointed_at">sdm-nat-http-2</span></span>
+ match access-group <a href="#acl_105">105</a>
+ match protocol http
+<br><span id="class_sdm-nat-user-protocol--3-2" class="pointee">class-map type inspect match-all <span class="pointed_at">sdm-nat-user-protocol--3-2</span></span>
+ match access-group <a href="#acl_111">111</a>
+ match protocol user-protocol--3
+<br><span id="class_sdm-nat-user-protocol--2-3" class="pointee">class-map type inspect match-all <span class="pointed_at">sdm-nat-user-protocol--2-3</span></span>
+ match access-group <a href="#acl_110">110</a>
+ match protocol user-protocol--2
+<br><span id="class_sdm-nat-http-3" class="pointee">class-map type inspect match-all <span class="pointed_at">sdm-nat-http-3</span></span>
+ match access-group <a href="#acl_109">109</a>
+ match protocol http
+<br><span id="class_CCP-Voice-permit" class="pointee">class-map type inspect match-any <span class="pointed_at">CCP-Voice-permit</span></span>
+ match protocol h323
+ match protocol skinny
+ match protocol sip
+<br><span id="class_ccp-cls-insp-traffic" class="pointee">class-map type inspect match-any <span class="pointed_at">ccp-cls-insp-traffic</span></span>
+ match protocol cuseeme
+ match protocol dns
+ match protocol ftp
+ match protocol h323
+ match protocol https
+ match protocol icmp
+ match protocol imap
+ match protocol pop3
+ match protocol netshow
+ match protocol shell
+ match protocol realmedia
+ match protocol rtsp
+ match protocol smtp extended
+ match protocol sql-net
+ match protocol streamworks
+ match protocol tftp
+ match protocol vdolive
+ match protocol tcp
+ match protocol udp
+<br><span id="class_ccp-insp-traffic" class="pointee">class-map type inspect match-all <span class="pointed_at">ccp-insp-traffic</span></span>
+ match class-map <a href="#class_ccp-cls-insp-traffic">ccp-cls-insp-traffic</a>
+<br><span id="class_ccp-app-yahoo-otherservices" class="pointee">class-map type inspect ymsgr match-any <span class="pointed_at">ccp-app-yahoo-otherservices</span></span>
+ match  service any
+<br><span id="class_ccp-app-msn-otherservices" class="pointee">class-map type inspect msnmsgr match-any <span class="pointed_at">ccp-app-msn-otherservices</span></span>
+ match  service any
+<br><span id="class_ccp-cls-icmp-access" class="pointee">class-map type inspect match-any <span class="pointed_at">ccp-cls-icmp-access</span></span>
+ match protocol icmp
+ match protocol tcp
+ match protocol udp
+<br><span id="class_ccp-cls-protocol-im" class="pointee">class-map type inspect match-any <span class="pointed_at">ccp-cls-protocol-im</span></span>
+ match protocol ymsgr yahoo-servers
+ match protocol msnmsgr msn-servers
+ match protocol aol aol-servers
+<br><span id="class_ccp-app-aol-otherservices" class="pointee">class-map type inspect aol match-any <span class="pointed_at">ccp-app-aol-otherservices</span></span>
+ match  service any
+<br><span id="class_ccp-protocol-pop3" class="pointee">class-map type inspect match-all <span class="pointed_at">ccp-protocol-pop3</span></span>
+ match protocol pop3
+<br><span id="class_ccp-app-pop3" class="pointee">class-map type inspect pop3 match-any <span class="pointed_at">ccp-app-pop3</span></span>
+ match  invalid-command
+<br><span id="class_ccp-app-msn" class="pointee">class-map type inspect msnmsgr match-any <span class="pointed_at">ccp-app-msn</span></span>
+ match  service text-chat
+<br><span id="class_ccp-app-yahoo" class="pointee">class-map type inspect ymsgr match-any <span class="pointed_at">ccp-app-yahoo</span></span>
+ match  service text-chat
+<br><span id="class_ccp-protocol-im" class="pointee">class-map type inspect match-all <span class="pointed_at">ccp-protocol-im</span></span>
+ match class-map <a href="#class_ccp-cls-protocol-im">ccp-cls-protocol-im</a>
+<br><span id="class_ccp-icmp-access" class="pointee">class-map type inspect match-all <span class="pointed_at">ccp-icmp-access</span></span>
+ match class-map <a href="#class_ccp-cls-icmp-access">ccp-cls-icmp-access</a>
+<br><span id="class_ccp-invalid-src" class="pointee">class-map type inspect match-all <span class="pointed_at">ccp-invalid-src</span></span>
+ match access-group <a href="#acl_100">100</a>
+<br><span id="class_ccp-app-httpmethods" class="pointee">class-map type inspect http match-any <span class="pointed_at">ccp-app-httpmethods</span></span>
+ match  request method bcopy
+ match  request method bdelete
+ match  request method bmove
+ match  request method bpropfind
+ match  request method bproppatch
+ match  request method connect
+ match  request method copy
+ match  request method delete
+ match  request method edit
+ match  request method getattribute
+ match  request method getattributenames
+ match  request method getproperties
+ match  request method index
+ match  request method lock
+ match  request method mkcol
+ match  request method mkdir
+ match  request method move
+ match  request method notify
+ match  request method options
+ match  request method poll
+ match  request method propfind
+ match  request method proppatch
+ match  request method put
+ match  request method revadd
+ match  request method revlabel
+ match  request method revlog
+ match  request method revnum
+ match  request method save
+ match  request method search
+ match  request method setattribute
+ match  request method startrev
+ match  request method stoprev
+ match  request method subscribe
+ match  request method trace
+ match  request method unedit
+ match  request method unlock
+ match  request method unsubscribe
+<br><span id="class_ccp-http-blockparam" class="pointee">class-map type inspect http match-any <span class="pointed_at">ccp-http-blockparam</span></span>
+ match  request port-misuse im
+ match  request port-misuse p2p
+ match  request port-misuse tunneling
+ match  req-resp protocol-violation
+<br><span id="class_ccp-protocol-imap" class="pointee">class-map type inspect match-all <span class="pointed_at">ccp-protocol-imap</span></span>
+ match protocol imap
+<br><span id="class_ccp-app-aol" class="pointee">class-map type inspect aol match-any <span class="pointed_at">ccp-app-aol</span></span>
+ match  service text-chat
+<br><span id="class_ccp-protocol-http" class="pointee">class-map type inspect match-all <span class="pointed_at">ccp-protocol-http</span></span>
+ match protocol http
+<br><span id="class_ccp-http-allowparam" class="pointee">class-map type inspect http match-any <span class="pointed_at">ccp-http-allowparam</span></span>
+ match  request port-misuse tunneling
+!
+!
+<br><span id="policy_map_ccp-permit-icmpreply" class="pointee">policy-map type inspect <span class="pointed_at">ccp-permit-icmpreply</span></span>
+ class type inspect <a href="#class_ccp-icmp-access">ccp-icmp-access</a>
+ class class-default
+  pass
+<br><span id="policy_map_sdm-pol-NATOutsideToInside-1" class="pointee">policy-map type inspect <span class="pointed_at">sdm-pol-NATOutsideToInside-1</span></span>
+ class type inspect <a href="#class_sdm-nat-user-protocol--1-1">sdm-nat-user-protocol--1-1</a>
+  inspect
+ class type inspect <a href="#class_sdm-nat-http-1">sdm-nat-http-1</a>
+  inspect
+ class type inspect <a href="#class_sdm-nat-user-protocol--2-1">sdm-nat-user-protocol--2-1</a>
+  inspect
+ class type inspect <a href="#class_sdm-nat-user-protocol--1-2">sdm-nat-user-protocol--1-2</a>
+  inspect
+ class type inspect <a href="#class_sdm-nat-http-2">sdm-nat-http-2</a>
+  inspect
+ class type inspect <a href="#class_sdm-nat-user-protocol--2-2">sdm-nat-user-protocol--2-2</a>
+  inspect
+ class type inspect <a href="#class_sdm-nat-user-protocol--3-1">sdm-nat-user-protocol--3-1</a>
+  inspect
+ class type inspect <a href="#class_sdm-nat-user-protocol--1-3">sdm-nat-user-protocol--1-3</a>
+  inspect
+ class type inspect <a href="#class_sdm-nat-http-3">sdm-nat-http-3</a>
+  inspect
+ class type inspect <a href="#class_sdm-nat-user-protocol--2-3">sdm-nat-user-protocol--2-3</a>
+  inspect
+ class type inspect <a href="#class_sdm-nat-user-protocol--3-2">sdm-nat-user-protocol--3-2</a>
+  inspect
+ class type inspect <a href="#class_sdm-nat-http-4">sdm-nat-http-4</a>
+  inspect
+ class type inspect <a href="#class_sdm-nat-user-protocol--1-4">sdm-nat-user-protocol--1-4</a>
+  inspect
+ class type inspect <a href="#class_sdm-nat-user-protocol--2-4">sdm-nat-user-protocol--2-4</a>
+  inspect
+ class type inspect <a href="#class_sdm-nat-user-protocol--1-5">sdm-nat-user-protocol--1-5</a>
+  inspect
+ class type inspect <a href="#class_sdm-nat-user-protocol--2-5">sdm-nat-user-protocol--2-5</a>
+  inspect
+ class type inspect <a href="#class_sdm-nat-http-5">sdm-nat-http-5</a>
+  inspect
+ class class-default
+  drop
+policy-map type inspect im ccp-action-app-im
+ class type inspect aol <a href="#class_ccp-app-aol">ccp-app-aol</a>
+  log
+  allow
+ class type inspect msnmsgr <a href="#class_ccp-app-msn">ccp-app-msn</a>
+  log
+  allow
+ class type inspect ymsgr <a href="#class_ccp-app-yahoo">ccp-app-yahoo</a>
+  log
+  allow
+ class type inspect aol <a href="#class_ccp-app-aol-otherservices">ccp-app-aol-otherservices</a>
+  log
+  reset
+ class type inspect msnmsgr <a href="#class_ccp-app-msn-otherservices">ccp-app-msn-otherservices</a>
+  log
+  reset
+ class type inspect ymsgr <a href="#class_ccp-app-yahoo-otherservices">ccp-app-yahoo-otherservices</a>
+  log
+  reset
+policy-map type inspect http ccp-action-app-http
+ class type inspect http <a href="#class_ccp-http-blockparam">ccp-http-blockparam</a>
+  log
+  reset
+ class type inspect http <a href="#class_ccp-app-httpmethods">ccp-app-httpmethods</a>
+  log
+  reset
+ class type inspect http <a href="#class_ccp-http-allowparam">ccp-http-allowparam</a>
+  log
+  allow
+policy-map type inspect imap ccp-action-imap
+ class type inspect imap <a href="#class_ccp-app-imap">ccp-app-imap</a>
+  log
+policy-map type inspect pop3 ccp-action-pop3
+ class type inspect pop3 <a href="#class_ccp-app-pop3">ccp-app-pop3</a>
+  log
+<br><span id="policy_map_ccp-inspect" class="pointee">policy-map type inspect <span class="pointed_at">ccp-inspect</span></span>
+ class type inspect <a href="#class_ccp-invalid-src">ccp-invalid-src</a>
+  drop log
+ class type inspect <a href="#class_ccp-protocol-http">ccp-protocol-http</a>
+  inspect
+  service-policy http ccp-action-app-http
+ class type inspect <a href="#class_ccp-protocol-imap">ccp-protocol-imap</a>
+  inspect
+  service-policy imap ccp-action-imap
+ class type inspect <a href="#class_ccp-protocol-pop3">ccp-protocol-pop3</a>
+  inspect
+  service-policy pop3 ccp-action-pop3
+ class type inspect <a href="#class_ccp-protocol-im">ccp-protocol-im</a>
+  inspect
+  service-policy im ccp-action-app-im
+ class type inspect <a href="#class_ccp-insp-traffic">ccp-insp-traffic</a>
+  inspect
+ class type inspect <a href="#class_CCP-Voice-permit">CCP-Voice-permit</a>
+  inspect
+ class class-default
+  pass
+<br><span id="policy_map_ccp-permit" class="pointee">policy-map type inspect <span class="pointed_at">ccp-permit</span></span>
+ class class-default
+  drop
+!
+zone security out-zone
+zone security in-zone
+zone-pair security ccp-zp-self-out source self destination out-zone
+ service-policy type inspect ccp-permit-icmpreply
+zone-pair security sdm-zp-NATOutsideToInside-1 source out-zone destination in-zone
+ service-policy type inspect sdm-pol-NATOutsideToInside-1
+zone-pair security ccp-zp-in-out source in-zone destination out-zone
+ service-policy type inspect ccp-inspect
+zone-pair security ccp-zp-out-self source out-zone destination self
+ service-policy type inspect ccp-permit
+!
+!
+!
+<br><span id="interface_FastEthernet0" class="pointee">interface <span class="pointed_at">FastEthernet0</span></span>
+!
+<br><span id="interface_FastEthernet1" class="pointee">interface <span class="pointed_at">FastEthernet1</span></span>
+!
+<br><span id="interface_FastEthernet2" class="pointee">interface <span class="pointed_at">FastEthernet2</span></span>
+!
+<br><span id="interface_FastEthernet3" class="pointee">interface <span class="pointed_at">FastEthernet3</span></span>
+!
+<br><span id="interface_FastEthernet4" class="pointee">interface <span class="pointed_at">FastEthernet4</span></span>
+ description <REMOVED>
+ ip address <REMOVED> 255.255.255.224
+ ip nat outside
+ ip virtual-reassembly
+ zone-member security out-zone
+ duplex auto
+ speed auto
+!
+<br><span id="interface_wlan-ap0" class="pointee">interface <span class="pointed_at">wlan-ap0</span></span>
+ description Service module interface to manage the embedded AP
+ ip unnumbered Vlan1
+ arp timeout 0
+!
+<br><span id="interface_Wlan-GigabitEthernet0" class="pointee">interface <span class="pointed_at">Wlan-GigabitEthernet0</span></span>
+ description <REMOVED>
+!
+<br><span id="interface_Vlan1" class="pointee">interface <span class="pointed_at">Vlan1</span></span>
+ description <REMOVED>
+ ip address 10.10.10.1 255.255.255.0
+ ip nat inside
+ ip virtual-reassembly
+ zone-member security in-zone
+ ip tcp adjust-mss 1452
+!
+ip forward-protocol nd
+ip route 0.0.0.0 0.0.0.0 FastEthernet4
+ip http server
+ip http access-class 23
+ip http authentication local
+ip http secure-server
+ip http timeout-policy idle 60 life 86400 requests 10000
+!
+!
+ip nat pool websrv 10.10.10.60 10.10.10.60 netmask 255.255.255.0
+ip nat inside source list <a href="#acl_1">1</a> interface <a href="#interface_FastEthernet4">FastEthernet4</a> overload
+ip nat inside source static tcp 10.10.10.40 53322 interface <a href="#interface_FastEthernet4">FastEthernet4</a> 53322
+ip nat inside source static udp 10.10.10.40 53322 interface <a href="#interface_FastEthernet4">FastEthernet4</a> 53322
+ip nat inside source static tcp 10.10.10.60 80 interface <a href="#interface_FastEthernet4">FastEthernet4</a> 80
+ip nat inside source static tcp <REMOVED> 80 10.10.10.60 80 extendable
+!
+<br><span id="acl_web" class="pointee">ip access-list extended <span class="pointed_at">web</span></span>
+ remark webservr
+ remark CCP_ACL Category=2
+ permit ip any host 10.10.10.60
+!
+<br><span id="acl_1" class="pointee">access-list <span class="pointed_at">1</span> remark INSIDE_IF=Vlan1</span>
+access-list 1 remark CCP_ACL Category=2
+access-list 1 permit 10.10.10.0 0.0.0.255
+<br><span id="acl_23" class="pointee">access-list <span class="pointed_at">23</span> permit 10.10.10.0 0.0.0.7</span>
+<br><span id="acl_100" class="pointee">access-list <span class="pointed_at">100</span> remark CCP_ACL Category=128</span>
+access-list 100 permit ip host 255.255.255.255 any
+access-list 100 permit ip 127.0.0.0 0.255.255.255 any
+access-list 100 permit ip  0.0.0.31 any
+<br><span id="acl_101" class="pointee">access-list <span class="pointed_at">101</span> remark CCP_ACL Category=0</span>
+access-list 101 permit ip any host 10.10.10.40
+<br><span id="acl_102" class="pointee">access-list <span class="pointed_at">102</span> remark CCP_ACL Category=0</span>
+access-list 102 permit ip any host 10.10.10.60
+<br><span id="acl_103" class="pointee">access-list <span class="pointed_at">103</span> remark CCP_ACL Category=0</span>
+access-list 103 permit ip any host 10.10.10.40
+<br><span id="acl_104" class="pointee">access-list <span class="pointed_at">104</span> remark CCP_ACL Category=0</span>
+access-list 104 permit ip any host 10.10.10.40
+<br><span id="acl_105" class="pointee">access-list <span class="pointed_at">105</span> remark CCP_ACL Category=0</span>
+access-list 105 permit ip any host 10.10.10.60
+<br><span id="acl_106" class="pointee">access-list <span class="pointed_at">106</span> remark CCP_ACL Category=0</span>
+access-list 106 permit ip any host 10.10.10.40
+<br><span id="acl_107" class="pointee">access-list <span class="pointed_at">107</span> remark CCP_ACL Category=0</span>
+access-list 107 permit ip any host 10.10.10.60
+<br><span id="acl_108" class="pointee">access-list <span class="pointed_at">108</span> remark CCP_ACL Category=0</span>
+access-list 108 permit ip any host 10.10.10.40
+<br><span id="acl_109" class="pointee">access-list <span class="pointed_at">109</span> remark CCP_ACL Category=0</span>
+access-list 109 permit ip any host 10.10.10.60
+<br><span id="acl_110" class="pointee">access-list <span class="pointed_at">110</span> remark CCP_ACL Category=0</span>
+access-list 110 permit ip any host 10.10.10.40
+<br><span id="acl_111" class="pointee">access-list <span class="pointed_at">111</span> remark CCP_ACL Category=0</span>
+access-list 111 permit ip any host 10.10.10.60
+<br><span id="acl_112" class="pointee">access-list <span class="pointed_at">112</span> remark CCP_ACL Category=0</span>
+access-list 112 permit ip any host 10.10.10.60
+<br><span id="acl_113" class="pointee">access-list <span class="pointed_at">113</span> remark CCP_ACL Category=0</span>
+access-list 113 permit ip any host 10.10.10.40
+<br><span id="acl_114" class="pointee">access-list <span class="pointed_at">114</span> remark CCP_ACL Category=0</span>
+access-list 114 permit ip any host 10.10.10.40
+<br><span id="acl_115" class="pointee">access-list <span class="pointed_at">115</span> remark CCP_ACL Category=0</span>
+access-list 115 permit ip any host 10.10.10.40
+<br><span id="acl_116" class="pointee">access-list <span class="pointed_at">116</span> remark CCP_ACL Category=0</span>
+access-list 116 permit ip any host 10.10.10.40
+<br><span id="acl_117" class="pointee">access-list <span class="pointed_at">117</span> remark CCP_ACL Category=0</span>
+access-list 117 permit ip any host 10.10.10.60
+no cdp run
+
+!
+!
+!
+!
+control-plane
+!
+banner exec ^C
+% Password expiration warning.
+-----------------------------------------------------------------------
+
+<REMOVED>
+
+-----------------------------------------------------------------------
+^C
+banner login ^C
+<REMOVED>
+-----------------------------------------------------------------------
+
+^C
+!
+line con 0
+ no modem enable
+line aux 0
+line 2
+ no activation-character
+ no exec
+ transport preferred none
+ transport input all
+line vty 0 4
+ access-class <a href="#acl_23">23</a> in
+ transport input telnet ssh
+!
+scheduler max-task-time 5000
+end
         </pre>
-        <a style="position: fixed; top:10px;right:10px;color: white;background-color: Blue;text-decoration:none" href="#" title="Click to go to top"><REMOVED (./ios_to_html_examples/html_test_case_6.cfg)</a>
+        <div class="floating-menu">
+    <h3><REMOVED (html_test_case_6.cfg)</h3>
+    <a href="#">Top</a>
+    <h4>Beginning of Sections</h4>
+<a href="#acl_web">Acl</a>
+<a href="#class_sdm-nat-http-4">Class</a>
+<a href="#crypto_pki_TP-self-signed-3499699271">Crypto_pki</a>
+<a href="#dhcp_pool_ccp-pool">Dhcp_pool</a>
+<a href="#interface_FastEthernet0">Interface</a>
+<a href="#parameter_map_ccp-regex-nonascii">Parameter_map</a>
+<a href="#policy_map_ccp-permit-icmpreply">Policy_map</a>
+</div>
     </body>
 </html>

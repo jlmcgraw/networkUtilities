@@ -324,7 +324,6 @@ sub find_pointees {
             }
         }
     }
-    ### %foundPointees
     return \%foundPointees;
 }
 
@@ -339,9 +338,9 @@ sub config_to_html {
         );
 
     #reset these for each file
-    my %foundPointers = ();
-    my %foundPointees = ();
-    my %pointeeSeen   = ();
+    my %foundPointers        = ();
+    my %foundPointees        = ();
+    my %pointee_seen_in_file = ();
 
     #Open the input and output files
     open my $filehandle, '<', $filename or die $!;
@@ -481,8 +480,8 @@ sub config_to_html {
 
                     #Have we seen this pointee already?
                     #We only want to make a section marker for the first occurrence
-                    if ( !$pointeeSeen{$pointeeType}{$unique_id} ) {
-                        $pointeeSeen{$pointeeType}{$unique_id}
+                    if ( !$pointee_seen_in_file{$pointeeType}{$unique_id} ) {
+                        $pointee_seen_in_file{$pointeeType}{$unique_id}
                             = "$pointed_at";
 
                         #                         my $anchor_text = '<a name="'
@@ -742,23 +741,95 @@ sub config_to_html {
 
     }
 
+    #Construct the floating menu
+    my $floating_menu_text = construct_floating_menu(
+        $filename, \@html_formatted_text,
+        $hostname, \%pointee_seen_in_file
+    );
+
     #Output as a web page
-    output_as_html( $filename, \@html_formatted_text, $hostname );
+    output_as_html( $filename, \@html_formatted_text, $hostname,
+        $floating_menu_text );
 
     close $filehandle;
 
     ### %foundPointers
     ### %foundPointees
-    ### %pointeeSeen
+    ### %pointee_seen_in_file
 }
 
-sub output_as_html {
-    my ( $filename, $html_formatted_text_ref, $hostname ) = validate_pos(
+sub construct_floating_menu {
+
+    #Construct a menu from the pointees we've seen in this file
+
+    my ( $filename, $html_formatted_text_ref, $hostname, $pointees_ref )
+        = validate_pos(
         @_,
         { type => SCALAR },
         { type => ARRAYREF },
         { type => SCALAR },
-    );
+        { type => HASHREF },
+        );
+
+    #Construct a menu from the pointees we've seen in this file
+    my $file_basename = basename($filename);
+
+    #First occurrence of each type of pointee
+    my @first_occurence_of_pointees;
+
+    #Copy the array of html-ized test to a scalar
+    my $config_as_html = join "", @$html_formatted_text_ref;
+
+    #for each pointee we found in this config
+    foreach my $pointee_type ( sort keys %{$pointees_ref} ) {
+
+        #find only the first occurrence
+        my $regex = qr/<span \s+ id="(?<type> $pointee_type .*? )"/x;
+        $config_as_html =~ /$regex/ix;
+
+        #Save it
+        push @first_occurence_of_pointees, "$pointee_type|$+{type}";
+    }
+
+    #First portion of the HTML
+    my $menu_text = << "END_MENU";
+<div class="floating-menu">
+    <h3>$hostname ($file_basename)</h3>
+    <a href="#">Top</a>
+    <h4>Beginning of Sections</h4>
+END_MENU
+
+    #Create a link for each type of pointee
+    map {
+        #Split up what we pushed earlier
+        my ( $type, $specific ) = split( '\|', $_ );
+
+        #Fix case on $type
+        $type = ucfirst $type;
+
+        #Construct the link
+        #         $menu_text .= "<div><a href=\"#$specific\" style=\"text-align: right\">$type</a>" . "</div>\n";
+        $menu_text .= "<a href=\"#$specific\">$type</a>" . "\n";
+    } @first_occurence_of_pointees;
+
+    #Close of the DIV in the html
+    $menu_text .= '</div>';
+
+    #Return the constructed text
+    return $menu_text;
+}
+
+sub output_as_html {
+    my ($filename, $html_formatted_text_ref,
+        $hostname, $floating_menu_text
+        )
+        = validate_pos(
+        @_,
+        { type => SCALAR },
+        { type => ARRAYREF },
+        { type => SCALAR },
+        { type => SCALAR },
+        );
 
     open my $filehandleHtml, '>', $filename . '.html' or die $!;
 
@@ -782,18 +853,44 @@ sub output_as_html {
             .pointed_at {
                 font-style: italic;
                 }
+            .to_top_label{
+                position: fixed; 
+                top:10px;
+                right:10px;
+                color: white;
+                background-color: Blue;
+                text-decoration:none
+                }
+            div.floating-menu {
+                position:fixed;
+                top:10px;
+                right:10px;
+                background:#fff4c8;
+                padding:5px;
+                z-index:100;
+                }
+            div.floating-menu a, div.floating-menu h3, div.floating-menu h4 {
+                text-align: right;
+                text-decoration:none;
+                display:block;
+                margin:0 0.5em;
+                }
+            div.floating-menu a:hover {
+                color: grey;
+                }
+                
         </style>
     </head>
     <body>
         <pre>
 END
-    say {$filehandleHtml} join( "\r", @$html_formatted_text_ref );
+    say {$filehandleHtml} join( "\n", @$html_formatted_text_ref );
 
     #say {$filehandleHtml} $line;
     #Close out the file with very basic html ending
     print $filehandleHtml <<"END";
         </pre>
-        <a style="position: fixed; top:10px;right:10px;color: white;background-color: Blue;text-decoration:none" href="#" title="Click to go to top">$hostname ($filename)</a>
+        $floating_menu_text
     </body>
 </html>
 END
