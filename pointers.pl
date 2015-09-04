@@ -205,7 +205,12 @@
             (?<points_to> $list_of_pointees_ref->{"community_list"}) 
             \s* $
             /ixsm,
-
+    2 => qr/^ \s* 
+            match \s+ 
+            community \s+ 
+            (?<points_to> $list_of_pointees_ref->{"community_list"}) 
+            \s* $
+            /ixsm,
     },
     'as_path_access_list' => {
     1 =>
@@ -312,6 +317,13 @@
                     vrf \s+
                     (?<points_to> (?: $list_of_pointees_ref->{"vrf"}) )
                     (\s+|$)
+        /ixsm,
+        #Match any mention of "vrf" except for the definition of one
+        6 => qr/(?<!^ ip)
+                \s+
+                vrf \s+
+                (?<points_to> (?: $list_of_pointees_ref->{"vrf"}) )
+                (\s+|$)
         /ixsm,
     },
     'key_chain' => {
