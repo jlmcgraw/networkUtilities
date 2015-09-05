@@ -318,8 +318,9 @@
                     (?<points_to> (?: $list_of_pointees_ref->{"vrf"}) )
                     (\s+|$)
         /ixsm,
-        #Match any mention of "vrf" except for the definition of one
-        6 => qr/(?<!^ ip)
+
+    #Match any mention of "vrf" except for the definition of one
+    6 => qr/(?<!^ ip)
                 \s+
                 vrf \s+
                 (?<points_to> (?: $list_of_pointees_ref->{"vrf"}) )
@@ -522,5 +523,21 @@
             .*?
             role \s+
             (?<points_to> (?: $list_of_pointees_ref->{"nxos_role"}) )
+            /ixsm,
+    },
+    'ipsec_profile' => {
+    1 => qr/^ \s* 
+            tunnel \s+ 
+            protection \s+ 
+            ipsec \s+ 
+            profile \s+ 
+            (?<points_to> (?: $list_of_pointees_ref->{"ipsec_profile"}) )
+            /ixsm,
+    },
+    'ipsec_transform_set' => {
+    1 => qr/^ \s* 
+            set \s+ 
+            transform-set \s+ 
+            (?<points_to> (?: $list_of_pointees_ref->{"ipsec_transform_set"}) )
             /ixsm,
     },

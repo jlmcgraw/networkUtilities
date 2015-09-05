@@ -214,6 +214,8 @@ sub find_pointees {
             =~ /^ \s* interface \s+ (?<current_interface> .*?) (?: \s | $) /ixsm;
         $current_interface = $+{current_interface} if $+{current_interface};
 
+        $current_interface //= "unknown";
+
         #Match it against our hash of pointees regexes
         foreach my $pointeeType ( sort keys %{$pointee_regex_ref} ) {
             foreach my $pointeeKey2 (

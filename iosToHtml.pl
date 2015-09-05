@@ -94,7 +94,7 @@ use Smart::Comments -ENV;
 # no if $] >= 5.018, warnings => "experimental";
 
 #Define the valid command line options
-my $opt_string = 'eh';
+my $opt_string = 'ehf';
 my $arg_num    = scalar @ARGV;
 
 #We need at least one argument
@@ -110,8 +110,9 @@ unless ( getopts( "$opt_string", \%opt ) ) {
 }
 
 #Set variables from command line options
-my ( $should_link_externally, $should_reformat_numbers )
-    = ( $opt{e}, $opt{h} );
+my ( $should_link_externally, $should_reformat_numbers,
+    $should_do_extra_formatting )
+    = ( $opt{e}, $opt{h}, $opt{f} );
 
 #Hold a copy of the original ARGV so we can pass it instead of globbed version to create_host_info_hashes
 my @ARGV_unmodified;
@@ -246,7 +247,11 @@ sub usage {
     say "";
     say "       -h Make some numbers human readable";
     say "";
-    say "       -e Try to make links to other files (bgp neighbors, etc)";
+    say
+        "       -e Try to make links to other configs from this same set (bgp neighbors, route next hops etc)";
+    say "";
+    say
+        "       -f Do some extra formatting (italic comments, permits/green denies/red)";
     say "";
     exit 1;
 }
@@ -533,8 +538,9 @@ sub config_to_html {
                     foreach my $number (@matches) {
 
                         #Different ways to format the number
-                        #my $number_formatted = format_number($number);
-                        my $number_formatted = format_bytes($number);
+                        my $number_formatted = format_number($number);
+
+                        #my $number_formatted = format_bytes($number);
 
                         #Replace the non-formatted number with the formmated one
                         $line =~ s/$number/$number_formatted/x;
@@ -733,7 +739,108 @@ sub config_to_html {
                         $line =~ s/(\s+) $host_ip (\s+|$)/$1$linkText$2/gx;
                     }
                 }
+
+                #Link to route next hops if we have a config for them
+                when (
+                    m/^ \s*
+                    ip \s+
+                    route \s+
+                    (?: vrf \S+ \s+)?
+                    $RE{net}{IPv4} \s+
+                    $RE{net}{IPv4} \s+
+                    (?<pointed_at>
+                        $RE{net}{IPv4})
+                    /ixms
+                    )
+                {
+
+                    my $neighbor_ip = $+{pointed_at};
+
+                    #say $neighbor_ip;
+
+                    if ( exists $host_info_ref->{'ip_address'}{$neighbor_ip} )
+                    {
+                        my ( $file, $interface )
+                            = split( ',',
+                            $host_info_ref->{'ip_address'}{$neighbor_ip} );
+
+                        #Pull out the various filename components of the input file from the command line
+                        my ( $filename, $dir, $ext )
+                            = fileparse( $file, qr/\.[^.]*/x );
+
+                        #Construct the text of the link
+                        my $linkText
+                            = '<a href="'
+                            . $filename
+                            . $ext . '.html' . '#'
+                            . "interface_$interface"
+                            . "\">$neighbor_ip</a>";
+
+                        #Insert the link back into the line
+                        #Link point needs to be surrounded by whitespace or end of line
+                        $line
+                            =~ s/(\s+) $neighbor_ip (\s+|$)/$1$linkText$2/gx;
+                    }
+                }
+
+                #Link to route next hops if we have a config for them
+                when (
+                    m/^ \s*
+                    ip \s+
+                    route \s+
+                    (?: vrf \S+ \s+)?
+                    $RE{net}{IPv4} \/ \d+
+                    (?<pointed_at>
+                        $RE{net}{IPv4})
+                    /ixms
+                    )
+                {
+
+                    my $neighbor_ip = $+{pointed_at};
+
+                    #say $neighbor_ip;
+
+                    if ( exists $host_info_ref->{'ip_address'}{$neighbor_ip} )
+                    {
+                        my ( $file, $interface )
+                            = split( ',',
+                            $host_info_ref->{'ip_address'}{$neighbor_ip} );
+
+                        #Pull out the various filename components of the input file from the command line
+                        my ( $filename, $dir, $ext )
+                            = fileparse( $file, qr/\.[^.]*/x );
+
+                        #Construct the text of the link
+                        my $linkText
+                            = '<a href="'
+                            . $filename
+                            . $ext . '.html' . '#'
+                            . "interface_$interface"
+                            . "\">$neighbor_ip</a>";
+
+                        #Insert the link back into the line
+                        #Link point needs to be surrounded by whitespace or end of line
+                        $line
+                            =~ s/(\s+) $neighbor_ip (\s+|$)/$1$linkText$2/gx;
+                    }
+                }
             }
+        }
+
+        #Some experimental formatting
+        if ($should_do_extra_formatting) {
+
+            #Style permit lines
+            $line
+                =~ s/ (\s+) (permit|included) (  .*? $  ) /$1<span class="permit">$2$3<\/span>/ixg;
+
+            #Style deny lines
+            $line
+                =~ s/ (\s+) (deny|excluded) (  .*?  $ ) /$1<span class="deny">$2$3<\/span>/ixg;
+
+            #Style remark lines
+            $line
+                =~ s/ (\s+) (remark|description) ( .*? $ ) /$1<span class="remark">$2$3<\/span>/ixg;
         }
 
         #Save the (possibly) modified line for later printing
@@ -851,6 +958,15 @@ sub output_as_html {
                 font-weight: bold;
                 }
             .pointed_at {
+                font-style: italic;
+                }
+            .deny {
+                color: red;
+                }
+            .permit {
+                color: green;
+                }
+            .remark {
                 font-style: italic;
                 }
             .to_top_label{

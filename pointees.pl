@@ -396,3 +396,23 @@
             )
             /ixsm,
     },
+    'ipsec_profile' => {
+    1 => qr/(?<unique_id>
+                        ^ \s*
+                        crypto \s+
+                        ipsec \s+
+                        profile \s+
+                        (?<pointed_at> $valid_cisco_name )
+            )
+            /ixsm,
+    },
+    'ipsec_transform_set' => {
+    1 => qr/(?<unique_id>
+                        ^ \s*
+                        crypto \s+
+                        ipsec \s+
+                        transform-set \s+
+                        (?<pointed_at> $valid_cisco_name )
+            )
+            /ixsm,
+    },
