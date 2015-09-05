@@ -4,9 +4,19 @@
     <head>
         <meta charset="UTF-8">
         <title>     
-            ./ios_to_html_examples/html_test_case_5.cfg
+            ios_to_html_examples/html_test_case_5.cfg
         </title>
         <style>
+            a {
+            text-decoration:none;
+            }
+            a:hover {
+                color: white;
+                background-color: Blue;
+                }
+            a:visited{
+                color:blue;
+                }
             :target{
                 background-color: #ffa;
                 }
@@ -14,6 +24,15 @@
                 font-weight: bold;
                 }
             .pointed_at {
+                font-style: italic;
+                }
+            .deny {
+                color: red;
+                }
+            .permit {
+                color: green;
+                }
+            .remark {
                 font-style: italic;
                 }
             .to_top_label{
@@ -25,6 +44,7 @@
                 text-decoration:none
                 }
             div.floating-menu {
+                opacity: .90;
                 position:fixed;
                 top:10px;
                 right:10px;
@@ -52,7 +72,7 @@ Current configuration : 3752 bytes
 !
 ! Last configuration change at 19:00:21 EST Sun Feb 28 1993
 version 15.2
-no service pad
+<span class="deny">no service pad</span>
 service timestamps debug datetime msec
 service timestamps log datetime msec
 service password-encryption
@@ -94,8 +114,8 @@ aaa accounting network acct_methods start-stop group rad_acct
 aaa session-id common
 clock timezone EST -5 0
 clock summer-time EDT recurring
-no ip source-route
-no ip gratuitous-arps
+<span class="deny">no ip source-route</span>
+<span class="deny">no ip gratuitous-arps</span>
 ip cef
 ip domain name xxxxxxco.com
 ip name-server xx.xx.xx.x
@@ -124,7 +144,7 @@ bridge irb
 !
 !
 <br><span id="interface_Dot11Radio0" class="pointee">interface <span class="pointed_at">Dot11Radio0</span></span>
-no ip address
+<span class="deny">no ip address</span>
 shutdown
 !
 encryption mode ciphers tkip
@@ -138,11 +158,11 @@ bridge-group 1
 bridge-group 1 subscriber-loop-control
 bridge-group 1 spanning-disabled
 bridge-group 1 block-unknown-source
-no bridge-group 1 source-learning
-no bridge-group 1 unicast-flooding
+<span class="deny">no bridge-group 1 source-learning</span>
+<span class="deny">no bridge-group 1 unicast-flooding</span>
 !
 <br><span id="interface_Dot11Radio1" class="pointee">interface <span class="pointed_at">Dot11Radio1</span></span>
-no ip address
+<span class="deny">no ip address</span>
 shutdown
 antenna gain 0
 dfs band 3 block
@@ -152,17 +172,17 @@ bridge-group 1
 bridge-group 1 subscriber-loop-control
 bridge-group 1 spanning-disabled
 bridge-group 1 block-unknown-source
-no bridge-group 1 source-learning
-no bridge-group 1 unicast-flooding
+<span class="deny">no bridge-group 1 source-learning</span>
+<span class="deny">no bridge-group 1 unicast-flooding</span>
 !
 <br><span id="interface_GigabitEthernet0" class="pointee">interface <span class="pointed_at">GigabitEthernet0</span></span>
-no ip address
+<span class="deny">no ip address</span>
 duplex auto
 speed auto
-no keepalive
+<span class="deny">no keepalive</span>
 bridge-group 1
 bridge-group 1 spanning-disabled
-no bridge-group 1 source-learning
+<span class="deny">no bridge-group 1 source-learning</span>
 !
 <br><span id="interface_BVI1" class="pointee">interface <span class="pointed_at">BVI1</span></span>
 ip address dhcp client-id GigabitEthernet0
@@ -170,23 +190,23 @@ ip address dhcp client-id GigabitEthernet0
 ip forward-protocol nd
 ip http server
 ip http authentication aaa
-no ip http secure-server
+<span class="deny">no ip http secure-server</span>
 ip http help-path http://www.cisco.com/warp/public/779/smbiz/prodconfig/help/eag
 ip route 0.0.0.0 0.0.0.0 xx.xx.xx.x
 ip route 0.0.0.0 0.0.0.0 xx.xx.xx.x
 !
 logging trap notifications
 logging xx.xx.xx.x
-<br><span id="acl_10" class="pointee">access-list <span class="pointed_at">10</span> permit xx.xx.xx.x</span>
-access-list 10 permit xx.xx.xx.x
-access-list 10 permit xx.xx.xx.x
-access-list 10 permit xx.xx.xx.x
-access-list 10 permit xx.xx.xx.x
-access-list 10 permit xx.xx.xx.x
-<br><span id="acl_20" class="pointee">access-list <span class="pointed_at">20</span> permit xx.xx.xx.x</span>
-access-list 20 permit xx.xx.xx.x
-<br><span id="acl_111" class="pointee">access-list <span class="pointed_at">111</span> permit tcp any any neq telnet</span>
-<br><span id="snmp_view_iso" class="pointee">snmp-server view <span class="pointed_at">iso</span> iso included</span>
+<br><span id="acl_10" class="pointee">access-list <span class="pointed_at">10</span> <span class="permit">permit xx.xx.xx.x</span></span>
+access-list 10 <span class="permit">permit xx.xx.xx.x</span>
+access-list 10 <span class="permit">permit xx.xx.xx.x</span>
+access-list 10 <span class="permit">permit xx.xx.xx.x</span>
+access-list 10 <span class="permit">permit xx.xx.xx.x</span>
+access-list 10 <span class="permit">permit xx.xx.xx.x</span>
+<br><span id="acl_20" class="pointee">access-list <span class="pointed_at">20</span> <span class="permit">permit xx.xx.xx.x</span></span>
+access-list 20 <span class="permit">permit xx.xx.xx.x</span>
+<br><span id="acl_111" class="pointee">access-list <span class="pointed_at">111</span> <span class="permit">permit tcp any any neq telnet</span></span>
+<br><span id="snmp_view_iso" class="pointee">snmp-server view <span class="pointed_at">iso</span> iso <span class="permit">included</span></span>
 snmp-server community xxxxxxxxxxx RW <a href="#acl_20">20</a>
 snmp-server location xxxxxxxxxx
 snmp-server contact xxxxxxxxxxx

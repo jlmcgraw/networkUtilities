@@ -14,7 +14,7 @@
                                 ^ \s*
                                 ip \s+
                                 access-list \s+
-                                (?: extended \s+)?
+                                (?: (?: standard | extended) \s+)?
                                 (?<pointed_at>
                                     (?: $valid_cisco_name)
                                 )
@@ -413,6 +413,16 @@
                         ipsec \s+
                         transform-set \s+
                         (?<pointed_at> $valid_cisco_name )
+            )
+            /ixsm,
+    },
+    'crypto_map' => {
+    1 => qr/(?<unique_id>
+                        ^ \s*
+                        crypto \s+
+                        map \s+
+                        (?<pointed_at> $valid_cisco_name) \s+
+                        \d+ \s+
             )
             /ixsm,
     },

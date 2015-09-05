@@ -4,9 +4,19 @@
     <head>
         <meta charset="UTF-8">
         <title>     
-            ./ios_to_html_examples/html_test_case_3.cfg
+            ios_to_html_examples/html_test_case_3.cfg
         </title>
         <style>
+            a {
+            text-decoration:none;
+            }
+            a:hover {
+                color: white;
+                background-color: Blue;
+                }
+            a:visited{
+                color:blue;
+                }
             :target{
                 background-color: #ffa;
                 }
@@ -14,6 +24,15 @@
                 font-weight: bold;
                 }
             .pointed_at {
+                font-style: italic;
+                }
+            .deny {
+                color: red;
+                }
+            .permit {
+                color: green;
+                }
+            .remark {
                 font-style: italic;
                 }
             .to_top_label{
@@ -25,6 +44,7 @@
                 text-decoration:none
                 }
             div.floating-menu {
+                opacity: .90;
                 position:fixed;
                 top:10px;
                 right:10px;
@@ -53,7 +73,7 @@ Current configuration : 30879 bytes
 ! Last configuration change at <REMOVED>
 !
 version 15.1
-no service pad
+<span class="deny">no service pad</span>
 service tcp-keepalives-in
 service tcp-keepalives-out
 service timestamps debug datetime msec localtime show-timezone
@@ -88,16 +108,16 @@ aaa session-id common
 clock timezone <REMOVED> -5 0
 clock summer-time NewYork date <REMOVED>
 !
-no ipv6 cef
-no ip source-route
+<span class="deny">no ipv6 cef</span>
+<span class="deny">no ip source-route</span>
 ip cef
 !
 !
 !
-ip dhcp excluded-address <REMOVED>
-ip dhcp excluded-address <REMOVED>
-ip dhcp excluded-address 192.168.1.1 192.168.1.154
-ip dhcp excluded-address <REMOVED>
+ip dhcp <span class="deny">excluded-address <REMOVED></span>
+ip dhcp <span class="deny">excluded-address <REMOVED></span>
+ip dhcp <span class="deny">excluded-address 192.168.1.1 192.168.1.154</span>
+ip dhcp <span class="deny">excluded-address <REMOVED></span>
 !
 <br><span id="dhcp_pool_INTERNAL" class="pointee">ip dhcp pool <span class="pointed_at">INTERNAL</span></span>
 network 192.168.1.0 255.255.255.0
@@ -120,15 +140,15 @@ hardware-address 0025.2207.1289
 client-name JER-MLSERVE
 !
 !
-no ip bootp server
+<span class="deny">no ip bootp server</span>
 ip domain name <REMOVED>
 ip name-server <REMOVED>
 ip name-server<REMOVED>
 ip name-server <REMOVED>
-ip port-map http port tcp 8080 description Proxys
+ip port-map http port tcp 8080 <span class="remark">description Proxys</span>
 ip port-map user-MTGO3 port tcp from 9001 to 9005
-ip port-map user-MTGO2 port tcp from 8001 to 8023 description Magic Online Ports 2
-ip port-map user-MTGO port tcp 7770 description Magic Online Ports
+ip port-map user-MTGO2 port tcp from 8001 to 8023 <span class="remark">description Magic Online Ports 2</span>
+ip port-map user-MTGO port tcp 7770 <span class="remark">description Magic Online Ports</span>
 ip port-map user-OpenVPN port udp 1196
 ip port-map user-rdp port tcp 3389
 ip inspect log drop-pkt
@@ -639,13 +659,13 @@ service-policy type inspect ccp-inspect
 !
 !
 <br><span id="interface_Null0" class="pointee">interface <span class="pointed_at">Null0</span></span>
-no ip unreachables
+<span class="deny">no ip unreachables</span>
 !
 <br><span id="interface_GigabitEthernet0/0" class="pointee">interface <span class="pointed_at">GigabitEthernet0/0</span></span>
 description <REMOVED>
 ip address dhcp client-id GigabitEthernet0/0 hostname <REMOVED>
-no ip redirects
-no ip unreachables
+<span class="deny">no ip redirects</span>
+<span class="deny">no ip unreachables</span>
 ip nbar protocol-discovery
 ip flow ingress
 ip flow egress
@@ -653,15 +673,15 @@ ip nat outside
 ip virtual-reassembly in
 duplex auto
 speed auto
-no mop enabled
+<span class="deny">no mop enabled</span>
 !
 <br><span id="interface_GigabitEthernet0/1" class="pointee">interface <span class="pointed_at">GigabitEthernet0/1</span></span>
 description <REMOVED>
 ip address <REMOVED>
 ip access-group <a href="#acl_101">101</a> in
-no ip redirects
-no ip unreachables
-no ip proxy-arp
+<span class="deny">no ip redirects</span>
+<span class="deny">no ip unreachables</span>
+<span class="deny">no ip proxy-arp</span>
 ip flow ingress
 ip flow egress
 ip nat inside
@@ -670,7 +690,7 @@ ip virtual-reassembly in
 zone-member security in-zone
 duplex auto
 speed auto
-no mop enabled
+<span class="deny">no mop enabled</span>
 !
 <br><span id="interface_GigabitEthernet0/0/0" class="pointee">interface <span class="pointed_at">GigabitEthernet0/0/0</span></span>
 description MLVPDCore
@@ -693,18 +713,18 @@ switchport trunk native vlan 5
 switchport mode trunk
 !
 <br><span id="interface_Vlan1" class="pointee">interface <span class="pointed_at">Vlan1</span></span>
-no ip address
-no ip redirects
-no ip unreachables
-no ip proxy-arp
+<span class="deny">no ip address</span>
+<span class="deny">no ip redirects</span>
+<span class="deny">no ip unreachables</span>
+<span class="deny">no ip proxy-arp</span>
 ip flow ingress
 !
 <br><span id="interface_Vlan5" class="pointee">interface <span class="pointed_at">Vlan5</span></span>
 description<REMOVED>
 ip address <REMOVED>
-no ip redirects
-no ip unreachables
-no ip proxy-arp
+<span class="deny">no ip redirects</span>
+<span class="deny">no ip unreachables</span>
+<span class="deny">no ip proxy-arp</span>
 ip nbar protocol-discovery
 ip flow ingress
 ip nat inside
@@ -717,8 +737,8 @@ zone-member security in-zone
 <br><span id="interface_Vlan10" class="pointee">interface <span class="pointed_at">Vlan10</span></span>
 description <REMOVED>
 ip address <REMOVED>
-no ip redirects
-no ip unreachables
+<span class="deny">no ip redirects</span>
+<span class="deny">no ip unreachables</span>
 ip flow ingress
 ip nat inside
 ip ips sdm_ips_rule in
@@ -729,8 +749,8 @@ zone-member security in-zone
 <br><span id="interface_Vlan20" class="pointee">interface <span class="pointed_at">Vlan20</span></span>
 description <REMOVED>
 ip address <REMOVED>
-no ip redirects
-no ip unreachables
+<span class="deny">no ip redirects</span>
+<span class="deny">no ip unreachables</span>
 ip flow ingress
 ip nat inside
 ip ips sdm_ips_rule in
@@ -741,8 +761,8 @@ zone-member security in-zone
 <br><span id="interface_Vlan30" class="pointee">interface <span class="pointed_at">Vlan30</span></span>
 description <REMOVED>
 ip address <REMOVED>
-no ip redirects
-no ip unreachables
+<span class="deny">no ip redirects</span>
+<span class="deny">no ip unreachables</span>
 ip flow ingress
 ip nat inside
 ip ips sdm_ips_rule in
@@ -790,44 +810,44 @@ remark CCP_ACL Category=0
 permit tcp any any eq 22
 !
 logging <REMOVED>
-<br><span id="acl_1" class="pointee">access-list <span class="pointed_at">1</span> remark CCP_ACL Category=2</span>
-access-list 1 permit <REMOVED>
-<br><span id="acl_2" class="pointee">access-list <span class="pointed_at">2</span> remark HTTP Access-class list</span>
-access-list 2 remark CCP_ACL Category=1
-access-list 2 permit 1<REMOVED>
-access-list 2 deny any
-<br><span id="acl_3" class="pointee">access-list <span class="pointed_at">3</span> remark CCP_ACL Category=2</span>
-access-list 3 permit <REMOVED>
-<br><span id="acl_4" class="pointee">access-list <span class="pointed_at">4</span> remark CCP_ACL Category=2</span>
-access-list 4 permit <REMOVED>
-access-list 4 permit <REMOVED>
-access-list 4 permit <REMOVED>
-<br><span id="acl_100" class="pointee">access-list <span class="pointed_at">100</span> remark CCP_ACL Category=128</span>
-access-list 100 permit ip host <REMOVED> any
-access-list 100 permit ip <REMOVED> any
-<br><span id="acl_101" class="pointee">access-list <span class="pointed_at">101</span> remark Auto generated by SDM Management Access feature</span>
-access-list 101 remark CCP_ACL Category=1
-access-list 101 permit tcp any host <REMOVED> eq www
-access-list 101 permit tcp <REMOVED> host 192.168.1.1 eq 22
-access-list 101 permit tcp <REMOVED> host 192.168.1.1 eq 443
-access-list 101 permit tcp <REMOVED> host 192.168.1.1 eq cmd
-access-list 101 deny tcp any host 192.168.1.1 eq telnet
-access-list 101 deny tcp any host 192.168.1.1 eq 22
-access-list 101 deny tcp any host 192.168.1.1 eq www
-access-list 101 deny tcp any host 192.168.1.1 eq 443
-access-list 101 deny tcp any host 192.168.1.1 eq cmd
-access-list 101 deny udp any host 192.168.1.1 eq snmp
-access-list 101 permit ip any any
-<br><span id="acl_102" class="pointee">access-list <span class="pointed_at">102</span> remark Auto generated by SDM Management Access feature</span>
-access-list 102 remark CCP_ACL Category=1
-access-list 102 permit ip 192.168.1.0 0.0.0.255 any
-<br><span id="acl_103" class="pointee">access-list <span class="pointed_at">103</span> remark Auto generated by SDM Management Access feature</span>
-access-list 103 remark CCP_ACL Category=1
-access-list 103 permit ip 192.168.1.0 0.0.0.255 any
-<br><span id="acl_122" class="pointee">access-list <span class="pointed_at">122</span> permit ip host <REMOVED> any</span>
-access-list 122 permit ip any host <REMOVED>
+<br><span id="acl_1" class="pointee">access-list <span class="pointed_at">1</span> <span class="remark">remark CCP_ACL Category=2</span></span>
+access-list 1 <span class="permit">permit <REMOVED></span>
+<br><span id="acl_2" class="pointee">access-list <span class="pointed_at">2</span> <span class="remark">remark HTTP Access-class list</span></span>
+access-list 2 <span class="remark">remark CCP_ACL Category=1</span>
+access-list 2 <span class="permit">permit 1<REMOVED></span>
+access-list 2 <span class="deny">deny any</span>
+<br><span id="acl_3" class="pointee">access-list <span class="pointed_at">3</span> <span class="remark">remark CCP_ACL Category=2</span></span>
+access-list 3 <span class="permit">permit <REMOVED></span>
+<br><span id="acl_4" class="pointee">access-list <span class="pointed_at">4</span> <span class="remark">remark CCP_ACL Category=2</span></span>
+access-list 4 <span class="permit">permit <REMOVED></span>
+access-list 4 <span class="permit">permit <REMOVED></span>
+access-list 4 <span class="permit">permit <REMOVED></span>
+<br><span id="acl_100" class="pointee">access-list <span class="pointed_at">100</span> <span class="remark">remark CCP_ACL Category=128</span></span>
+access-list 100 <span class="permit">permit ip host <REMOVED> any</span>
+access-list 100 <span class="permit">permit ip <REMOVED> any</span>
+<br><span id="acl_101" class="pointee">access-list <span class="pointed_at">101</span> <span class="remark">remark Auto generated by SDM Management Access feature</span></span>
+access-list 101 <span class="remark">remark CCP_ACL Category=1</span>
+access-list 101 <span class="permit">permit tcp any host <REMOVED> eq www</span>
+access-list 101 <span class="permit">permit tcp <REMOVED> host 192.168.1.1 eq 22</span>
+access-list 101 <span class="permit">permit tcp <REMOVED> host 192.168.1.1 eq 443</span>
+access-list 101 <span class="permit">permit tcp <REMOVED> host 192.168.1.1 eq cmd</span>
+access-list 101 <span class="deny">deny tcp any host 192.168.1.1 eq telnet</span>
+access-list 101 <span class="deny">deny tcp any host 192.168.1.1 eq 22</span>
+access-list 101 <span class="deny">deny tcp any host 192.168.1.1 eq www</span>
+access-list 101 <span class="deny">deny tcp any host 192.168.1.1 eq 443</span>
+access-list 101 <span class="deny">deny tcp any host 192.168.1.1 eq cmd</span>
+access-list 101 <span class="deny">deny udp any host 192.168.1.1 eq snmp</span>
+access-list 101 <span class="permit">permit ip any any</span>
+<br><span id="acl_102" class="pointee">access-list <span class="pointed_at">102</span> <span class="remark">remark Auto generated by SDM Management Access feature</span></span>
+access-list 102 <span class="remark">remark CCP_ACL Category=1</span>
+access-list 102 <span class="permit">permit ip 192.168.1.0 0.0.0.255 any</span>
+<br><span id="acl_103" class="pointee">access-list <span class="pointed_at">103</span> <span class="remark">remark Auto generated by SDM Management Access feature</span></span>
+access-list 103 <span class="remark">remark CCP_ACL Category=1</span>
+access-list 103 <span class="permit">permit ip 192.168.1.0 0.0.0.255 any</span>
+<br><span id="acl_122" class="pointee">access-list <span class="pointed_at">122</span> <span class="permit">permit ip host <REMOVED> any</span></span>
+access-list 122 <span class="permit">permit ip any host <REMOVED></span>
 !
-no cdp run
+<span class="deny">no cdp run</span>
 
 !
 !

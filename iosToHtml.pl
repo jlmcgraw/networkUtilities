@@ -838,7 +838,7 @@ sub config_to_html {
             $line
                 =~ s/ (\s+) (deny|excluded) (  .*?  $ ) /$1<span class="deny">$2$3<\/span>/ixg;
             
-            #Style deny lines
+            #Style no lines
             $line
                 =~ s/^( \s* ) (no) (  .*?  $ ) /$1<span class="deny">$2$3<\/span>/ixg;
                 
@@ -955,6 +955,16 @@ sub output_as_html {
             $filename
         </title>
         <style>
+            a {
+            text-decoration:none;
+            }
+            a:hover {
+                color: white;
+                background-color: Blue;
+                }
+            a:visited{
+                color:blue;
+                }
             :target{
                 background-color: #ffa;
                 }
@@ -982,6 +992,7 @@ sub output_as_html {
                 text-decoration:none
                 }
             div.floating-menu {
+                opacity: .90;
                 position:fixed;
                 top:10px;
                 right:10px;

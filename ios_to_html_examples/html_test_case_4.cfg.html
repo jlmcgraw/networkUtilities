@@ -4,9 +4,19 @@
     <head>
         <meta charset="UTF-8">
         <title>     
-            ./ios_to_html_examples/html_test_case_4.cfg
+            ios_to_html_examples/html_test_case_4.cfg
         </title>
         <style>
+            a {
+            text-decoration:none;
+            }
+            a:hover {
+                color: white;
+                background-color: Blue;
+                }
+            a:visited{
+                color:blue;
+                }
             :target{
                 background-color: #ffa;
                 }
@@ -14,6 +24,15 @@
                 font-weight: bold;
                 }
             .pointed_at {
+                font-style: italic;
+                }
+            .deny {
+                color: red;
+                }
+            .permit {
+                color: green;
+                }
+            .remark {
                 font-style: italic;
                 }
             .to_top_label{
@@ -25,6 +44,7 @@
                 text-decoration:none
                 }
             div.floating-menu {
+                opacity: .90;
                 position:fixed;
                 top:10px;
                 right:10px;
@@ -49,7 +69,7 @@
 Current configuration : 5242 bytes
 !
 version 12.4
-no service pad
+<span class="deny">no service pad</span>
 service timestamps debug datetime msec
 service timestamps log datetime msec
 service password-encryption
@@ -98,9 +118,9 @@ authentication key-management wpa
 guest-mode
 wpa-psk ascii 7 <REMOVED>
 !
-no ip dhcp use vrf connected
-ip dhcp excluded-address 192.168.1.1 192.168.1.100
-ip dhcp excluded-address 192.168.2.1 192.168.2.100
+<span class="deny">no ip dhcp use vrf connected</span>
+ip dhcp <span class="deny">excluded-address 192.168.1.1 192.168.1.100</span>
+ip dhcp <span class="deny">excluded-address 192.168.2.1 192.168.2.100</span>
 !
 <br><span id="dhcp_pool_Internal-net" class="pointee">ip dhcp pool <span class="pointed_at">Internal-net</span></span>
 import all
@@ -120,7 +140,7 @@ lease 4
 ip cef
 <br><span id="ip_inspect_MYFW" class="pointee">ip inspect name <span class="pointed_at">MYFW</span> tcp</span>
 <br><span id="ip_inspect_MYFW" class="pointee">ip inspect name <span class="pointed_at">MYFW</span> udp</span>
-no ip domain lookup
+<span class="deny">no ip domain lookup</span>
 ip domain name genXXX.local
 !
 !
@@ -156,11 +176,11 @@ ip virtual-reassembly
 ip tcp adjust-mss 1460
 duplex auto
 speed auto
-no cdp enable
+<span class="deny">no cdp enable</span>
 !
 <br><span id="interface_Dot11Radio0" class="pointee">interface <span class="pointed_at">Dot11Radio0</span></span>
-no ip address
-no dot11 extension aironet
+<span class="deny">no ip address</span>
+<span class="deny">no dot11 extension aironet</span>
 !
 encryption vlan 1 mode ciphers tkip
 !
@@ -174,7 +194,7 @@ speed basic-1.0 basic-2.0 basic-5.5 6.0 9.0 basic-11.0 12.0 18.0 24.0 36.0 48.0
 54.0
 channel 2437
 station-role root
-no cdp enable
+<span class="deny">no cdp enable</span>
 !
 <br><span id="interface_Dot11Radio0.1" class="pointee">interface <span class="pointed_at">Dot11Radio0.1</span></span>
 encapsulation dot1Q 1 native
@@ -182,8 +202,8 @@ bridge-group 1
 bridge-group 1 subscriber-loop-control
 bridge-group 1 spanning-disabled
 bridge-group 1 block-unknown-source
-no bridge-group 1 source-learning
-no bridge-group 1 unicast-flooding
+<span class="deny">no bridge-group 1 source-learning</span>
+<span class="deny">no bridge-group 1 unicast-flooding</span>
 !
 <br><span id="interface_Dot11Radio0.20" class="pointee">interface <span class="pointed_at">Dot11Radio0.20</span></span>
 description Guest wireless LAN - routed WLAN
@@ -196,7 +216,7 @@ ip virtual-reassembly
 !
 <br><span id="interface_Vlan1" class="pointee">interface <span class="pointed_at">Vlan1</span></span>
 description Internal Network
-no ip address
+<span class="deny">no ip address</span>
 ip nat inside
 ip virtual-reassembly
 bridge-group 1
@@ -222,8 +242,8 @@ permit icmp any any traceroute
 permit gre any any
 permit esp any any
 !
-<br><span id="acl_1" class="pointee">access-list <span class="pointed_at">1</span> permit 192.168.1.0 0.0.0.255</span>
-access-list 1 permit 192.168.2.0 0.0.0.255
+<br><span id="acl_1" class="pointee">access-list <span class="pointed_at">1</span> <span class="permit">permit 192.168.1.0 0.0.0.255</span></span>
+access-list 1 <span class="permit">permit 192.168.2.0 0.0.0.255</span>
 !
 control-plane
 !
@@ -231,7 +251,7 @@ bridge 1 route ip
 !
 line con 0
 password 7 <REMOVED>
-no modem enable
+<span class="deny">no modem enable</span>
 line aux 0
 line vty 0 4
 password 7 <REMOVED>

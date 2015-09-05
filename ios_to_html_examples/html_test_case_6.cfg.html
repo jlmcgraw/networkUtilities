@@ -4,9 +4,19 @@
     <head>
         <meta charset="UTF-8">
         <title>     
-            ./ios_to_html_examples/html_test_case_6.cfg
+            ios_to_html_examples/html_test_case_6.cfg
         </title>
         <style>
+            a {
+            text-decoration:none;
+            }
+            a:hover {
+                color: white;
+                background-color: Blue;
+                }
+            a:visited{
+                color:blue;
+                }
             :target{
                 background-color: #ffa;
                 }
@@ -14,6 +24,15 @@
                 font-weight: bold;
                 }
             .pointed_at {
+                font-style: italic;
+                }
+            .deny {
+                color: red;
+                }
+            .permit {
+                color: green;
+                }
+            .remark {
                 font-style: italic;
                 }
             .to_top_label{
@@ -25,6 +44,7 @@
                 text-decoration:none
                 }
             div.floating-menu {
+                opacity: .90;
                 position:fixed;
                 top:10px;
                 right:10px;
@@ -49,10 +69,10 @@
 Using 16191 out of 262136 bytes
 !
 version 12.4
-no service pad
+<span class="deny">no service pad</span>
 service timestamps debug datetime msec
 service timestamps log datetime msec
-no service password-encryption
+<span class="deny">no service password-encryption</span>
 !
 hostname <REMOVED>
 !
@@ -84,7 +104,7 @@ crypto pki trustpoint <a href="#crypto_pki_TP-self-signed-3499699271">TP-self-si
 <br><span id="crypto_pki_TP-self-signed-3499699271" class="pointee">crypto pki certificate chain <span class="pointed_at">TP-self-signed-3499699271</span></span>
  certificate self-signed 01 nvram:IOS-Self-Sig#D.cer
 ip source-route
-ip dhcp excluded-address 10.10.10.1 10.10.10.74
+ip dhcp <span class="deny">excluded-address 10.10.10.1 10.10.10.74</span>
 !
 <br><span id="dhcp_pool_ccp-pool" class="pointee">ip dhcp pool <span class="pointed_at">ccp-pool</span></span>
    import all
@@ -436,7 +456,7 @@ zone-pair security ccp-zp-out-self source out-zone destination self
 <br><span id="interface_FastEthernet3" class="pointee">interface <span class="pointed_at">FastEthernet3</span></span>
 !
 <br><span id="interface_FastEthernet4" class="pointee">interface <span class="pointed_at">FastEthernet4</span></span>
- description <REMOVED>
+ <span class="remark">description <REMOVED></span>
  ip address <REMOVED> 255.255.255.224
  ip nat outside
  ip virtual-reassembly
@@ -445,15 +465,15 @@ zone-pair security ccp-zp-out-self source out-zone destination self
  speed auto
 !
 <br><span id="interface_wlan-ap0" class="pointee">interface <span class="pointed_at">wlan-ap0</span></span>
- description Service module interface to manage the embedded AP
+ <span class="remark">description Service module interface to manage the embedded AP</span>
  ip unnumbered Vlan1
  arp timeout 0
 !
 <br><span id="interface_Wlan-GigabitEthernet0" class="pointee">interface <span class="pointed_at">Wlan-GigabitEthernet0</span></span>
- description <REMOVED>
+ <span class="remark">description <REMOVED></span>
 !
 <br><span id="interface_Vlan1" class="pointee">interface <span class="pointed_at">Vlan1</span></span>
- description <REMOVED>
+ <span class="remark">description <REMOVED></span>
  ip address 10.10.10.1 255.255.255.0
  ip nat inside
  ip virtual-reassembly
@@ -477,53 +497,53 @@ ip nat inside source static tcp 10.10.10.60 80 interface <a href="#interface_Fas
 ip nat inside source static tcp <REMOVED> 80 10.10.10.60 80 extendable
 !
 <br><span id="acl_web" class="pointee">ip access-list extended <span class="pointed_at">web</span></span>
- remark webservr
- remark CCP_ACL Category=2
- permit ip any host 10.10.10.60
+ <span class="remark">remark webservr</span>
+ <span class="remark">remark CCP_ACL Category=2</span>
+ <span class="permit">permit ip any host 10.10.10.60</span>
 !
-<br><span id="acl_1" class="pointee">access-list <span class="pointed_at">1</span> remark INSIDE_IF=Vlan1</span>
-access-list 1 remark CCP_ACL Category=2
-access-list 1 permit 10.10.10.0 0.0.0.255
-<br><span id="acl_23" class="pointee">access-list <span class="pointed_at">23</span> permit 10.10.10.0 0.0.0.7</span>
-<br><span id="acl_100" class="pointee">access-list <span class="pointed_at">100</span> remark CCP_ACL Category=128</span>
-access-list 100 permit ip host 255.255.255.255 any
-access-list 100 permit ip 127.0.0.0 0.255.255.255 any
-access-list 100 permit ip  0.0.0.31 any
-<br><span id="acl_101" class="pointee">access-list <span class="pointed_at">101</span> remark CCP_ACL Category=0</span>
-access-list 101 permit ip any host 10.10.10.40
-<br><span id="acl_102" class="pointee">access-list <span class="pointed_at">102</span> remark CCP_ACL Category=0</span>
-access-list 102 permit ip any host 10.10.10.60
-<br><span id="acl_103" class="pointee">access-list <span class="pointed_at">103</span> remark CCP_ACL Category=0</span>
-access-list 103 permit ip any host 10.10.10.40
-<br><span id="acl_104" class="pointee">access-list <span class="pointed_at">104</span> remark CCP_ACL Category=0</span>
-access-list 104 permit ip any host 10.10.10.40
-<br><span id="acl_105" class="pointee">access-list <span class="pointed_at">105</span> remark CCP_ACL Category=0</span>
-access-list 105 permit ip any host 10.10.10.60
-<br><span id="acl_106" class="pointee">access-list <span class="pointed_at">106</span> remark CCP_ACL Category=0</span>
-access-list 106 permit ip any host 10.10.10.40
-<br><span id="acl_107" class="pointee">access-list <span class="pointed_at">107</span> remark CCP_ACL Category=0</span>
-access-list 107 permit ip any host 10.10.10.60
-<br><span id="acl_108" class="pointee">access-list <span class="pointed_at">108</span> remark CCP_ACL Category=0</span>
-access-list 108 permit ip any host 10.10.10.40
-<br><span id="acl_109" class="pointee">access-list <span class="pointed_at">109</span> remark CCP_ACL Category=0</span>
-access-list 109 permit ip any host 10.10.10.60
-<br><span id="acl_110" class="pointee">access-list <span class="pointed_at">110</span> remark CCP_ACL Category=0</span>
-access-list 110 permit ip any host 10.10.10.40
-<br><span id="acl_111" class="pointee">access-list <span class="pointed_at">111</span> remark CCP_ACL Category=0</span>
-access-list 111 permit ip any host 10.10.10.60
-<br><span id="acl_112" class="pointee">access-list <span class="pointed_at">112</span> remark CCP_ACL Category=0</span>
-access-list 112 permit ip any host 10.10.10.60
-<br><span id="acl_113" class="pointee">access-list <span class="pointed_at">113</span> remark CCP_ACL Category=0</span>
-access-list 113 permit ip any host 10.10.10.40
-<br><span id="acl_114" class="pointee">access-list <span class="pointed_at">114</span> remark CCP_ACL Category=0</span>
-access-list 114 permit ip any host 10.10.10.40
-<br><span id="acl_115" class="pointee">access-list <span class="pointed_at">115</span> remark CCP_ACL Category=0</span>
-access-list 115 permit ip any host 10.10.10.40
-<br><span id="acl_116" class="pointee">access-list <span class="pointed_at">116</span> remark CCP_ACL Category=0</span>
-access-list 116 permit ip any host 10.10.10.40
-<br><span id="acl_117" class="pointee">access-list <span class="pointed_at">117</span> remark CCP_ACL Category=0</span>
-access-list 117 permit ip any host 10.10.10.60
-no cdp run
+<br><span id="acl_1" class="pointee">access-list <span class="pointed_at">1</span> <span class="remark">remark INSIDE_IF=Vlan1</span></span>
+access-list 1 <span class="remark">remark CCP_ACL Category=2</span>
+access-list 1 <span class="permit">permit 10.10.10.0 0.0.0.255</span>
+<br><span id="acl_23" class="pointee">access-list <span class="pointed_at">23</span> <span class="permit">permit 10.10.10.0 0.0.0.7</span></span>
+<br><span id="acl_100" class="pointee">access-list <span class="pointed_at">100</span> <span class="remark">remark CCP_ACL Category=128</span></span>
+access-list 100 <span class="permit">permit ip host 255.255.255.255 any</span>
+access-list 100 <span class="permit">permit ip 127.0.0.0 0.255.255.255 any</span>
+access-list 100 <span class="permit">permit ip  0.0.0.31 any</span>
+<br><span id="acl_101" class="pointee">access-list <span class="pointed_at">101</span> <span class="remark">remark CCP_ACL Category=0</span></span>
+access-list 101 <span class="permit">permit ip any host 10.10.10.40</span>
+<br><span id="acl_102" class="pointee">access-list <span class="pointed_at">102</span> <span class="remark">remark CCP_ACL Category=0</span></span>
+access-list 102 <span class="permit">permit ip any host 10.10.10.60</span>
+<br><span id="acl_103" class="pointee">access-list <span class="pointed_at">103</span> <span class="remark">remark CCP_ACL Category=0</span></span>
+access-list 103 <span class="permit">permit ip any host 10.10.10.40</span>
+<br><span id="acl_104" class="pointee">access-list <span class="pointed_at">104</span> <span class="remark">remark CCP_ACL Category=0</span></span>
+access-list 104 <span class="permit">permit ip any host 10.10.10.40</span>
+<br><span id="acl_105" class="pointee">access-list <span class="pointed_at">105</span> <span class="remark">remark CCP_ACL Category=0</span></span>
+access-list 105 <span class="permit">permit ip any host 10.10.10.60</span>
+<br><span id="acl_106" class="pointee">access-list <span class="pointed_at">106</span> <span class="remark">remark CCP_ACL Category=0</span></span>
+access-list 106 <span class="permit">permit ip any host 10.10.10.40</span>
+<br><span id="acl_107" class="pointee">access-list <span class="pointed_at">107</span> <span class="remark">remark CCP_ACL Category=0</span></span>
+access-list 107 <span class="permit">permit ip any host 10.10.10.60</span>
+<br><span id="acl_108" class="pointee">access-list <span class="pointed_at">108</span> <span class="remark">remark CCP_ACL Category=0</span></span>
+access-list 108 <span class="permit">permit ip any host 10.10.10.40</span>
+<br><span id="acl_109" class="pointee">access-list <span class="pointed_at">109</span> <span class="remark">remark CCP_ACL Category=0</span></span>
+access-list 109 <span class="permit">permit ip any host 10.10.10.60</span>
+<br><span id="acl_110" class="pointee">access-list <span class="pointed_at">110</span> <span class="remark">remark CCP_ACL Category=0</span></span>
+access-list 110 <span class="permit">permit ip any host 10.10.10.40</span>
+<br><span id="acl_111" class="pointee">access-list <span class="pointed_at">111</span> <span class="remark">remark CCP_ACL Category=0</span></span>
+access-list 111 <span class="permit">permit ip any host 10.10.10.60</span>
+<br><span id="acl_112" class="pointee">access-list <span class="pointed_at">112</span> <span class="remark">remark CCP_ACL Category=0</span></span>
+access-list 112 <span class="permit">permit ip any host 10.10.10.60</span>
+<br><span id="acl_113" class="pointee">access-list <span class="pointed_at">113</span> <span class="remark">remark CCP_ACL Category=0</span></span>
+access-list 113 <span class="permit">permit ip any host 10.10.10.40</span>
+<br><span id="acl_114" class="pointee">access-list <span class="pointed_at">114</span> <span class="remark">remark CCP_ACL Category=0</span></span>
+access-list 114 <span class="permit">permit ip any host 10.10.10.40</span>
+<br><span id="acl_115" class="pointee">access-list <span class="pointed_at">115</span> <span class="remark">remark CCP_ACL Category=0</span></span>
+access-list 115 <span class="permit">permit ip any host 10.10.10.40</span>
+<br><span id="acl_116" class="pointee">access-list <span class="pointed_at">116</span> <span class="remark">remark CCP_ACL Category=0</span></span>
+access-list 116 <span class="permit">permit ip any host 10.10.10.40</span>
+<br><span id="acl_117" class="pointee">access-list <span class="pointed_at">117</span> <span class="remark">remark CCP_ACL Category=0</span></span>
+access-list 117 <span class="permit">permit ip any host 10.10.10.60</span>
+<span class="deny">no cdp run</span>
 
 !
 !
@@ -546,11 +566,11 @@ banner login ^C
 ^C
 !
 line con 0
- no modem enable
+ <span class="deny">no modem enable</span>
 line aux 0
 line 2
- no activation-character
- no exec
+ <span class="deny">no activation-character</span>
+ <span class="deny">no exec</span>
  transport preferred none
  transport input all
 line vty 0 4

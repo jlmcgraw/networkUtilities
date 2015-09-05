@@ -4,9 +4,19 @@
     <head>
         <meta charset="UTF-8">
         <title>     
-            ./ios_to_html_examples/html_test_case_7.cfg
+            ios_to_html_examples/html_test_case_7.cfg
         </title>
         <style>
+            a {
+            text-decoration:none;
+            }
+            a:hover {
+                color: white;
+                background-color: Blue;
+                }
+            a:visited{
+                color:blue;
+                }
             :target{
                 background-color: #ffa;
                 }
@@ -14,6 +24,15 @@
                 font-weight: bold;
                 }
             .pointed_at {
+                font-style: italic;
+                }
+            .deny {
+                color: red;
+                }
+            .permit {
+                color: green;
+                }
+            .remark {
                 font-style: italic;
                 }
             .to_top_label{
@@ -25,6 +44,7 @@
                 text-decoration:none
                 }
             div.floating-menu {
+                opacity: .90;
                 position:fixed;
                 top:10px;
                 right:10px;
@@ -97,7 +117,7 @@ logging asdm informational
 mtu <a href="#pix_nameif_inside">inside</a> 1500
 mtu <a href="#pix_nameif_outside">outside</a> 1500
 icmp unreachable rate-limit 1 burst-size 1
-no asdm history enable
+<span class="deny">no asdm history enable</span>
 arp timeout 14400
 global (outside) 1 interface
 nat (inside) 1 0.0.0.0 0.0.0.0
@@ -115,8 +135,8 @@ http 192.168.2.0 255.255.255.0 <a href="#pix_nameif_inside">inside</a>
 http 192.168.2.4 255.255.255.255 <a href="#pix_nameif_inside">inside</a>
 http 192.168.1.108 255.255.255.255 <a href="#pix_nameif_outside">outside</a>
 http internetip 255.255.255.255 <a href="#pix_nameif_outside">outside</a>
-no snmp-server location
-no snmp-server contact
+<span class="deny">no snmp-server location</span>
+<span class="deny">no snmp-server contact</span>
 snmp-server enable traps snmp authentication linkup linkdown coldstart
 crypto ipsec security-association lifetime seconds 28800
 crypto ipsec security-association lifetime kilobytes 4608000
@@ -139,7 +159,7 @@ dhcprelay timeout 60
 
 threat-detection basic-threat
 threat-detection statistics access-list
-no threat-detection statistics tcp-intercept
+<span class="deny">no threat-detection statistics tcp-intercept</span>
 webvpn
 !
 !

@@ -93,6 +93,15 @@
                 address \s+
                 (?<points_to> $list_of_pointees_ref->{"acl"})
                 /ixsm,
+    18 => qr /^ \s* 
+            match \s+
+            address \s+
+            (?<points_to> $list_of_pointees_ref->{"acl"})
+            /ixsm,
+    19 => qr /^ \s* 
+            distribute-list \s+
+            (?<points_to> $list_of_pointees_ref->{"acl"})
+            /ixsm,
     },
 
     'policy_map' => {
@@ -262,6 +271,10 @@
 
     11 => qr/[\S]+ 
             (?:source|interface) \s+ 
+            (?<points_to> $list_of_pointees_ref->{"interface"}) 
+            /ixsm,
+    12 => qr/\s+ 
+            (?: in | out ) \s+
             (?<points_to> $list_of_pointees_ref->{"interface"}) 
             /ixsm,
 
@@ -540,4 +553,12 @@
             transform-set \s+ 
             (?<points_to> (?: $list_of_pointees_ref->{"ipsec_transform_set"}) )
             /ixsm,
+    },
+    'crypto_map' => {
+    1 => qr/^ \s*
+                        crypto \s+
+                        map \s+ 
+        (?<points_to> (?: $list_of_pointees_ref->{"crypto_map"}) )
+        $
+        /ixsm,
     },
