@@ -837,7 +837,11 @@ sub config_to_html {
             #Style deny lines
             $line
                 =~ s/ (\s+) (deny|excluded) (  .*?  $ ) /$1<span class="deny">$2$3<\/span>/ixg;
-
+            
+            #Style deny lines
+            $line
+                =~ s/^( \s* ) (no) (  .*?  $ ) /$1<span class="deny">$2$3<\/span>/ixg;
+                
             #Style remark lines
             $line
                 =~ s/ (\s+) (remark|description) ( .*? $ ) /$1<span class="remark">$2$3<\/span>/ixg;
