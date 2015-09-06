@@ -50,6 +50,7 @@
                                 \s \/ \d+)
                             (\s+|$)
                             )/ixsm,
+
         #NXOS HSRP
         5 => qr/(?<unique_id> ^ \s*
                     ip \s+
@@ -59,7 +60,7 @@
                     \s*
                     $
                     )/ixsm,
-        
+
         #IOS HSRP
         6 => qr/(?<unique_id> ^ \s*
                     standby \s+

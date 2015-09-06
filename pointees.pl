@@ -426,7 +426,7 @@
             )
             /ixsm,
     },
-        'aaa_list' => {
+    'aaa_list' => {
     1 => qr/(?<unique_id>
                         ^ \s*
                         aaa \s+

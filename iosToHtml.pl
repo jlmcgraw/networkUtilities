@@ -630,14 +630,19 @@ sub config_to_html {
                             my @peer_array;
 
                             #TODO BUG Make this sort
-#                             while ( my ( $peer_file, $peer_interface )
-#                                 = each
-#                                 %{ $host_info_ref->{'subnet'}{$network} } )
-                            foreach my $peer_file (sort keys %{ $host_info_ref->{'subnet'}{$network} } )
+                            #                             while ( my ( $peer_file, $peer_interface )
+                            #                                 = each
+                            #                                 %{ $host_info_ref->{'subnet'}{$network} } )
+                            foreach my $peer_file (
+                                sort
+                                keys %{ $host_info_ref->{'subnet'}{$network} }
+                                )
                             {
 
-                                my $peer_interface = $host_info_ref->{'subnet'}{$network}{$peer_file};
-                                
+                                my $peer_interface
+                                    = $host_info_ref->{'subnet'}{$network}
+                                    {$peer_file};
+
                                 #Don't list ourself as a peer
                                 if ( $filename =~ quotemeta $peer_file ) {
                                     next;
@@ -662,7 +667,9 @@ sub config_to_html {
                             #Join them all together
                             my $peer_list = join( ' | ', @peer_array );
                             my $peer_count = @peer_array;
-                            my $peer_form = $peer_count > 1 ? "PEERS" : "PEER"; 
+                            my $peer_form
+                                = $peer_count > 1 ? "PEERS" : "PEER";
+
                             #And add them below the IP address line if there
                             #are any peers
                             if ($peer_list) {
@@ -697,12 +704,12 @@ sub config_to_html {
                             = fileparse( $file, qr/\.[^.]*/x );
 
                         #Construct the text of the link
-#                         my $linkText
-#                             = '<a href="'
-#                             . $filename
-#                             . $ext . '.html' . '#'
-#                             . "interface_$interface"
-#                             . "\">$host_ip</a>";
+                        #                         my $linkText
+                        #                             = '<a href="'
+                        #                             . $filename
+                        #                             . $ext . '.html' . '#'
+                        #                             . "interface_$interface"
+                        #                             . "\">$host_ip</a>";
 
                         my $linkText
                             = '<a href="'
@@ -710,6 +717,7 @@ sub config_to_html {
                             . $ext . '.html' . '#'
                             . "interface_$interface"
                             . "\" title=\"$filename\">$host_ip</a>";
+
                         #Insert the link back into the line
                         #Link point needs to be surrounded by whitespace or end of line
                         $line =~ s/(\s+) $host_ip (\s+|$)/$1$linkText$2/gx;
@@ -738,18 +746,19 @@ sub config_to_html {
                             = fileparse( $file, qr/\.[^.]*/x );
 
                         #Construct the text of the link
-#                         my $linkText
-#                             = '<a href="'
-#                             . $filename
-#                             . $ext . '.html' . '#'
-#                             . "interface_$interface"
-#                             . "\">$host_ip</a>";
+                        #                         my $linkText
+                        #                             = '<a href="'
+                        #                             . $filename
+                        #                             . $ext . '.html' . '#'
+                        #                             . "interface_$interface"
+                        #                             . "\">$host_ip</a>";
                         my $linkText
                             = '<a href="'
                             . $filename
                             . $ext . '.html' . '#'
                             . "interface_$interface"
                             . "\" title=\"$filename\">$host_ip</a>";
+
                         #Insert the link back into the line
                         #Link point needs to be surrounded by whitespace or end of line
                         $line =~ s/(\s+) $host_ip (\s+|$)/$1$linkText$2/gx;
@@ -785,12 +794,12 @@ sub config_to_html {
                             = fileparse( $file, qr/\.[^.]*/x );
 
                         #Construct the text of the link
-#                         my $linkText
-#                             = '<a href="'
-#                             . $filename
-#                             . $ext . '.html' . '#'
-#                             . "interface_$interface"
-#                             . "\">$neighbor_ip</a>";
+                        #                         my $linkText
+                        #                             = '<a href="'
+                        #                             . $filename
+                        #                             . $ext . '.html' . '#'
+                        #                             . "interface_$interface"
+                        #                             . "\">$neighbor_ip</a>";
 
                         my $linkText
                             = '<a href="'
@@ -798,7 +807,7 @@ sub config_to_html {
                             . $ext . '.html' . '#'
                             . "interface_$interface"
                             . "\" title=\"$filename\">$neighbor_ip</a>";
-                            
+
                         #Insert the link back into the line
                         #Link point needs to be surrounded by whitespace or end of line
                         $line
@@ -834,20 +843,20 @@ sub config_to_html {
                             = fileparse( $file, qr/\.[^.]*/x );
 
                         #Construct the text of the link
-#                         my $linkText
-#                             = '<a href="'
-#                             . $filename
-#                             . $ext . '.html' . '#'
-#                             . "interface_$interface"
-#                             . "\">$neighbor_ip</a>";
-#                             
+                        #                         my $linkText
+                        #                             = '<a href="'
+                        #                             . $filename
+                        #                             . $ext . '.html' . '#'
+                        #                             . "interface_$interface"
+                        #                             . "\">$neighbor_ip</a>";
+                        #
                         my $linkText
                             = '<a href="'
                             . $filename
                             . $ext . '.html' . '#'
                             . "interface_$interface"
                             . "\" title=\"$filename\">$neighbor_ip</a>";
-                        
+
                         #Insert the link back into the line
                         #Link point needs to be surrounded by whitespace or end of line
                         $line
@@ -867,11 +876,11 @@ sub config_to_html {
             #Style deny lines
             $line
                 =~ s/ (\s+) (deny|excluded) (  .*?  $ ) /$1<span class="deny">$2$3<\/span>/ixg;
-            
+
             #Style no lines
             $line
                 =~ s/^( \s* ) (no) (  .*?  $ ) /$1<span class="deny">$2$3<\/span>/ixg;
-                
+
             #Style remark lines
             $line
                 =~ s/ (\s+) (remark|description) ( .*? $ ) /$1<span class="remark">$2$3<\/span>/ixg;
