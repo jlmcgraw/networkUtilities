@@ -201,7 +201,7 @@ sub find_pointees {
     my %foundPointees = ();
 
     #Keep track of the last interface name we saw
-    my $current_interface;
+    my $current_interface = "unknown";
 
     foreach my $line (@$array_of_lines_ref) {
         chomp $line;
@@ -214,7 +214,7 @@ sub find_pointees {
             =~ /^ \s* interface \s+ (?<current_interface> .*?) (?: \s | $) /ixsm;
         $current_interface = $+{current_interface} if $+{current_interface};
 
-        $current_interface //= "unknown";
+#         $current_interface //= "unknown";
 
         #Match it against our hash of pointees regexes
         foreach my $pointeeType ( sort keys %{$pointee_regex_ref} ) {
@@ -293,6 +293,9 @@ sub calculate_subnets {
             #Smart comment
             # ### $pointees_seen_ref
 
+        }
+        else {
+        say "Couldn't create subnet for $ip_and_netmask";
         }
     }
 

@@ -581,7 +581,7 @@ sub config_to_html {
                             . $filename
                             . $ext . '.html' . '#'
                             . "interface_$interface"
-                            . "\">$neighbor_ip</a>";
+                            . "\" title=\"$filename\">$neighbor_ip</a>";
 
                         #Insert the link back into the line
                         #Link point needs to be surrounded by whitespace or end of line
@@ -624,16 +624,20 @@ sub config_to_html {
                         #                             my $isRfc1918      = $subnet->is_rfc1918();
                         #                             my $range          = $subnet->range();
 
-                        #Do we know about this subnet via create_host_info_hashes
+                        #Do we know about this subnet via create_host_info_hashes?
                         if ( exists $host_info_ref->{'subnet'}{$network} ) {
 
                             my @peer_array;
 
-                            while ( my ( $peer_file, $peer_interface )
-                                = each
-                                %{ $host_info_ref->{'subnet'}{$network} } )
+                            #TODO BUG Make this sort
+#                             while ( my ( $peer_file, $peer_interface )
+#                                 = each
+#                                 %{ $host_info_ref->{'subnet'}{$network} } )
+                            foreach my $peer_file (sort keys %{ $host_info_ref->{'subnet'}{$network} } )
                             {
 
+                                my $peer_interface = $host_info_ref->{'subnet'}{$network}{$peer_file};
+                                
                                 #Don't list ourself as a peer
                                 if ( $filename =~ quotemeta $peer_file ) {
                                     next;
@@ -656,14 +660,15 @@ sub config_to_html {
                             }
 
                             #Join them all together
-                            my $peer_list = join( ' ', @peer_array );
-
+                            my $peer_list = join( ' | ', @peer_array );
+                            my $peer_count = @peer_array;
+                            my $peer_form = $peer_count > 1 ? "PEERS" : "PEER"; 
                             #And add them below the IP address line if there
                             #are any peers
                             if ($peer_list) {
                                 $line
                                     .= "\n"
-                                    . "$current_indent_level! PEERS: $peer_list";
+                                    . "$current_indent_level! $peer_count $peer_form: $peer_list";
                             }
                         }
                     }
@@ -692,13 +697,19 @@ sub config_to_html {
                             = fileparse( $file, qr/\.[^.]*/x );
 
                         #Construct the text of the link
+#                         my $linkText
+#                             = '<a href="'
+#                             . $filename
+#                             . $ext . '.html' . '#'
+#                             . "interface_$interface"
+#                             . "\">$host_ip</a>";
+
                         my $linkText
                             = '<a href="'
                             . $filename
                             . $ext . '.html' . '#'
                             . "interface_$interface"
-                            . "\">$host_ip</a>";
-
+                            . "\" title=\"$filename\">$host_ip</a>";
                         #Insert the link back into the line
                         #Link point needs to be surrounded by whitespace or end of line
                         $line =~ s/(\s+) $host_ip (\s+|$)/$1$linkText$2/gx;
@@ -727,13 +738,18 @@ sub config_to_html {
                             = fileparse( $file, qr/\.[^.]*/x );
 
                         #Construct the text of the link
+#                         my $linkText
+#                             = '<a href="'
+#                             . $filename
+#                             . $ext . '.html' . '#'
+#                             . "interface_$interface"
+#                             . "\">$host_ip</a>";
                         my $linkText
                             = '<a href="'
                             . $filename
                             . $ext . '.html' . '#'
                             . "interface_$interface"
-                            . "\">$host_ip</a>";
-
+                            . "\" title=\"$filename\">$host_ip</a>";
                         #Insert the link back into the line
                         #Link point needs to be surrounded by whitespace or end of line
                         $line =~ s/(\s+) $host_ip (\s+|$)/$1$linkText$2/gx;
@@ -769,13 +785,20 @@ sub config_to_html {
                             = fileparse( $file, qr/\.[^.]*/x );
 
                         #Construct the text of the link
+#                         my $linkText
+#                             = '<a href="'
+#                             . $filename
+#                             . $ext . '.html' . '#'
+#                             . "interface_$interface"
+#                             . "\">$neighbor_ip</a>";
+
                         my $linkText
                             = '<a href="'
                             . $filename
                             . $ext . '.html' . '#'
                             . "interface_$interface"
-                            . "\">$neighbor_ip</a>";
-
+                            . "\" title=\"$filename\">$neighbor_ip</a>";
+                            
                         #Insert the link back into the line
                         #Link point needs to be surrounded by whitespace or end of line
                         $line
@@ -811,13 +834,20 @@ sub config_to_html {
                             = fileparse( $file, qr/\.[^.]*/x );
 
                         #Construct the text of the link
+#                         my $linkText
+#                             = '<a href="'
+#                             . $filename
+#                             . $ext . '.html' . '#'
+#                             . "interface_$interface"
+#                             . "\">$neighbor_ip</a>";
+#                             
                         my $linkText
                             = '<a href="'
                             . $filename
                             . $ext . '.html' . '#'
                             . "interface_$interface"
-                            . "\">$neighbor_ip</a>";
-
+                            . "\" title=\"$filename\">$neighbor_ip</a>";
+                        
                         #Insert the link back into the line
                         #Link point needs to be surrounded by whitespace or end of line
                         $line
@@ -958,14 +988,14 @@ sub output_as_html {
             a {
             text-decoration:none;
             }
-            a:hover {
-                color: white;
-                background-color: Blue;
-                }
-            a:visited{
+            a:link, a:visited {
                 color:blue;
                 }
-            :target{
+            a:hover, a:visited:hover {
+                color: white;
+                background-color: blue;
+                }
+            :target {
                 background-color: #ffa;
                 }
             .pointee {
@@ -1007,7 +1037,7 @@ sub output_as_html {
                 margin:0 0.5em;
                 }
             div.floating-menu a:hover {
-                color: grey;
+                color: white;
                 }
                 
         </style>

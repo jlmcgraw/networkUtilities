@@ -426,3 +426,32 @@
             )
             /ixsm,
     },
+        'aaa_list' => {
+    1 => qr/(?<unique_id>
+                        ^ \s*
+                        aaa \s+
+                        authorization \s+
+                        (?: auth-proxy | network | exec | (?: commands \s+ \d+) | reverse-access | configuration | ipmobile) \s+
+                        (?!default)
+                        (?<pointed_at> $valid_cisco_name)
+            )
+            /ixsm,
+    2 => qr/(?<unique_id>
+                    ^ \s*
+                    aaa \s+
+                    authentication \s+
+                    (?: ppp | login | arap | dot1x | enable | sgbp ) \s+
+                    (?!default)
+                    (?<pointed_at> $valid_cisco_name)
+        )
+        /ixsm,
+    3 => qr/(?<unique_id>
+                    ^ \s*
+                    aaa \s+
+                    accounting \s+
+                    (?: auth-proxy | (?: commands \s+ \d+) | connection | dot1x | exec |  multicast | network | resource | system ) \s+
+                    (?!default)
+                    (?<pointed_at> $valid_cisco_name)
+        )
+        /ixsm,
+    },

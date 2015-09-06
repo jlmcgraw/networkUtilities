@@ -405,13 +405,18 @@
 
     },
     'routing_process' => {
-    1 => qr/ ^ \s*
-        router \s+
-        (?<points_to> (?: $list_of_pointees_ref->{"routing_process"}) )
-        /ixsm,
-    2 => qr/ ^ \s*
+    1 => qr/^ \s*
+            router \s+
+            (?<points_to> (?: $list_of_pointees_ref->{"routing_process"}) )
+            /ixsm,
+    2 => qr/^ \s*
             ip \s+
             router \s+
+            (?<points_to> (?: $list_of_pointees_ref->{"routing_process"}) )
+            /ixsm,
+    3 => qr/^ \s*
+            ip \s+
+            summary-address \s+
             (?<points_to> (?: $list_of_pointees_ref->{"routing_process"}) )
             /ixsm,
     },
@@ -561,4 +566,17 @@
         (?<points_to> (?: $list_of_pointees_ref->{"crypto_map"}) )
         $
         /ixsm,
+    },
+    'aaa_list' => {
+    1 => qr/ ^ \s*
+        authorization \s+ 
+        (?: auth-proxy | network | exec | (?: commands \s+ \d+) | reverse-access | configuration | ipmobile) \s+
+        (?<points_to> (?: $list_of_pointees_ref->{"aaa_list"}) )
+        /ixsm,
+    2 => qr/ ^ \s*
+        login \s+
+        authentication \s+ 
+        (?<points_to> (?: $list_of_pointees_ref->{"aaa_list"}) )
+        /ixsm,
+
     },

@@ -35,7 +35,6 @@
                             (?<pointed_at>
                                 $RE{net}{IPv4}
                                 \/ \d+)
-
                             (\s+|$)
                             )/ixsm,
 
@@ -51,8 +50,28 @@
                                 \s \/ \d+)
                             (\s+|$)
                             )/ixsm,
+        #NXOS HSRP
+        5 => qr/(?<unique_id> ^ \s*
+                    ip \s+
+                    (?<pointed_at>
+                        $RE{net}{IPv4}
+                        )
+                    \s*
+                    $
+                    )/ixsm,
+        
+        #IOS HSRP
+        6 => qr/(?<unique_id> ^ \s*
+                    standby \s+
+                    \d+ \s+
+                    ip \s+
+                    (?<pointed_at>
+                        $RE{net}{IPv4}
+                        )
+                    \s*
+                    $
+                    )/ixsm,
         },
-
         'hostname' => {
         1 => qr/(?<unique_id> ^ \s* 
                             hostname \s+
