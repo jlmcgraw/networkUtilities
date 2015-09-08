@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html>
+
+    <head>
+        <meta charset="UTF-8">
+        <title>     
+            ios_to_html_examples/html_test_case_9.cfg
+        </title>
+        <style>
+            a {
+            text-decoration:none;
+            }
+            a:hover {
+                color: white;
+                background-color: Blue;
+                }
+            a:visited{
+                color:blue;
+                }
+            :target{
+                background-color: #ffa;
+                }
+            .pointee {
+                font-weight: bold;
+                }
+            .pointed_at {
+                font-style: italic;
+                }
+            .deny {
+                color: red;
+                }
+            .permit {
+                color: green;
+                }
+            .remark {
+                font-style: italic;
+                }
+            .to_top_label{
+                position: fixed; 
+                top:10px;
+                right:10px;
+                color: white;
+                background-color: Blue;
+                text-decoration:none
+                }
+            div.floating-menu {
+                opacity: .90;
+                position:fixed;
+                top:10px;
+                right:10px;
+                background:#fff4c8;
+                padding:5px;
+                z-index:100;
+                }
+            div.floating-menu a, div.floating-menu h3, div.floating-menu h4 {
+                text-align: right;
+                text-decoration:none;
+                display:block;
+                margin:0 0.5em;
+                }
+            div.floating-menu a:hover {
+                color: grey;
+                }
+                
+        </style>
+    </head>
+    <body>
+        <pre>
+: Saved
+:
+ASA Version 8.2(5)
+!
+hostname CISCOASA
+enable password encrypted
+passwd encrypted
+names
+!
+<br><span id="interface_Ethernet0/0" class="pointee">interface <span class="pointed_at">Ethernet0/0</span></span>
+ switchport access vlan 2
+!
+<br><span id="interface_Ethernet0/1" class="pointee">interface <span class="pointed_at">Ethernet0/1</span></span>
+!
+<br><span id="interface_Ethernet0/2" class="pointee">interface <span class="pointed_at">Ethernet0/2</span></span>
+!
+<br><span id="interface_Ethernet0/3" class="pointee">interface <span class="pointed_at">Ethernet0/3</span></span>
+!
+<br><span id="interface_Ethernet0/4" class="pointee">interface <span class="pointed_at">Ethernet0/4</span></span>
+!
+<br><span id="interface_Ethernet0/5" class="pointee">interface <span class="pointed_at">Ethernet0/5</span></span>
+!
+<br><span id="interface_Ethernet0/6" class="pointee">interface <span class="pointed_at">Ethernet0/6</span></span>
+!
+<br><span id="interface_Ethernet0/7" class="pointee">interface <span class="pointed_at">Ethernet0/7</span></span>
+!
+<br><span id="interface_Vlan1" class="pointee">interface <span class="pointed_at">Vlan1</span></span>
+<br><span id="pix_nameif_inside" class="pointee"> nameif <span class="pointed_at">inside</span></span>
+ security-level 100
+ ip address 10.#.#.33 255.255.255.240
+!
+<br><span id="interface_Vlan2" class="pointee">interface <span class="pointed_at">Vlan2</span></span>
+<br><span id="pix_nameif_outside" class="pointee"> nameif <span class="pointed_at">outside</span></span>
+ security-level 0
+ ip address 70.#.#.78 255.255.255.224
+!
+ftp mode passive
+clock timezone CST -6
+clock summer-time CDT recurring
+<br><span id="object_group_StateNet" class="pointee">object-group network <span class="pointed_at">StateNet</span></span>
+ network-object 10.#.#.0 255.255.254.0
+ network-object 10.#.#.192 255.255.255.240
+ network-object 170.#.#.32 255.255.255.224
+ network-object 170.#.#.0 255.255.255.0
+ network-object 10.#.#.0 255.255.255.0
+ network-object 10.#.#.210 255.255.255.255
+<br><span id="object_group_Inside" class="pointee">object-group network <span class="pointed_at">Inside</span></span>
+ network-object 10.#.#.32 255.#.#.240
+<br><span id="acl_outside_cryptomap" class="pointee">access-list <span class="pointed_at">outside_cryptomap</span> extended <span class="permit">permit ip object-group <a href="#object_group_Inside">Inside</a> object-group <a href="#object_group_StateNet">StateNet</a></span></span>
+<br><span id="acl_inside_nat0_outbound" class="pointee">access-list <span class="pointed_at">inside_nat0_outbound</span> extended <span class="permit">permit ip object-group <a href="#object_group_Inside">Inside</a> object-group <a href="#object_group_StateNet">StateNet</a></span></span>
+pager lines 24
+logging enable
+logging asdm informational
+mtu <a href="#pix_nameif_inside">inside</a> 1500
+mtu <a href="#pix_nameif_outside">outside</a> 1500
+icmp unreachable rate-limit 1 burst-size 1
+<span class="deny">no asdm history enable</span>
+arp timeout 14400
+global (outside) 1 interface
+nat (inside) 0 access-list inside_nat0_outbound
+nat (inside) 1 0.0.0.0 0.0.0.0
+route <a href="#pix_nameif_outside">outside</a> 0.0.0.0 0.0.0.0 70.#.#.78 1
+timeout xlate 3:00:00
+timeout conn 1:00:00 half-closed 0:10:00 udp 0:02:00 icmp 0:00:02
+timeout sunrpc 0:10:00 h323 0:05:00 h225 1:00:00 mgcp 0:05:00 mgcp-pat 0:05:00
+timeout sip 0:30:00 sip_media 0:02:00 sip-invite 0:03:00 sip-disconnect 0:02:00
+timeout sip-provisional-media 0:02:00 uauth 0:05:00 absolute
+timeout tcp-proxy-reassembly 0:01:00
+timeout floating-conn 0:00:00
+dynamic-access-policy-record DfltAccessPolicy
+http server enable
+http 10.#.#.32 255.255.255.240 <a href="#pix_nameif_inside">inside</a>
+http 170.#.#.100 255.255.255.255 <a href="#pix_nameif_outside">outside</a>
+<span class="deny">no snmp-server location</span>
+<span class="deny">no snmp-server contact</span>
+snmp-server enable traps snmp authentication linkup linkdown coldstart
+<br><span id="ipsec_transform_set_ESP-AES-256-SHA" class="pointee">crypto ipsec transform-set <span class="pointed_at">ESP-AES-256-SHA</span> esp-aes-256 esp-sha-hmac</span>
+crypto ipsec security-association lifetime seconds 28800
+crypto ipsec security-association lifetime kilobytes 4608000
+<br><span id="crypto_map_outside_map" class="pointee">crypto map <span class="pointed_at">outside_map</span> 1 match address <a href="#acl_outside_cryptomap">outside_cryptomap</a></span>
+crypto map outside_map 1 set peer 170.#.#.5
+crypto map outside_map 1 set transform-set ESP-AES-256-SHA
+crypto map outside_map 1 set nat-t-disable
+crypto map outside_map interface <a href="#pix_nameif_outside">outside</a>
+crypto isakmp enable <a href="#pix_nameif_outside">outside</a>
+crypto isakmp policy 1
+ authentication pre-share
+ encryption aes-256
+ hash sha
+ group 5
+ lifetime 86400
+telnet timeout 5
+ssh timeout 5
+console timeout 0
+
+threat-detection basic-threat
+threat-detection statistics access-list
+<span class="deny">no threat-detection statistics tcp-intercept</span>
+webvpn
+
+tunnel-group 170.#.#.5 type ipsec-l2l
+tunnel-group 170.#.#.5 ipsec-attributes
+ pre-shared-key *****
+!
+class-map inspection_default
+ match default-inspection-traffic
+!
+!
+policy-map type inspect dns preset_dns_map
+ parameters
+  message-length maximum client auto
+  message-length maximum 512
+<br><span id="policy_map_global_policy" class="pointee">policy-map <span class="pointed_at">global_policy</span></span>
+ class inspection_default
+  inspect dns preset_dns_map
+  inspect ftp
+  inspect h323 h225
+  inspect h323 ras
+  inspect rsh
+  inspect rtsp
+  inspect esmtp
+  inspect sqlnet
+  inspect skinny
+  inspect sunrpc
+  inspect xdmcp
+  inspect sip
+  inspect netbios
+  inspect tftp
+  inspect ip-options
+!
+service-policy global_policy global
+prompt hostname context
+<span class="deny">no call-home reporting anonymous</span>
+
+: end
+        </pre>
+        <div class="floating-menu">
+    <h3>CISCOASA (html_test_case_9.cfg)</h3>
+    <a href="#">Top</a>
+    <h4>Beginning of Sections</h4>
+<a href="#acl_outside_cryptomap">Acl</a>
+<a href="#crypto_map_outside_map">Crypto_map</a>
+<a href="#interface_Ethernet0/0">Interface</a>
+<a href="#ipsec_transform_set_ESP-AES-256-SHA">Ipsec_transform_set</a>
+<a href="#object_group_StateNet">Object_group</a>
+<a href="#pix_nameif_inside">Pix_nameif</a>
+<a href="#policy_map_global_policy">Policy_map</a>
+</div>
+    </body>
+</html>

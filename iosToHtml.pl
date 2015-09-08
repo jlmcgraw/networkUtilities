@@ -54,7 +54,7 @@ use FindBin '$Bin';
 use vars qw/ %opt /;
 use Config;
 
-# use Data::Dumper;
+use Data::Dumper;
 # # #Look into using this so users don't need to install modules
 use lib "$FindBin::Bin/local/lib/perl5";
 
@@ -70,7 +70,10 @@ use Params::Validate qw(:all);
 # to run without smart comments, and
 #Smart_Comments=1 perl my_script.pl
 use Smart::Comments -ENV;
+    use Sys::CpuAffinity;
 
+our $num_cpus = Sys::CpuAffinity::getNumCpus();
+# say "$num_cpus processors available";
 #
 # # The sort routine for Data::Dumper
 # $Data::Dumper::Sortkeys = sub {
@@ -94,7 +97,7 @@ use Smart::Comments -ENV;
 # no if $] >= 5.018, warnings => "experimental";
 
 #Define the valid command line options
-my $opt_string = 'ehfn';
+my $opt_string = 'ehfns';
 my $arg_num    = scalar @ARGV;
 
 #We need at least one argument
@@ -111,10 +114,11 @@ unless ( getopts( "$opt_string", \%opt ) ) {
 
 #Set variables from command line options
 my ($should_link_externally,     $should_reformat_numbers,
-    $should_do_extra_formatting, $dont_use_threads
-) = ( $opt{e}, $opt{h}, $opt{f}, $opt{n} );
+    $should_do_extra_formatting, $dont_use_threads, $should_scrub
+) = ( $opt{e}, $opt{h}, $opt{f}, $opt{n}, $opt{s} );
 
-#Hold a copy of the original ARGV so we can pass it instead of globbed version to create_host_info_hashes
+#Hold a copy of the original ARGV so we can pass it instead of globbed version 
+#to create_host_info_hashes
 my @ARGV_unmodified;
 
 #Expand wildcards on command line since windows doesn't do it for us
@@ -126,14 +130,7 @@ if ( $Config{archname} =~ m/win/ix ) {
     @ARGV = map {glob} @ARGV;
 }
 
-#An octet
-my $octetRegex = qr/(?:25[0-5]|2[0-4]\d|[01]?\d\d?)/mx;
 
-#An IP address is made of octets
-my $ipv4AddressRegex = qr/$octetRegex\.
-			      $octetRegex\.
-			      $octetRegex\.
-			      $octetRegex/mx;
 
 #Call main routine
 exit main(@ARGV);
@@ -148,6 +145,18 @@ sub main {
     #Could fine tune if I ever look up the list of valid characters
     our $valid_cisco_name = qr/ [\S]+ /isxm;
 
+    my $hex_digits = qr/[A-F0-9]{8}/ix;
+    our $cert_line = qr/(?: $hex_digits (?: \s+ | $ ) ){8}/ix;
+    
+    #An octet
+    my $octetRegex = qr/(?:25[0-5]|2[0-4]\d|[01]?\d\d?)/mx;
+
+    #An IP address is made of octets
+    our $ipv4AddressRegex = qr/$octetRegex\.
+                                $octetRegex\.
+                                $octetRegex\.
+                                $octetRegex/mx;
+			      
     #The hashes of regexes have been moved to an external file to reduce clutter here
     #Note that the keys/categories in pointers and pointees match (acl, route_map etc)
     #This is so we can match them together properly
@@ -163,6 +172,20 @@ sub main {
 
     #load regexes for the items that are pointed at ("pointees")
     my %pointees = do $Bin . 'pointees.pl';
+  
+    
+#     #Testing pre-compiling of regexes
+#     my %compiled_pointees;
+#     foreach my $pointee_type (sort keys %pointees) {
+#         my @array;
+#         foreach my $rule_number (sort keys %{ $pointees{$pointee_type} }){            
+#             push @array, qr/$pointees{$pointee_type}{$rule_number}/;
+#             }
+#         $compiled_pointees{$pointee_type} = \@array;
+#         }
+#     
+#     print Dumper \%compiled_pointees;
+#     exit;
 
     #load regexes for the items that may point to other files at ("external-pointers")
     my %external_pointers = do $Bin . 'external_pointers.pl';
@@ -235,6 +258,7 @@ sub main {
     }
     else {
         #Create $thread_limit worker threads calling "config_to_html"
+        say "Using $main::num_cpus threads";
         my @thr = map {
             threads->create(
                 sub {
@@ -245,7 +269,7 @@ sub main {
                     }
                 }
             );
-        } 1 .. $thread_limit;
+        } 1 .. $main::num_cpus;
 
         # terminate all of the threads in @thr
         $_->join() for @thr;
@@ -277,7 +301,9 @@ sub usage {
     say
         "       -f Do some extra formatting (italic comments, permits/green denies/red)";
     say "";
-    say "       -n Don't use threads";
+    say "       -n Don't use threads (for debugging/profiling)";
+    say "";
+    say "       -s Do a simple scrub of sensitive info";
     say "";
     exit 1;
 }
@@ -358,6 +384,42 @@ sub find_pointees {
     return \%foundPointees;
 }
 
+# sub find_pointees_compiled {
+# 
+#     #Construct a hash of the types of pointees we've seen in this file
+#     my ( $array_of_lines_ref, $pointee_regex_ref )
+#         = validate_pos( @_, { type => ARRAYREF }, { type => HASHREF } );
+# 
+#     my %foundPointees = ();
+# 
+#     foreach my $line (@$array_of_lines_ref) {
+# 
+#         #Remove linefeeds
+#         $line =~ s/\R//gx;
+# 
+#         
+#         #Match it against our hash of pointees regexes
+#         foreach my $pointeeType ( sort keys %{$pointee_regex_ref} ) {
+#             foreach my $rule_regex ( @{ $pointee_regex_ref->{"$pointeeType"} } )
+#             {
+#                 if ( $line =~ $rule_regex )
+#                 {
+#                     my $unique_id  = $+{unique_id};
+#                     my $pointed_at = $+{pointed_at};
+# 
+#                     #Have we seen this pointee already?
+#                     #We only want to make a link pointer for the first occurrence
+#                     if ( !$foundPointees{$pointeeType}{$unique_id} ) {
+#                         $foundPointees{$pointeeType}{$unique_id}
+#                             = "$pointed_at";
+# 
+#                     }
+#                 }
+#             }
+#         }
+#     }
+#     return \%foundPointees;
+# }
 sub config_to_html {
     my ( $filename, $pointees_ref, $human_readable_ref, $host_info_ref,
         $external_pointers_ref )
@@ -369,7 +431,11 @@ sub config_to_html {
         { type => HASHREF },
         { type => HASHREF },
         );
-
+        
+        my $subnet_regex_ref = qr/(?: ^ \s+ ip \s+ address \s+ (?<ip_and_mask> $RE{net}{IPv4} \s+ $RE{net}{IPv4}) ) |
+                          (?: ^ \s+ ip \s+ address \s+ (?<ip_and_mask> $RE{net}{IPv4} \s* \/ \d+) )
+                        /ixsm;
+        
     #reset these for each file
     my %foundPointers        = ();
     my %foundPointees        = ();
@@ -422,10 +488,10 @@ sub config_to_html {
         #Remove trailing whitespace
         $line =~ s/\s+$//gx;
 
-        #Save the current amount of indentation of this line
-        #to make stuff we might insert line up right (eg PEERS)
-        my ($current_indent_level) = $line =~ m/^(\s*)/ixsm;
 
+        #Scrub passwords etc. if user requested
+        $line = scrub($line) if $should_scrub;
+        
         #Match $line against our hash of POINTERS regexes
         #add HTML link to matching lines
         foreach my $pointerType ( sort keys %pointers ) {
@@ -435,7 +501,7 @@ sub config_to_html {
 
                 #The while allows multiple pointers in one line
                 while (
-                    $line =~ m/$pointers{"$pointerType"}{"$rule_number"}/g )
+                    $line =~ m/$pointers{"$pointerType"}{"$rule_number"}/xg )
                 {
                     #Save what we captured
                     #                     my $unique_id = $+{unique_id};
@@ -503,7 +569,7 @@ sub config_to_html {
                 sort keys %{ $pointees_ref->{"$pointeeType"} } )
             {
                 if ( $line
-                    =~ m/$pointees_ref->{"$pointeeType"}{"$rule_number"}/ )
+                    =~ m/$pointees_ref->{"$pointeeType"}{"$rule_number"}/x )
                 {
                     my $unique_id  = $+{unique_id};
                     my $pointed_at = $+{pointed_at};
@@ -549,9 +615,8 @@ sub config_to_html {
         }
 
         #Did user request to reformat some numbers?
-        if ($should_reformat_numbers) {
-            $line = reformat_numbers( $line, $human_readable_ref );
-        }
+        $line = reformat_numbers( $line, $human_readable_ref ) if $should_reformat_numbers;
+        
 
         #Did user request to try to link to external files?
         #BUG TODO HACK This section is very experimental currently
@@ -561,18 +626,17 @@ sub config_to_html {
             $line = process_external_pointers( $line,
                 $external_pointers_ref, $host_info_ref );
 
-            #Find the devices with interfaces on the same subnet and list them
+            #Find the devices from this run with interfaces on the same subnet and list them
             #as peers
             $line
                 = find_subnet_peers( $line, $filename,
-                $external_pointers_ref, $host_info_ref )
+                $external_pointers_ref, $host_info_ref, $subnet_regex_ref );
 
         }
 
         #Some experimental formatting (colored permits/denies, comments are italic etc)
-        if ($should_do_extra_formatting) {
-            $line = extra_formatting($line);
-        }
+        $line = extra_formatting($line) if $should_do_extra_formatting;
+        
 
         #Save the (possibly) modified line for later printing
         push @html_formatted_text, $line
@@ -594,6 +658,7 @@ sub config_to_html {
     ### %foundPointers
     ### %foundPointees
     ### %pointee_seen_in_file
+    return;
 }
 
 sub construct_floating_menu {
@@ -710,6 +775,10 @@ sub output_as_html {
             .remark {
                 font-style: italic;
                 }
+            .remark_subtle {
+                font-style: italic;
+                opacity: .40;
+                }
             .to_top_label{
                 position: fixed; 
                 top:10px;
@@ -754,6 +823,7 @@ END
 END
 
     close $filehandleHtml;
+    return;
 }
 
 sub process_external_pointers {
@@ -776,7 +846,7 @@ sub process_external_pointers {
 
             #The while allows multiple pointers in one line
             while ( $line
-                =~ m/$external_pointers_ref->{"$pointerType"}{"$rule_number"}/g
+                =~ m/$external_pointers_ref->{"$pointerType"}{"$rule_number"}/xg
                 )
             {
                 my $neighbor_ip = $+{external_ipv4};
@@ -843,23 +913,21 @@ sub reformat_numbers {
 
 sub find_subnet_peers {
 
-    my ( $line, $our_filename, $external_pointers_ref, $host_info_ref )
+    my ( $line, $our_filename, $external_pointers_ref, $host_info_ref, $subnet_regex_ref )
         = validate_pos(
         @_,
         { type => SCALAR },
         { type => SCALAR },
         { type => HASHREF },
         { type => HASHREF },
+        { type => SCALARREF },
         );
 
     given ($line) {
 
         #List devices on the same subnet when we know of them
         when (
-            m/(?: ^ \s+ ip \s+ address \s+ (?<ip_and_mask> $RE{net}{IPv4} \s+ $RE{net}{IPv4}) |
-                          ^ \s+ ip \s+ address \s+ (?<ip_and_mask> $RE{net}{IPv4} \s* \/ \d+)
-                              )
-                        /ixms
+            m/$subnet_regex_ref/ixms
             )
         {
 
@@ -885,7 +953,7 @@ sub find_subnet_peers {
                 my $network = $subnet->network;
 
                 #                             my $mask           = $subnet->mask;
-                #                             my $masklen        = $subnet->masklen;
+                                             my $masklen        = $subnet->masklen;
                 #                             my $ip_addr_bigint = $subnet->bigint();
                 #                             my $isRfc1918      = $subnet->is_rfc1918();
                 #                             my $range          = $subnet->range();
@@ -940,7 +1008,9 @@ sub find_subnet_peers {
                     if ($peer_list) {
                         $line
                             .= "\n"
-                            . "$current_indent_level! $peer_count $peer_form: $peer_list";
+                            . '<span class="remark_subtle">'
+                            . "$current_indent_level! $peer_count $peer_form on $network: $peer_list"
+                            . '</span>';
                     }
                 }
             }
@@ -969,5 +1039,25 @@ sub extra_formatting {
     #Style remark lines
     $line
         =~ s/ (\s+) (remark|description) ( .*? $ ) /$1<span class="remark">$2$3<\/span>/ixg;
+    return $line;
+}
+
+sub scrub {
+    my ($line) = validate_pos( @_, { type => SCALAR }, );
+
+    $line =~ s/password .*/password SCRUBBED/gi;
+    $line =~ s/secret .*/secret SCRUBBED/gi;
+    $line =~ s/snmp-server community [^ ]+/snmp-server community SCRUBBED/gi;
+    $line =~ s/(key-string \s+ \d+) \s+ \S+/$1 SCRUBBED/gix;
+    $line =~ s/(tacacs-server \s+ key \s+ \d+) \s+ \S+/$1 SCRUBBED/gix;
+    $line =~ s/(tacacs-server \s+ 
+                host \s+ 
+                $main::ipv4AddressRegex \s+ 
+                key \s+ 
+                \d+) \s+ \S+/$1 SCRUBBED/gix;
+    $line =~ s/(snmp-server \s+ host \s+  $main::ipv4AddressRegex ) \s+ \S+/$1 SCRUBBED/gix;
+    $line =~ s/(flash:) \S+/$1 SCRUBBED/gix;
+    $line =~ s/$main::cert_line/SCRUBBED/gix;
+    
     return $line;
 }

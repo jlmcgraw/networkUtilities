@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html>
+
+    <head>
+        <meta charset="UTF-8">
+        <title>     
+            ios_to_html_examples/html_test_case_8.cfg
+        </title>
+        <style>
+            a {
+            text-decoration:none;
+            }
+            a:hover {
+                color: white;
+                background-color: Blue;
+                }
+            a:visited{
+                color:blue;
+                }
+            :target{
+                background-color: #ffa;
+                }
+            .pointee {
+                font-weight: bold;
+                }
+            .pointed_at {
+                font-style: italic;
+                }
+            .deny {
+                color: red;
+                }
+            .permit {
+                color: green;
+                }
+            .remark {
+                font-style: italic;
+                }
+            .to_top_label{
+                position: fixed; 
+                top:10px;
+                right:10px;
+                color: white;
+                background-color: Blue;
+                text-decoration:none
+                }
+            div.floating-menu {
+                opacity: .90;
+                position:fixed;
+                top:10px;
+                right:10px;
+                background:#fff4c8;
+                padding:5px;
+                z-index:100;
+                }
+            div.floating-menu a, div.floating-menu h3, div.floating-menu h4 {
+                text-align: right;
+                text-decoration:none;
+                display:block;
+                margin:0 0.5em;
+                }
+            div.floating-menu a:hover {
+                color: grey;
+                }
+                
+        </style>
+    </head>
+    <body>
+        <pre>
+: Saved
+:
+ASA Version 8.3(1)
+!
+hostname atest1
+enable password someencryptedpassword encrypted
+passwd somepasswordalsoencrypted encrypted
+names
+!
+<br><span id="interface_Ethernet0/0" class="pointee">interface <span class="pointed_at">Ethernet0/0</span></span>
+<br><span id="pix_nameif_outside" class="pointee">nameif <span class="pointed_at">outside</span></span>
+security-level 0
+ip address 1.1.1.254 255.255.255.0
+!
+<br><span id="interface_Ethernet0/1" class="pointee">interface <span class="pointed_at">Ethernet0/1</span></span>
+<br><span id="pix_nameif_inside" class="pointee">nameif <span class="pointed_at">inside</span></span>
+security-level 100
+ip address 10.1.26.111 255.255.255.0
+!
+<br><span id="interface_Ethernet0/2" class="pointee">interface <span class="pointed_at">Ethernet0/2</span></span>
+<br><span id="pix_nameif_VMWARE" class="pointee">nameif <span class="pointed_at">VMWARE</span></span>
+security-level 75
+ip address 10.1.110.100 255.255.255.0
+!
+<br><span id="interface_Ethernet0/3" class="pointee">interface <span class="pointed_at">Ethernet0/3</span></span>
+shutdown
+<span class="deny">no nameif</span>
+<span class="deny">no security-level</span>
+<span class="deny">no ip address</span>
+!
+<br><span id="interface_Management0/0" class="pointee">interface <span class="pointed_at">Management0/0</span></span>
+shutdown
+<span class="deny">no nameif</span>
+<span class="deny">no security-level</span>
+<span class="deny">no ip address</span>
+!
+boot system disk0:/asa831.bin
+ftp mode passive
+object network obj-192.168.0.0
+subnet 192.168.0.0 255.255.255.0
+object network obj-10.1.110.0
+subnet 10.1.110.0 255.255.255.0
+<br><span id="object_group_ESXi-HOSTS" class="pointee">object-group network <span class="pointed_at">ESXi-HOSTS</span></span>
+network-object host 10.0.0.51
+network-object host 10.0.0.52
+<br><span id="acl_VMWARE_IN" class="pointee">access-list <span class="pointed_at">VMWARE_IN</span> <span class="remark">remark vCenter Access</span></span>
+access-list VMWARE_IN extended <span class="permit">permit udp host 10.1.110.3 object-group <a href="#object_group_ESXi-HOSTS">ESXi-HOSTS</a> eq 902</span>
+access-list VMWARE_IN extended <span class="permit">permit tcp host 10.1.110.3 object-group <a href="#object_group_ESXi-HOSTS">ESXi-HOSTS</a> eq 902</span>
+access-list VMWARE_IN extended <span class="permit">permit tcp host 10.1.110.3 object-group <a href="#object_group_ESXi-HOSTS">ESXi-HOSTS</a> eq https</span>
+<br><span id="acl_OUTSIDE_IN" class="pointee">access-list <span class="pointed_at">OUTSIDE_IN</span> extended <span class="permit">permit tcp any 10.1.110.0 255.255.255.0 eq https</span></span>
+access-list OUTSIDE_IN extended <span class="deny">deny ip any any log</span>
+pager lines 24
+logging enable
+logging buffered informational
+mtu <a href="#pix_nameif_outside">outside</a> 1500
+mtu <a href="#pix_nameif_inside">inside</a> 1500
+mtu <a href="#pix_nameif_VMWARE">VMWARE</a> 1500
+<span class="deny">no failover</span>
+icmp unreachable rate-limit 1 burst-size 1
+asdm image disk0:/asdm-713.bin
+<span class="deny">no asdm history enable</span>
+arp timeout 14400
+!
+object network obj-192.168.0.0
+nat (inside,outside) dynamic interface
+object network obj-10.1.110.0
+nat (VMWARE,outside) static 1.1.1.0
+access-group <a href="#acl_VMWARE_IN">VMWARE_IN</a> in interface <a href="#pix_nameif_VMWARE">VMWARE</a>
+route <a href="#pix_nameif_inside">inside</a> 10.0.0.0 255.255.255.0 10.1.26.100 1
+route <a href="#pix_nameif_inside">inside</a> 10.1.0.0 255.255.255.0 10.1.26.100 1
+timeout xlate 3:00:00
+timeout conn 1:00:00 half-closed 0:10:00 udp 0:02:00 icmp 0:00:02
+timeout sunrpc 0:10:00 h323 0:05:00 h225 1:00:00 mgcp 0:05:00 mgcp-pat 0:05:00
+timeout sip 0:30:00 sip_media 0:02:00 sip-invite 0:03:00 sip-disconnect 0:02:00
+timeout sip-provisional-media 0:02:00 uauth 0:05:00 absolute
+timeout tcp-proxy-reassembly 0:01:00
+dynamic-access-policy-record DfltAccessPolicy
+<span class="deny">no snmp-server location</span>
+<span class="deny">no snmp-server contact</span>
+snmp-server enable traps snmp authentication linkup linkdown coldstart
+crypto ipsec security-association lifetime seconds 28800
+crypto ipsec security-association lifetime kilobytes 4608000
+telnet timeout 5
+ssh timeout 5
+console timeout 0
+threat-detection basic-threat
+threat-detection statistics access-list
+<span class="deny">no threat-detection statistics tcp-intercept</span>
+!
+class-map inspection_default
+match default-inspection-traffic
+!
+!
+policy-map type inspect dns preset_dns_map
+parameters
+message-length maximum client auto
+message-length maximum 512
+<br><span id="policy_map_global_policy" class="pointee">policy-map <span class="pointed_at">global_policy</span></span>
+class inspection_default
+inspect dns preset_dns_map
+inspect ftp
+inspect h323 h225
+inspect h323 ras
+inspect netbios
+inspect rsh
+inspect rtsp
+inspect skinny
+inspect esmtp
+inspect sqlnet
+inspect sunrpc
+inspect tftp
+inspect sip
+inspect xdmcp
+inspect icmp
+inspect ip-options
+!
+service-policy global_policy global
+prompt hostname context
+call-home
+profile CiscoTAC-1
+<span class="deny">no active</span>
+destination address http https://tools.cisco.com/its/service/oddce/services/DDCEService
+destination address email callhome@cisco.com
+destination transport-method http
+subscribe-to-alert-group diagnostic
+subscribe-to-alert-group environment
+subscribe-to-alert-group inventory periodic monthly
+subscribe-to-alert-group configuration periodic monthly
+subscribe-to-alert-group telemetry periodic daily
+Cryptochecksum:527c19dc36bafc1da5c12066d871bd0b
+: end
+        </pre>
+        <div class="floating-menu">
+    <h3>atest1 (html_test_case_8.cfg)</h3>
+    <a href="#">Top</a>
+    <h4>Beginning of Sections</h4>
+<a href="#acl_VMWARE_IN">Acl</a>
+<a href="#interface_Ethernet0/0">Interface</a>
+<a href="#object_group_ESXi-HOSTS">Object_group</a>
+<a href="#pix_nameif_outside">Pix_nameif</a>
+<a href="#policy_map_global_policy">Policy_map</a>
+</div>
+    </body>
+</html>
