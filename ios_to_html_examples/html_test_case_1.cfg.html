@@ -4,20 +4,20 @@
     <head>
         <meta charset="UTF-8">
         <title>     
-            ios_to_html_examples/html_test_case_1.cfg
+            ./ios_to_html_examples/html_test_case_1.cfg
         </title>
         <style>
             a {
             text-decoration:none;
             }
-            a:hover {
-                color: white;
-                background-color: Blue;
-                }
-            a:visited{
+            a:link, a:visited {
                 color:blue;
                 }
-            :target{
+            a:hover, a:visited:hover {
+                color: white;
+                background-color: blue;
+                }
+            :target {
                 background-color: #ffa;
                 }
             .pointee {
@@ -34,6 +34,10 @@
                 }
             .remark {
                 font-style: italic;
+                }
+            .remark_subtle {
+                font-style: italic;
+                opacity: .40;
                 }
             .to_top_label{
                 position: fixed; 
@@ -59,7 +63,7 @@
                 margin:0 0.5em;
                 }
             div.floating-menu a:hover {
-                color: grey;
+                color: white;
                 }
                 
         </style>
@@ -251,7 +255,7 @@ ip ssh version 2
 <br><span id="interface_GigabitEthernet0/0" class="pointee">interface <span class="pointed_at">GigabitEthernet0/0</span></span>
  bandwidth 990,000
  ip address 10.255.236.17 255.255.255.252
- ! PEERS: <a href="html_test_case_2.cfg.html#interface_GigabitEthernet0/0">html_test_case_2</a>
+<span class="remark_subtle"> ! 1 PEER on 10.255.236.16/30: <a href="html_test_case_2.cfg.html#interface_GigabitEthernet0/0">html_test_case_2</a></span>
  <span class="deny">no ip redirects</span>
  <span class="deny">no ip proxy-arp</span>
  ip flow ingress
@@ -325,13 +329,13 @@ snmp-server view voip rttMonCtrl <span class="permit">included</span>
 snmp-server view voip rttMonStats <span class="permit">included</span>
 snmp-server view voip rttMonHistory <span class="permit">included</span>
 
-snmp-server community TEST  RW <a href="#acl_93">93</a>
-snmp-server community TEST2 RO 95
-snmp-server community TEST3 RO <a href="#acl_84">84</a>
-snmp-server community TEST4 view <a href="#snmp_view_voip">voip</a> RW 95
-snmp-server community TEST5 view <a href="#snmp_view_ping">ping</a> RW 95
-snmp-server community TEST6 RO 95
-snmp-server community TEST7 RO <a href="#acl_13">13</a>
+snmp-server community SCRUBBED  RW <a href="#acl_93">93</a>
+snmp-server community SCRUBBED RO 95
+snmp-server community SCRUBBED RO <a href="#acl_84">84</a>
+snmp-server community SCRUBBED view <a href="#snmp_view_voip">voip</a> RW 95
+snmp-server community SCRUBBED view <a href="#snmp_view_ping">ping</a> RW 95
+snmp-server community SCRUBBED RO 95
+snmp-server community SCRUBBED RO <a href="#acl_13">13</a>
 
 line con 0
  session-timeout 15

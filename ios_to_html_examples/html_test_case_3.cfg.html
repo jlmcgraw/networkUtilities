@@ -4,20 +4,20 @@
     <head>
         <meta charset="UTF-8">
         <title>     
-            ios_to_html_examples/html_test_case_3.cfg
+            ./ios_to_html_examples/html_test_case_3.cfg
         </title>
         <style>
             a {
             text-decoration:none;
             }
-            a:hover {
-                color: white;
-                background-color: Blue;
-                }
-            a:visited{
+            a:link, a:visited {
                 color:blue;
                 }
-            :target{
+            a:hover, a:visited:hover {
+                color: white;
+                background-color: blue;
+                }
+            :target {
                 background-color: #ffa;
                 }
             .pointee {
@@ -34,6 +34,10 @@
                 }
             .remark {
                 font-style: italic;
+                }
+            .remark_subtle {
+                font-style: italic;
+                opacity: .40;
                 }
             .to_top_label{
                 position: fixed; 
@@ -59,7 +63,7 @@
                 margin:0 0.5em;
                 }
             div.floating-menu a:hover {
-                color: grey;
+                color: white;
                 }
                 
         </style>
@@ -96,8 +100,8 @@ logging console critical
 aaa new-model
 !
 !
-aaa authentication login local_authen local
-aaa authorization exec local_author local
+<br><span id="aaa_list_local_authen" class="pointee">aaa authentication login <span class="pointed_at">local_authen</span> local</span>
+<br><span id="aaa_list_local_author" class="pointee">aaa authorization exec <span class="pointed_at">local_author</span> local</span>
 !
 !
 !
@@ -153,7 +157,7 @@ ip port-map user-OpenVPN port udp 1196
 ip port-map user-rdp port tcp 3389
 ip inspect log drop-pkt
 ip inspect tcp reassembly queue length 25
-ip ips config location flash:/IPSSIG retries 1
+ip ips config location flash: SCRUBBED retries 1
 ip ips notify SDEE
 ip ips name sdm_ips_rule
 !
@@ -257,9 +261,9 @@ certificate self-signed 01
 quit
 !
 !
-username Gatekeeper secret 5 <REMOVED>
-username WarBux privilege 15 view root secret 5 <REMOVED>
-username dave privilege 15 secret 5 <REMOVED>
+username Gatekeeper secret SCRUBBED
+username WarBux privilege 15 view root secret SCRUBBED
+username dave privilege 15 secret SCRUBBED
 !
 redundancy
 !
@@ -861,21 +865,21 @@ control-plane
 banner login ^CCUnauthorized access is strictly forbidden!^C
 !
 line con 0
-login authentication local_authen
+login authentication <a href="#aaa_list_local_authen">local_authen</a>
 transport output telnet
 line aux 0
-login authentication local_authen
+login authentication <a href="#aaa_list_local_authen">local_authen</a>
 transport output telnet
 line vty 0 4
 access-class <a href="#acl_102">102</a> in
-password 7 <REMOVED>
-authorization exec local_author
-login authentication local_authen
+password SCRUBBED
+authorization exec <a href="#aaa_list_local_author">local_author</a>
+login authentication <a href="#aaa_list_local_authen">local_authen</a>
 transport input telnet ssh
 line vty 5 15
 access-class <a href="#acl_103">103</a> in
-authorization exec local_author
-login authentication local_authen
+authorization exec <a href="#aaa_list_local_author">local_author</a>
+login authentication <a href="#aaa_list_local_authen">local_authen</a>
 transport input telnet ssh
 !
 scheduler allocate 20000 1000
@@ -887,6 +891,7 @@ end
     <h3>Trident (html_test_case_3.cfg)</h3>
     <a href="#">Top</a>
     <h4>Beginning of Sections</h4>
+<a href="#aaa_list_local_authen">Aaa_list</a>
 <a href="#acl_IN_TO_OUT_ACL">Acl</a>
 <a href="#class_SDM_BOOTPC">Class</a>
 <a href="#crypto_pki_Equifax_Secure_CA">Crypto_pki</a>

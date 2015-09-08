@@ -4,20 +4,20 @@
     <head>
         <meta charset="UTF-8">
         <title>     
-            ios_to_html_examples/html_test_case_7.cfg
+            ./ios_to_html_examples/html_test_case_7.cfg
         </title>
         <style>
             a {
             text-decoration:none;
             }
-            a:hover {
-                color: white;
-                background-color: Blue;
-                }
-            a:visited{
+            a:link, a:visited {
                 color:blue;
                 }
-            :target{
+            a:hover, a:visited:hover {
+                color: white;
+                background-color: blue;
+                }
+            :target {
                 background-color: #ffa;
                 }
             .pointee {
@@ -34,6 +34,10 @@
                 }
             .remark {
                 font-style: italic;
+                }
+            .remark_subtle {
+                font-style: italic;
+                opacity: .40;
                 }
             .to_top_label{
                 position: fixed; 
@@ -59,7 +63,7 @@
                 margin:0 0.5em;
                 }
             div.floating-menu a:hover {
-                color: grey;
+                color: white;
                 }
                 
         </style>
@@ -72,7 +76,7 @@ ASA Version 8.2(1)
 !
 hostname superasa
 domain-name somedomainname
-enable password /****** encrypted
+enable password SCRUBBED
 passwd ******************** encrypted
 names
 !
@@ -80,7 +84,7 @@ names
 <br><span id="pix_nameif_inside" class="pointee"> nameif <span class="pointed_at">inside</span></span>
  security-level 100
  ip address 192.168.2.1 255.255.255.0
- ! PEERS: <a href="html_test_case_4.cfg.html#interface_Dot11Radio0.20">html_test_case_4</a>
+<span class="remark_subtle"> ! 1 PEER on 192.168.2.0/24: <a href="html_test_case_4.cfg.html#interface_Dot11Radio0.20">html_test_case_4</a></span>
 !
 <br><span id="interface_Vlan2" class="pointee">interface <span class="pointed_at">Vlan2</span></span>
 <br><span id="pix_nameif_outside" class="pointee"> nameif <span class="pointed_at">outside</span></span>

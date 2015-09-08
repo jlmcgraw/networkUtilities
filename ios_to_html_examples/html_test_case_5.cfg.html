@@ -4,20 +4,20 @@
     <head>
         <meta charset="UTF-8">
         <title>     
-            ios_to_html_examples/html_test_case_5.cfg
+            ./ios_to_html_examples/html_test_case_5.cfg
         </title>
         <style>
             a {
             text-decoration:none;
             }
-            a:hover {
-                color: white;
-                background-color: Blue;
-                }
-            a:visited{
+            a:link, a:visited {
                 color:blue;
                 }
-            :target{
+            a:hover, a:visited:hover {
+                color: white;
+                background-color: blue;
+                }
+            :target {
                 background-color: #ffa;
                 }
             .pointee {
@@ -34,6 +34,10 @@
                 }
             .remark {
                 font-style: italic;
+                }
+            .remark_subtle {
+                font-style: italic;
+                opacity: .40;
                 }
             .to_top_label{
                 position: fixed; 
@@ -59,7 +63,7 @@
                 margin:0 0.5em;
                 }
             div.floating-menu a:hover {
-                color: grey;
+                color: white;
                 }
                 
         </style>
@@ -81,7 +85,7 @@ hostname xxxxap02
 !
 !
 logging rate-limit console 9
-enable secret 5 <REMOVED>
+enable secret SCRUBBED
 !
 aaa new-model
 !
@@ -102,10 +106,10 @@ aaa group server radius dummy
 !
 aaa authentication username-prompt Login:
 aaa authentication login default group <a href="#aaa_group_tac_admin">tac_admin</a> local
-aaa authentication login eap_methods group rad_eap
-aaa authentication login mac_methods local
+<br><span id="aaa_list_eap_methods" class="pointee">aaa authentication login <span class="pointed_at">eap_methods</span> group rad_eap</span>
+<br><span id="aaa_list_mac_methods" class="pointee">aaa authentication login <span class="pointed_at">mac_methods</span> local</span>
 aaa authorization exec default group <a href="#aaa_group_tac_admin">tac_admin</a> local
-aaa accounting network acct_methods start-stop group rad_acct
+<br><span id="aaa_list_acct_methods" class="pointee">aaa accounting network <span class="pointed_at">acct_methods</span> start-stop group rad_acct</span>
 !
 !
 !
@@ -136,7 +140,7 @@ dot11 wpa handshake timeout 1500
 crypto pki token default removal timeout 0
 !
 !
-username Cisco password 7 <REMOVED>
+username Cisco password SCRUBBED
 !
 !
 bridge irb
@@ -207,7 +211,7 @@ access-list 10 <span class="permit">permit xx.xx.xx.x</span>
 access-list 20 <span class="permit">permit xx.xx.xx.x</span>
 <br><span id="acl_111" class="pointee">access-list <span class="pointed_at">111</span> <span class="permit">permit tcp any any neq telnet</span></span>
 <br><span id="snmp_view_iso" class="pointee">snmp-server view <span class="pointed_at">iso</span> iso <span class="permit">included</span></span>
-snmp-server community xxxxxxxxxxx RW <a href="#acl_20">20</a>
+snmp-server community SCRUBBED RW <a href="#acl_20">20</a>
 snmp-server location xxxxxxxxxx
 snmp-server contact xxxxxxxxxxx
 snmp-server enable traps tty
@@ -243,6 +247,7 @@ end
     <a href="#">Top</a>
     <h4>Beginning of Sections</h4>
 <a href="#aaa_group_tac_admin">Aaa_group</a>
+<a href="#aaa_list_eap_methods">Aaa_list</a>
 <a href="#acl_10">Acl</a>
 <a href="#interface_Dot11Radio0">Interface</a>
 <a href="#snmp_view_iso">Snmp_view</a>

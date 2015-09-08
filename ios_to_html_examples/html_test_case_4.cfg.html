@@ -4,20 +4,20 @@
     <head>
         <meta charset="UTF-8">
         <title>     
-            ios_to_html_examples/html_test_case_4.cfg
+            ./ios_to_html_examples/html_test_case_4.cfg
         </title>
         <style>
             a {
             text-decoration:none;
             }
-            a:hover {
-                color: white;
-                background-color: Blue;
-                }
-            a:visited{
+            a:link, a:visited {
                 color:blue;
                 }
-            :target{
+            a:hover, a:visited:hover {
+                color: white;
+                background-color: blue;
+                }
+            :target {
                 background-color: #ffa;
                 }
             .pointee {
@@ -34,6 +34,10 @@
                 }
             .remark {
                 font-style: italic;
+                }
+            .remark_subtle {
+                font-style: italic;
+                opacity: .40;
                 }
             .to_top_label{
                 position: fixed; 
@@ -59,7 +63,7 @@
                 margin:0 0.5em;
                 }
             div.floating-menu a:hover {
-                color: grey;
+                color: white;
                 }
                 
         </style>
@@ -79,8 +83,8 @@ hostname GenXXX
 boot-start-marker
 boot-end-marker
 !
-enable secret 5 <REMOVED>
-enable password 7 <REMOVED>
+enable secret SCRUBBED
+enable password SCRUBBED
 !
 aaa new-model
 !
@@ -145,7 +149,7 @@ ip domain name genXXX.local
 !
 !
 !
-username roger privilege 15 password 7 <REMOVED>
+username roger privilege 15 password SCRUBBED
 archive
 log config
 hidekeys
@@ -250,11 +254,11 @@ control-plane
 bridge 1 route ip
 !
 line con 0
-password 7 <REMOVED>
+password SCRUBBED
 <span class="deny">no modem enable</span>
 line aux 0
 line vty 0 4
-password 7 <REMOVED>
+password SCRUBBED
 !
 scheduler max-task-time 5000
 end
