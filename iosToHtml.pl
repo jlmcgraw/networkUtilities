@@ -94,7 +94,7 @@ use Smart::Comments -ENV;
 # no if $] >= 5.018, warnings => "experimental";
 
 #Define the valid command line options
-my $opt_string = 'ehf';
+my $opt_string = 'ehfn';
 my $arg_num    = scalar @ARGV;
 
 #We need at least one argument
@@ -110,9 +110,9 @@ unless ( getopts( "$opt_string", \%opt ) ) {
 }
 
 #Set variables from command line options
-my ( $should_link_externally, $should_reformat_numbers,
-    $should_do_extra_formatting )
-    = ( $opt{e}, $opt{h}, $opt{f} );
+my ($should_link_externally,     $should_reformat_numbers,
+    $should_do_extra_formatting, $dont_use_threads
+) = ( $opt{e}, $opt{h}, $opt{f}, $opt{n} );
 
 #Hold a copy of the original ARGV so we can pass it instead of globbed version to create_host_info_hashes
 my @ARGV_unmodified;
@@ -125,6 +125,15 @@ if ( $Config{archname} =~ m/win/ix ) {
     @ARGV_unmodified = @ARGV;
     @ARGV = map {glob} @ARGV;
 }
+
+#An octet
+my $octetRegex = qr/(?:25[0-5]|2[0-4]\d|[01]?\d\d?)/mx;
+
+#An IP address is made of octets
+my $ipv4AddressRegex = qr/$octetRegex\.
+			      $octetRegex\.
+			      $octetRegex\.
+			      $octetRegex/mx;
 
 #Call main routine
 exit main(@ARGV);
@@ -155,6 +164,10 @@ sub main {
     #load regexes for the items that are pointed at ("pointees")
     my %pointees = do $Bin . 'pointees.pl';
 
+    #load regexes for the items that may point to other files at ("external-pointers")
+    my %external_pointers = do $Bin . 'external_pointers.pl';
+
+    #A hash reference for information about all hosts in this run
     my $host_info_ref = {};
 
     #Try to retrieve host_info_hash if user wants to try linking between files
@@ -167,6 +180,7 @@ sub main {
 
         #Pass the unglobbed command line under Windows so command line isn't too long
         my $status;
+
         if ( $Config{archname} =~ m/win/ix ) {
             $status = system( $Bin
                     . "create_host_info_hashes.pl @ARGV_unmodified" );
@@ -175,6 +189,7 @@ sub main {
             $status = system( $Bin . 'create_host_info_hashes.pl',
                 map {"$_"} @ARGV );
         }
+
         if ( ( $status >>= 8 ) != 0 ) {
             die "Failed to run " . $Bin . "create_host_info_hashes.pl $!";
         }
@@ -210,22 +225,31 @@ sub main {
     # BUG TODO Adjust this dynamically based on number of CPUs
     my $thread_limit = 3;
 
-    #Create $thread_limit worker threads calling "config_to_html"
-    my @thr = map {
-        threads->create(
-            sub {
-                while ( defined( my $filename = $q->dequeue_nb() ) ) {
-                    config_to_html(
-                        $filename,       \%pointees,
-                        \%humanReadable, $host_info_ref
-                    );
-                }
-            }
-        );
-    } 1 .. $thread_limit;
+    if ($dont_use_threads) {
+        say "Not using threads";
 
-    # terminate all of the threads in @thr
-    $_->join() for @thr;
+        while ( defined( my $filename = $q->dequeue_nb() ) ) {
+            config_to_html( $filename, \%pointees, \%humanReadable,
+                $host_info_ref, \%external_pointers );
+        }
+    }
+    else {
+        #Create $thread_limit worker threads calling "config_to_html"
+        my @thr = map {
+            threads->create(
+                sub {
+                    while ( defined( my $filename = $q->dequeue_nb() ) ) {
+                        config_to_html( $filename, \%pointees,
+                            \%humanReadable,
+                            $host_info_ref, \%external_pointers );
+                    }
+                }
+            );
+        } 1 .. $thread_limit;
+
+        # terminate all of the threads in @thr
+        $_->join() for @thr;
+    }
 
     # end timer
     my $end = new Benchmark;
@@ -252,6 +276,8 @@ sub usage {
     say "";
     say
         "       -f Do some extra formatting (italic comments, permits/green denies/red)";
+    say "";
+    say "       -n Don't use threads";
     say "";
     exit 1;
 }
@@ -333,10 +359,12 @@ sub find_pointees {
 }
 
 sub config_to_html {
-    my ( $filename, $pointees_ref, $human_readable_ref, $host_info_ref )
+    my ( $filename, $pointees_ref, $human_readable_ref, $host_info_ref,
+        $external_pointers_ref )
         = validate_pos(
         @_,
         { type => SCALAR },
+        { type => HASHREF },
         { type => HASHREF },
         { type => HASHREF },
         { type => HASHREF },
@@ -522,368 +550,28 @@ sub config_to_html {
 
         #Did user request to reformat some numbers?
         if ($should_reformat_numbers) {
-
-            #Match it against our hash of number regexes
-            foreach
-                my $human_readable_key ( sort keys %{$human_readable_ref} )
-            {
-
-                #Did we find any matches? (number of captured items varies between the regexes)
-                if ( my @matches
-                    = ( $line
-                            =~ $human_readable_ref->{"$human_readable_key"} )
-                    )
-                {
-                    #For each match, reformat the number
-                    foreach my $number (@matches) {
-
-                        #Different ways to format the number
-                        my $number_formatted = format_number($number);
-
-                        #my $number_formatted = format_bytes($number);
-
-                        #Replace the non-formatted number with the formmated one
-                        $line =~ s/$number/$number_formatted/x;
-                    }
-
-                }
-            }
+            $line = reformat_numbers( $line, $human_readable_ref );
         }
 
         #Did user request to try to link to external files?
         #BUG TODO HACK This section is very experimental currently
         if ($should_link_externally) {
-            given ($line) {
 
-                #Link to BGP neighbors if we have a config for them
-                when (
-                    m/^ \s+ neighbor \s+ (?<neighbor_ip> $RE{net}{IPv4})/ixms
-                    )
-                {
+            #Simple external links to one IP address
+            $line = process_external_pointers( $line,
+                $external_pointers_ref, $host_info_ref );
 
-                    my $neighbor_ip = $+{neighbor_ip};
+            #Find the devices with interfaces on the same subnet and list them
+            #as peers
+            $line
+                = find_subnet_peers( $line, $filename,
+                $external_pointers_ref, $host_info_ref )
 
-                    #say $neighbor_ip;
-
-                    if ( exists $host_info_ref->{'ip_address'}{$neighbor_ip} )
-                    {
-                        my ( $file, $interface )
-                            = split( ',',
-                            $host_info_ref->{'ip_address'}{$neighbor_ip} );
-
-                        #Pull out the various filename components of the input file from the command line
-                        my ( $filename, $dir, $ext )
-                            = fileparse( $file, qr/\.[^.]*/x );
-
-                        #Construct the text of the link
-                        my $linkText
-                            = '<a href="'
-                            . $filename
-                            . $ext . '.html' . '#'
-                            . "interface_$interface"
-                            . "\" title=\"$filename\">$neighbor_ip</a>";
-
-                        #Insert the link back into the line
-                        #Link point needs to be surrounded by whitespace or end of line
-                        $line
-                            =~ s/(\s+) $neighbor_ip (\s+|$)/$1$linkText$2/gx;
-                    }
-                }
-
-                #List devices on the same subnet when we know of them
-                when (
-                    m/(?: ^ \s+ ip \s+ address \s+ (?<ip_and_mask> $RE{net}{IPv4} \s+ $RE{net}{IPv4}) |
-                          ^ \s+ ip \s+ address \s+ (?<ip_and_mask> $RE{net}{IPv4} \s* \/ \d+)
-                              )
-                        /ixms
-                    )
-
-                    #ip address 10.102.54.2 255.255.255.0
-                {
-
-                    my $ip_and_netmask = $+{ip_and_mask};
-
-                    #                      say $ip_and_mask;
-
-                    #HACK In RIOS, there's a space between IP address and CIDR
-                    #Remove that without hopefully causing other issues
-                    $ip_and_netmask =~ s|\s/|/|;
-
-                    #Try to create a new NetAddr::IP object from this key
-                    my $subnet = NetAddr::IP->new($ip_and_netmask);
-
-                    #If it worked...
-                    if ($subnet) {
-
-                        #                             my $ip_addr        = $subnet->addr;
-                        my $network = $subnet->network;
-
-                        #                             my $mask           = $subnet->mask;
-                        #                             my $masklen        = $subnet->masklen;
-                        #                             my $ip_addr_bigint = $subnet->bigint();
-                        #                             my $isRfc1918      = $subnet->is_rfc1918();
-                        #                             my $range          = $subnet->range();
-
-                        #Do we know about this subnet via create_host_info_hashes?
-                        if ( exists $host_info_ref->{'subnet'}{$network} ) {
-
-                            my @peer_array;
-
-                            #TODO BUG Make this sort
-                            #                             while ( my ( $peer_file, $peer_interface )
-                            #                                 = each
-                            #                                 %{ $host_info_ref->{'subnet'}{$network} } )
-                            foreach my $peer_file (
-                                sort
-                                keys %{ $host_info_ref->{'subnet'}{$network} }
-                                )
-                            {
-
-                                my $peer_interface
-                                    = $host_info_ref->{'subnet'}{$network}
-                                    {$peer_file};
-
-                                #Don't list ourself as a peer
-                                if ( $filename =~ quotemeta $peer_file ) {
-                                    next;
-                                }
-
-                                #Pull out the various filename components of the file
-                                my ( $filename, $dir, $ext )
-                                    = fileparse( $peer_file, qr/\.[^.]*/x );
-
-                                #Construct the text of the link
-                                my $linkText
-                                    = '<a href="'
-                                    . $filename
-                                    . $ext . '.html' . '#'
-                                    . "interface_$peer_interface"
-                                    . "\">$filename</a>";
-
-                                #And save that link
-                                push @peer_array, $linkText;
-                            }
-
-                            #Join them all together
-                            my $peer_list = join( ' | ', @peer_array );
-                            my $peer_count = @peer_array;
-                            my $peer_form
-                                = $peer_count > 1 ? "PEERS" : "PEER";
-
-                            #And add them below the IP address line if there
-                            #are any peers
-                            if ($peer_list) {
-                                $line
-                                    .= "\n"
-                                    . "$current_indent_level! $peer_count $peer_form: $peer_list";
-                            }
-                        }
-                    }
-                }
-
-                #Hosts in ACLs
-                when (
-                    m/^ \s+ (?: permit | deny ) \s+ .*? host \s+ (?<host_ip> $RE{net}{IPv4})/ixms
-                    )
-                {
-
-                    my $host_ip = $+{host_ip};
-
-                    #                      say $host_ip;
-
-                    #Is this particular IP referenced in our pre-collected host_info_hash
-                    if ( exists $host_info_ref->{'ip_address'}{$host_ip} ) {
-
-                        #Get the file and interface the IP was referenced in
-                        my ( $file, $interface )
-                            = split( ',',
-                            $host_info_ref->{'ip_address'}{$host_ip} );
-
-                        #Pull out the various filename components of the input file from the command line
-                        my ( $filename, $dir, $ext )
-                            = fileparse( $file, qr/\.[^.]*/x );
-
-                        #Construct the text of the link
-                        #                         my $linkText
-                        #                             = '<a href="'
-                        #                             . $filename
-                        #                             . $ext . '.html' . '#'
-                        #                             . "interface_$interface"
-                        #                             . "\">$host_ip</a>";
-
-                        my $linkText
-                            = '<a href="'
-                            . $filename
-                            . $ext . '.html' . '#'
-                            . "interface_$interface"
-                            . "\" title=\"$filename\">$host_ip</a>";
-
-                        #Insert the link back into the line
-                        #Link point needs to be surrounded by whitespace or end of line
-                        $line =~ s/(\s+) $host_ip (\s+|$)/$1$linkText$2/gx;
-                    }
-                }
-
-                #IP SLA
-                when (
-                    m/\w+ \s +source-ip \s+ (?<host_ip> $RE{net}{IPv4})/ixms)
-                {
-
-                    my $host_ip = $+{host_ip};
-
-                    #                      say $host_ip;
-
-                    #Is this particular IP referenced in our pre-collected host_info_hash
-                    if ( exists $host_info_ref->{'ip_address'}{$host_ip} ) {
-
-                        #Get the file and interface the IP was referenced in
-                        my ( $file, $interface )
-                            = split( ',',
-                            $host_info_ref->{'ip_address'}{$host_ip} );
-
-                        #Pull out the various filename components of the input file from the command line
-                        my ( $filename, $dir, $ext )
-                            = fileparse( $file, qr/\.[^.]*/x );
-
-                        #Construct the text of the link
-                        #                         my $linkText
-                        #                             = '<a href="'
-                        #                             . $filename
-                        #                             . $ext . '.html' . '#'
-                        #                             . "interface_$interface"
-                        #                             . "\">$host_ip</a>";
-                        my $linkText
-                            = '<a href="'
-                            . $filename
-                            . $ext . '.html' . '#'
-                            . "interface_$interface"
-                            . "\" title=\"$filename\">$host_ip</a>";
-
-                        #Insert the link back into the line
-                        #Link point needs to be surrounded by whitespace or end of line
-                        $line =~ s/(\s+) $host_ip (\s+|$)/$1$linkText$2/gx;
-                    }
-                }
-
-                #Link to route next hops if we have a config for them
-                when (
-                    m/^ \s*
-                    ip \s+
-                    route \s+
-                    (?: vrf \S+ \s+)?
-                    $RE{net}{IPv4} \s+
-                    $RE{net}{IPv4} \s+
-                    (?<pointed_at>
-                        $RE{net}{IPv4})
-                    /ixms
-                    )
-                {
-
-                    my $neighbor_ip = $+{pointed_at};
-
-                    #say $neighbor_ip;
-
-                    if ( exists $host_info_ref->{'ip_address'}{$neighbor_ip} )
-                    {
-                        my ( $file, $interface )
-                            = split( ',',
-                            $host_info_ref->{'ip_address'}{$neighbor_ip} );
-
-                        #Pull out the various filename components of the input file from the command line
-                        my ( $filename, $dir, $ext )
-                            = fileparse( $file, qr/\.[^.]*/x );
-
-                        #Construct the text of the link
-                        #                         my $linkText
-                        #                             = '<a href="'
-                        #                             . $filename
-                        #                             . $ext . '.html' . '#'
-                        #                             . "interface_$interface"
-                        #                             . "\">$neighbor_ip</a>";
-
-                        my $linkText
-                            = '<a href="'
-                            . $filename
-                            . $ext . '.html' . '#'
-                            . "interface_$interface"
-                            . "\" title=\"$filename\">$neighbor_ip</a>";
-
-                        #Insert the link back into the line
-                        #Link point needs to be surrounded by whitespace or end of line
-                        $line
-                            =~ s/(\s+) $neighbor_ip (\s+|$)/$1$linkText$2/gx;
-                    }
-                }
-
-                #Link to route next hops if we have a config for them
-                when (
-                    m/^ \s*
-                    ip \s+
-                    route \s+
-                    (?: vrf \S+ \s+)?
-                    $RE{net}{IPv4} \/ \d+
-                    (?<pointed_at>
-                        $RE{net}{IPv4})
-                    /ixms
-                    )
-                {
-
-                    my $neighbor_ip = $+{pointed_at};
-
-                    #say $neighbor_ip;
-
-                    if ( exists $host_info_ref->{'ip_address'}{$neighbor_ip} )
-                    {
-                        my ( $file, $interface )
-                            = split( ',',
-                            $host_info_ref->{'ip_address'}{$neighbor_ip} );
-
-                        #Pull out the various filename components of the input file from the command line
-                        my ( $filename, $dir, $ext )
-                            = fileparse( $file, qr/\.[^.]*/x );
-
-                        #Construct the text of the link
-                        #                         my $linkText
-                        #                             = '<a href="'
-                        #                             . $filename
-                        #                             . $ext . '.html' . '#'
-                        #                             . "interface_$interface"
-                        #                             . "\">$neighbor_ip</a>";
-                        #
-                        my $linkText
-                            = '<a href="'
-                            . $filename
-                            . $ext . '.html' . '#'
-                            . "interface_$interface"
-                            . "\" title=\"$filename\">$neighbor_ip</a>";
-
-                        #Insert the link back into the line
-                        #Link point needs to be surrounded by whitespace or end of line
-                        $line
-                            =~ s/(\s+) $neighbor_ip (\s+|$)/$1$linkText$2/gx;
-                    }
-                }
-            }
         }
 
-        #Some experimental formatting
+        #Some experimental formatting (colored permits/denies, comments are italic etc)
         if ($should_do_extra_formatting) {
-
-            #Style permit lines
-            $line
-                =~ s/ (\s+) (permit|included) (  .*? $  ) /$1<span class="permit">$2$3<\/span>/ixg;
-
-            #Style deny lines
-            $line
-                =~ s/ (\s+) (deny|excluded) (  .*?  $ ) /$1<span class="deny">$2$3<\/span>/ixg;
-
-            #Style no lines
-            $line
-                =~ s/^( \s* ) (no) (  .*?  $ ) /$1<span class="deny">$2$3<\/span>/ixg;
-
-            #Style remark lines
-            $line
-                =~ s/ (\s+) (remark|description) ( .*? $ ) /$1<span class="remark">$2$3<\/span>/ixg;
+            $line = extra_formatting($line);
         }
 
         #Save the (possibly) modified line for later printing
@@ -898,8 +586,8 @@ sub config_to_html {
     );
 
     #Output as a web page
-    output_as_html( $filename, \@html_formatted_text, $hostname,
-        $floating_menu_text );
+    output_as_html( $filename, \@html_formatted_text,
+        $hostname, $floating_menu_text );
 
     close $filehandle;
 
@@ -1066,4 +754,220 @@ END
 END
 
     close $filehandleHtml;
+}
+
+sub process_external_pointers {
+
+    #Construct a menu from the pointees we've seen in this file
+
+    my ( $line, $external_pointers_ref, $host_info_ref ) = validate_pos(
+        @_,
+        { type => SCALAR },
+        { type => HASHREF },
+        { type => HASHREF },
+    );
+
+    #Match $line against our hash of EXTERNAL_POINTERS regexes
+    #add HTML link to matching lines
+    foreach my $pointerType ( sort keys %{$external_pointers_ref} ) {
+        foreach my $rule_number (
+            sort keys %{ $external_pointers_ref->{"$pointerType"} } )
+        {
+
+            #The while allows multiple pointers in one line
+            while ( $line
+                =~ m/$external_pointers_ref->{"$pointerType"}{"$rule_number"}/g
+                )
+            {
+                my $neighbor_ip = $+{external_ipv4};
+
+                #say $neighbor_ip;
+
+                if ( exists $host_info_ref->{'ip_address'}{$neighbor_ip} ) {
+                    my ( $file, $interface )
+                        = split( ',',
+                        $host_info_ref->{'ip_address'}{$neighbor_ip} );
+
+                    #Pull out the various filename components of the input file from the command line
+                    my ( $filename, $dir, $ext )
+                        = fileparse( $file, qr/\.[^.]*/x );
+
+                    #Construct the text of the link
+                    my $linkText
+                        = '<a href="'
+                        . $filename
+                        . $ext . '.html' . '#'
+                        . "interface_$interface"
+                        . "\" title=\"$filename\">$neighbor_ip</a>";
+
+                    #Insert the link back into the line
+                    #Link point needs to be surrounded by whitespace or end of line
+                    $line =~ s/(\s+) $neighbor_ip (\s+|$)/$1$linkText$2/gx;
+                }
+
+            }
+        }
+    }
+    return $line;
+}
+
+sub reformat_numbers {
+
+    #Make some numbers easier to read (add thousands separator etc)
+    my ( $line, $human_readable_ref )
+        = validate_pos( @_, { type => SCALAR }, { type => HASHREF }, );
+
+    #Match it against our hash of number regexes
+    foreach my $human_readable_key ( sort keys %{$human_readable_ref} ) {
+
+        #Did we find any matches? (number of captured items varies between the regexes)
+        if ( my @matches
+            = ( $line =~ $human_readable_ref->{"$human_readable_key"} ) )
+        {
+            #For each match, reformat the number
+            foreach my $number (@matches) {
+
+                #Different ways to format the number, choose what you like
+                my $number_formatted = format_number($number);
+
+                #my $number_formatted = format_bytes($number);
+
+                #Replace the non-formatted number with the formmated one
+                $line =~ s/$number/$number_formatted/x;
+            }
+
+        }
+    }
+    return $line;
+}
+
+sub find_subnet_peers {
+
+    my ( $line, $our_filename, $external_pointers_ref, $host_info_ref )
+        = validate_pos(
+        @_,
+        { type => SCALAR },
+        { type => SCALAR },
+        { type => HASHREF },
+        { type => HASHREF },
+        );
+
+    given ($line) {
+
+        #List devices on the same subnet when we know of them
+        when (
+            m/(?: ^ \s+ ip \s+ address \s+ (?<ip_and_mask> $RE{net}{IPv4} \s+ $RE{net}{IPv4}) |
+                          ^ \s+ ip \s+ address \s+ (?<ip_and_mask> $RE{net}{IPv4} \s* \/ \d+)
+                              )
+                        /ixms
+            )
+        {
+
+            my $ip_and_netmask = $+{ip_and_mask};
+
+            #Save the current amount of indentation of this line
+            #to make stuff we might insert line up right (eg PEERS)
+            my ($current_indent_level) = $line =~ m/^(\s*)/ixsm;
+
+            #                      say $ip_and_mask;
+
+            #HACK In RIOS, there's a space between IP address and CIDR
+            #Remove that without hopefully causing other issues
+            $ip_and_netmask =~ s|\s/|/|;
+
+            #Try to create a new NetAddr::IP object from this key
+            my $subnet = NetAddr::IP->new($ip_and_netmask);
+
+            #If it worked...
+            if ($subnet) {
+
+                #                             my $ip_addr        = $subnet->addr;
+                my $network = $subnet->network;
+
+                #                             my $mask           = $subnet->mask;
+                #                             my $masklen        = $subnet->masklen;
+                #                             my $ip_addr_bigint = $subnet->bigint();
+                #                             my $isRfc1918      = $subnet->is_rfc1918();
+                #                             my $range          = $subnet->range();
+
+                #Do we know about this subnet via create_host_info_hashes?
+                if ( exists $host_info_ref->{'subnet'}{$network} ) {
+
+                    my @peer_array;
+
+                    #TODO BUG Make this sort
+                    #                             while ( my ( $peer_file, $peer_interface )
+                    #                                 = each
+                    #                                 %{ $host_info_ref->{'subnet'}{$network} } )
+                    foreach my $peer_file (
+                        sort
+                        keys %{ $host_info_ref->{'subnet'}{$network} }
+                        )
+                    {
+
+                        my $peer_interface
+                            = $host_info_ref->{'subnet'}{$network}
+                            {$peer_file};
+
+                        #Don't list ourself as a peer
+                        if ( $our_filename =~ quotemeta $peer_file ) {
+                            next;
+                        }
+
+                        #Pull out the various filename components of the file
+                        my ( $peer_filename, $dir, $ext )
+                            = fileparse( $peer_file, qr/\.[^.]*/x );
+
+                        #Construct the text of the link
+                        my $linkText
+                            = '<a href="'
+                            . $peer_filename
+                            . $ext . '.html' . '#'
+                            . "interface_$peer_interface"
+                            . "\">$peer_filename</a>";
+
+                        #And save that link
+                        push @peer_array, $linkText;
+                    }
+
+                    #Join them all together
+                    my $peer_list  = join( ' | ', @peer_array );
+                    my $peer_count = @peer_array;
+                    my $peer_form  = $peer_count > 1 ? "PEERS" : "PEER";
+
+                    #And add them below the IP address line if there
+                    #are any peers
+                    if ($peer_list) {
+                        $line
+                            .= "\n"
+                            . "$current_indent_level! $peer_count $peer_form: $peer_list";
+                    }
+                }
+            }
+
+        }
+    }
+
+    return $line;
+}
+
+sub extra_formatting {
+    my ($line) = validate_pos( @_, { type => SCALAR }, );
+
+    #Style permit lines
+    $line
+        =~ s/ (\s+) (permit|included) (  .*? $  ) /$1<span class="permit">$2$3<\/span>/ixg;
+
+    #Style deny lines
+    $line
+        =~ s/ (\s+) (deny|excluded) (  .*?  $ ) /$1<span class="deny">$2$3<\/span>/ixg;
+
+    #Style no lines
+    $line
+        =~ s/^( \s* ) (no) (  .*?  $ ) /$1<span class="deny">$2$3<\/span>/ixg;
+
+    #Style remark lines
+    $line
+        =~ s/ (\s+) (remark|description) ( .*? $ ) /$1<span class="remark">$2$3<\/span>/ixg;
+    return $line;
 }
