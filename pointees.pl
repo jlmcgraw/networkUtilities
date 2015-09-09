@@ -454,3 +454,82 @@
         )
         /ixsm,
     },
+'voice_translation_profile' => {
+    1 => qr/(?<unique_id>
+                        ^ \s*
+                        voice \s+
+                        translation-profile \s+
+                        (?<pointed_at> $valid_cisco_name)
+            )
+            /ixsm,
+
+    },
+'voice_translation_rule' => {
+    1 => qr/(?<unique_id>
+                        ^ \s*
+                        voice \s+
+                        translation-rule \s+
+                        (?<pointed_at> $valid_cisco_name)
+            )
+            /ixsm,
+
+    },
+'voice_class_sip_profiles' => {
+    #BUG TODO: Get ID's with spaces working right and consolidate these classes
+    1 => qr/(?<unique_id>
+                        ^ \s*
+                        voice \s+
+                        class \s+
+                        sip-profiles \s+
+                        (?<pointed_at> $valid_cisco_name)
+            )
+            /ixsm,
+
+    },
+'voice_class_codec' => {
+    #BUG TODO: Get ID's with spaces working right and consolidate these classes
+    1 => qr/(?<unique_id>
+                        ^ \s*
+                        voice \s+
+                        class \s+
+                        codec \s+
+                        (?<pointed_at> $valid_cisco_name)
+            )
+            /ixsm,
+
+    },
+'trunk_group' => {
+    #BUG TODO: Get ID's with spaces working right and consolidate these classes
+    1 => qr/(?<unique_id>
+                        ^ \s*
+                        trunk \s+
+                        group \s+
+                        (?<pointed_at> $valid_cisco_name)
+            )
+            /ixsm,
+
+    },
+'dspfarm_profile' => {
+    #BUG TODO: Get ID's with spaces working right and consolidate these classes
+    1 => qr/(?<unique_id>
+                        ^ \s*
+                        dspfarm \s+
+                        profile \s+
+                        (?<pointed_at> $valid_cisco_name)
+            )
+            /ixsm,
+
+    },
+'sccp_ccm' => {
+    #BUG TODO: Get ID's with spaces working right and consolidate these classes
+    1 => qr/(?<unique_id>
+                        ^ \s*
+                        sccp \s+
+                        ccm \s+
+                        .*?
+                        identifier \s+
+                        (?<pointed_at> $valid_cisco_name)
+            )
+            /ixsm,
+
+    },

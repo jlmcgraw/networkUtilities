@@ -21,18 +21,28 @@
 #-------------------------------------------------------------------------------
 
 #TODO
+#   Make pointed_at/points_to with a space in them work right
+#       eg 
+#         "track 1"
+#         "ospf 10"
+#         "sip-profiles 1"
+#
 #   How to handle cases where pointer doesn't match pointee?
+#       Add per-match callbacks
 #       eg: channel-group 20 -> Etherchannel20
-
+#
 #   Hightlight missing pointees in red?
+#
 #   Yes, I'm reading through the file twice.  I haven't reached the point
 #       of really trying to optimize anything
+#
 #   Add a unit to numbers we make human readable?
-#   Make pointed_at/points_to with a space in them work right
-#       eg "track 1" or "ospf 10"
+
 #BUGS
 #   wrong link location (first match) when pointed_to occurs twice in string
 #       eg: standby 1 track 1 decrement 10
+#       Would be fixed by having identifiers with spaces in them
+#       eg "track 1" instead of "1"
 
 #DONE
 #   Maybe should regenerate overall host info hash each run?
@@ -1058,6 +1068,6 @@ sub scrub {
     $line =~ s/(snmp-server \s+ host \s+  $main::ipv4AddressRegex ) \s+ \S+/$1 SCRUBBED/gix;
     $line =~ s/(flash:) \S+/$1 SCRUBBED/gix;
     $line =~ s/$main::cert_line/SCRUBBED/gix;
-    
+    $line =~ s/\s+sn\s+\S+/ sn SCRUBBED/gix;
     return $line;
 }

@@ -580,3 +580,54 @@
         /ixsm,
 
     },
+    'voice_translation_profile' => {
+        1 => qr/ ^ \s*
+            translation-profile \s+ 
+            (?: outgoing | incoming) \s+
+            (?<points_to> (?: $list_of_pointees_ref->{"voice_translation_profile"}) )
+            /ixsm,
+        },
+    'voice_translation_rule' => {
+        1 => qr/ ^ \s*
+            translate \s+ 
+            (?: calling | called) \s+
+            (?<points_to> (?: $list_of_pointees_ref->{"voice_translation_rule"}) )
+            /ixsm,
+        },
+    'voice_class_sip_profiles' => {
+        1 => qr/ ^ \s*
+            sip-profiles \s+ 
+            (?<points_to> (?: $list_of_pointees_ref->{"voice_class_sip_profiles"}) )
+            /ixsm,
+        },
+    'voice_class_codec' => {
+        1 => qr/ ^ \s*
+            voice-class \s+ 
+            codec \s+ 
+            (?<points_to> (?: $list_of_pointees_ref->{"voice_class_codec"}) )
+            /ixsm,
+        },
+    'trunk_group' => {
+        1 => qr/ ^ \s*
+            trunk-group \s+ 
+            (?<points_to> (?: $list_of_pointees_ref->{"trunk_group"}) )
+            /ixsm,
+        2 => qr/ ^ \s*
+            trunkgroup \s+ 
+            (?<points_to> (?: $list_of_pointees_ref->{"trunk_group"}) )
+            /ixsm,
+        },
+    'dspfarm_profile' => {
+        1 => qr/ ^ \s*
+            associate \s+ 
+            profile \s+ 
+            (?<points_to> (?: $list_of_pointees_ref->{"dspfarm_profile"}) )
+            /ixsm,
+        },
+    'sccp_ccm' => {
+        1 => qr/ ^ \s*
+            associate \s+ 
+            ccm \s+ 
+            (?<points_to> (?: $list_of_pointees_ref->{"dspfarm_profile"}) )
+            /ixsm,
+        },
