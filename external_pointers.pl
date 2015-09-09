@@ -41,4 +41,9 @@
                 $RE{net}{IPv4} \/ \d+
                 (?<external_ipv4> $RE{net}{IPv4})
                 /ixsm,
+        6 => qr/^ \s*
+                ip \s+
+                default-gateway \s+
+                (?<external_ipv4> $RE{net}{IPv4})
+                /ixsm,
         },
