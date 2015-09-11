@@ -113,5 +113,5 @@ foreach my $file (@ARGV) {
     say "$file -> $dir$name";
 
     #Do it
-    #move( $file, $dir . $name ) or die(qq{failed to move $file -> $dir$name});
+    move( $file, $dir . $name ) or die(qq{failed to move $file -> $dir$name});
 }
