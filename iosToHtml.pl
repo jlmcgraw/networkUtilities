@@ -138,11 +138,12 @@ my @ARGV_unmodified;
 
 #Expand wildcards on command line since windows doesn't do it for us
 if ( $Config{archname} =~ m/win/ix ) {
+    use File::Glob ':bsd_glob';
 
     #Expand wildcards on command line
     say "Expanding wildcards for Windows";
     @ARGV_unmodified = @ARGV;
-    @ARGV = map {glob} @ARGV;
+    @ARGV            = bsd_glob "@ARGV";
 }
 
 #Call main routine
