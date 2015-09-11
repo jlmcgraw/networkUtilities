@@ -254,7 +254,8 @@ sub main {
     #Return if there's no files to process
     return 0 unless $q->pending();
 
-    say $q->pending() . " files queued";
+    my $number_of_files_queued = $q->pending();
+    say "$number_of_files_queued files queued";
 
     # Maximum number of worker threads
     # BUG TODO Adjust this dynamically based on number of CPUs
@@ -291,11 +292,13 @@ sub main {
     my $end = new Benchmark;
 
     # calculate difference
-    my $diff = timediff( $end, $start );
+    my $diff            = timediff( $end, $start );
+    my $duration_of_run = $diff->cpu_a;
+    my $time_per_file   = $duration_of_run / $number_of_files_queued;
 
     # report
     say "Time taken was ", timestr( $diff, 'all' ), " seconds";
-
+    say "$time_per_file CPU seconds per file";
     return (0);
 
 }
@@ -340,7 +343,9 @@ sub construct_lists_of_pointees {
         {
             #Add this label to our list
             push( @list_of_pointees,
-                $pointees_seen_ref->{"$pointeeType"}{"$rule_number"} );
+                      '(?: '
+                    . $pointees_seen_ref->{"$pointeeType"}{"$rule_number"}
+                    . ')' );
 
         }
 
@@ -354,7 +359,7 @@ sub construct_lists_of_pointees {
         #This list is what will be used in the pointer regex (see pointers.pl)
         $pointees_list{$pointeeType} = join( ' | ', @list_of_pointees );
     }
-    ### %pointees_list
+
     return \%pointees_list;
 }
 
@@ -396,42 +401,6 @@ sub find_pointees {
     return \%foundPointees;
 }
 
-# sub find_pointees_compiled {
-#
-#     #Construct a hash of the types of pointees we've seen in this file
-#     my ( $array_of_lines_ref, $pointee_regex_ref )
-#         = validate_pos( @_, { type => ARRAYREF }, { type => HASHREF } );
-#
-#     my %foundPointees = ();
-#
-#     foreach my $line (@$array_of_lines_ref) {
-#
-#         #Remove linefeeds
-#         $line =~ s/\R//gx;
-#
-#
-#         #Match it against our hash of pointees regexes
-#         foreach my $pointeeType ( sort keys %{$pointee_regex_ref} ) {
-#             foreach my $rule_regex ( @{ $pointee_regex_ref->{"$pointeeType"} } )
-#             {
-#                 if ( $line =~ $rule_regex )
-#                 {
-#                     my $unique_id  = $+{unique_id};
-#                     my $pointed_at = $+{pointed_at};
-#
-#                     #Have we seen this pointee already?
-#                     #We only want to make a link pointer for the first occurrence
-#                     if ( !$foundPointees{$pointeeType}{$unique_id} ) {
-#                         $foundPointees{$pointeeType}{$unique_id}
-#                             = "$pointed_at";
-#
-#                     }
-#                 }
-#             }
-#         }
-#     }
-#     return \%foundPointees;
-# }
 sub config_to_html {
     my ( $filename, $pointees_ref, $human_readable_ref, $host_info_ref,
         $external_pointers_ref )
@@ -450,8 +419,9 @@ sub config_to_html {
                         /ixsm;
 
     #reset these for each file
-    my %foundPointers        = ();
-    my %foundPointees        = ();
+    my %foundPointers = ();
+
+    #     my %foundPointees        = ();
     my %pointee_seen_in_file = ();
     my @html_formatted_text;
 
@@ -468,24 +438,29 @@ sub config_to_html {
 
     #Find all pointees (things that are pointed TO) in this particular file
     my $found_pointees_ref = find_pointees( \@array_of_lines, $pointees_ref );
+    ### found_pointees_ref
 
-    #Construct lists of the found pointees of each type for using in the POINTER regexes
+    #Construct "OR" lists (eg a|b|c|d) of the found pointees of each type for using in the POINTER regexes
     #to make them more explicit for this particular file
     our $list_of_pointees_ref
         = construct_lists_of_pointees($found_pointees_ref);
+    ### $list_of_pointees_ref
 
     #Load regexes for commands that refer to other lists of some sort
     #NOTE THAT THESE ARE DYNAMICALLY CONSTRUCTED FOR EACH FILE BASED ON THE
     #POINTEES WE FOUND IN IT ABOVE in "construct_lists_of_pointees"
     my %pointers = do $Bin . 'pointers.pl';
 
+    #Delete pointers that have no possible pointees, hopefully speeding things
+    #up
+    delete_pointers_with_no_pointees( \%pointers, $list_of_pointees_ref );
     ### %pointers
 
     # Get the thread id. Allows each thread to be identified.
     my $id = threads->tid();
     say "Thread $id: $filename";
 
-    #Find the hostname
+    #Search the whole file to find the hostname
     my ($hostname)
         = map { /^ \s* hostname \s+ (\S+) \b/ix ? $1 : () } @array_of_lines;
 
@@ -504,17 +479,17 @@ sub config_to_html {
         #Scrub passwords etc. if user requested
         $line = scrub($line) if $should_scrub;
 
+        #Did user request to reformat some numbers?
+        $line = reformat_numbers( $line, $human_readable_ref )
+            if $should_reformat_numbers;
+
         #Add pointer links
         $line
             = add_pointer_links_to_line( $line, \%pointers, \%foundPointers );
 
         #Add pointee links
         $line = add_pointee_links_to_line( $line, $pointees_ref,
-            $found_pointees_ref, \%pointee_seen_in_file );
-
-        #Did user request to reformat some numbers?
-        $line = reformat_numbers( $line, $human_readable_ref )
-            if $should_reformat_numbers;
+            $found_pointees_ref, \%pointee_seen_in_file, \%foundPointers );
 
         #Did user request to try to link to external files?
         if ($should_link_externally) {
@@ -537,7 +512,12 @@ sub config_to_html {
         push @html_formatted_text, $line;
     }
 
-    #Construct the floating menu
+    #Find any pointee that doesn't seem to have something pointing to it
+    #and change its CSS class
+    my $config_as_html_ref = find_pointees_with_nothing_pointing_to_them(
+        \@html_formatted_text );
+
+    #Construct the floating menu unique to this file
     my $floating_menu_text = construct_floating_menu(
         $filename, \@html_formatted_text,
         $hostname, \%pointee_seen_in_file
@@ -545,12 +525,78 @@ sub config_to_html {
 
     #Output as a web page
     output_as_html( $filename, \@html_formatted_text,
-        $hostname, $floating_menu_text );
+        $hostname, $floating_menu_text, $config_as_html_ref );
 
     ### %foundPointers
-    ### %foundPointees
     ### %pointee_seen_in_file
     return;
+}
+
+sub delete_pointers_with_no_pointees {
+
+    #Clean out pointers with no possible pointees
+
+    my ( $pointers_ref, $list_of_pointees_ref )
+        = validate_pos( @_, { type => HASHREF }, { type => HASHREF }, );
+
+    while ( my ( $rule_type, $rule_number ) = each %{$pointers_ref} ) {
+        if ( !( exists $list_of_pointees_ref->{"$rule_type"} ) ) {
+
+            #say "$rule_type has no list";
+            delete $pointers_ref->{$rule_type};
+        }
+    }
+}
+
+sub find_pointees_with_nothing_pointing_to_them {
+    my ( $html_formatted_text_ref, )
+        = validate_pos( @_, { type => ARRAYREF }, );
+
+    #Copy the array of html-ized test to a scalar
+    my $config_as_html = join "\n", @$html_formatted_text_ref;
+
+    my %pointers;
+    my %pointees;
+
+    #     %pointers
+    #         = map { "$1", 1 } map {/<a href="#(.*?)">/} @$html_formatted_text_ref;
+    #     %pointees = map { /id="(.*?)"/, 1 } @$html_formatted_text_ref;
+
+    my @array_of_pointers = $config_as_html =~ /<a href="#(.*?)">/g;
+    %pointers = map { $_, 1 } @array_of_pointers;
+
+    my @array_of_pointees = $config_as_html =~ /id="(.*?)" class="pointee">/g;
+    %pointees = map { $_, 1 } @array_of_pointees;
+
+    #          say "Pointers";
+    #         print Dumper \@array_of_pointers;
+    #          say "Pointees";
+    #         print Dumper \@array_of_pointees;
+    #             say "Pointers";
+    #         print Dumper \%pointers;
+    #         say "Pointees";
+    #         print Dumper \%pointees;
+
+    #Delete every POINTEE that has a POINTER
+    foreach my $pointer ( keys %pointers ) {
+        if ( exists $pointees{$pointer} ) {
+            delete $pointees{$pointer};
+        }
+    }
+
+    #At this point, pointees contains only things that haven't been pointed at
+    #         say "Pointees";
+    #         print Dumper \%pointees;
+    foreach my $unused_pointee ( keys %pointees ) {
+        my $class = 'unused_pointee';
+        if ( $unused_pointee =~ /interface_|routing_/ix ) {
+            $class = '';
+        }
+        $config_as_html
+            =~ s/id="$unused_pointee" class="pointee">/id="$unused_pointee" class="$class">/g;
+    }
+
+    return \$config_as_html;
 }
 
 sub construct_floating_menu {
@@ -606,6 +652,13 @@ END_MENU
         #         $menu_text .= "<div><a href=\"#$specific\" style=\"text-align: right\">$type</a>" . "</div>\n";
         $menu_text .= "<a href=\"#$specific\">$type</a>" . "\n";
     } @first_occurence_of_pointees;
+    $menu_text .= '<h4>Key</h4>';
+    $menu_text
+        .= '<span class="unused_pointee" style="text-align: right">Unused Pointee</span> ';
+    $menu_text .= '<span class="deny">Deny/no</span>';
+    $menu_text .= '<span class="permit">Permit/included</span>';
+    $menu_text .= '<span class="pointee">Pointee</span>';
+    $menu_text .= '<span class="remark">Remark/Description</span>';
 
     #Close of the DIV in the html
     $menu_text .= '</div>';
@@ -615,15 +668,15 @@ END_MENU
 }
 
 sub output_as_html {
-    my ($filename, $html_formatted_text_ref,
-        $hostname, $floating_menu_text
-        )
+    my ( $filename, $html_formatted_text_ref,
+        $hostname, $floating_menu_text, $config_as_html_ref )
         = validate_pos(
         @_,
         { type => SCALAR },
         { type => ARRAYREF },
         { type => SCALAR },
         { type => SCALAR },
+        { type => SCALARREF },
         );
 
     open my $filehandleHtml, '>', $filename . '.html' or die $!;
@@ -654,6 +707,10 @@ sub output_as_html {
                 }
             .pointee {
                 font-weight: bold;
+                }
+            .unused_pointee {
+                color: white;
+                background-color:orange
                 }
             .pointed_at {
                 font-style: italic;
@@ -703,7 +760,9 @@ sub output_as_html {
     <body>
         <pre>
 END
-    say {$filehandleHtml} join( "\n", @$html_formatted_text_ref );
+
+    #     say {$filehandleHtml} join( "\n", @$html_formatted_text_ref );
+    say {$filehandleHtml} $$config_as_html_ref;
 
     #say {$filehandleHtml} $line;
     #Close out the file with very basic html ending
@@ -944,7 +1003,7 @@ sub scrub {
                 \d+) \s+ \S+/$1 SCRUBBED/gix;
     $line
         =~ s/(snmp-server \s+ host \s+  $main::ipv4AddressRegex ) \s+ \S+/$1 SCRUBBED/gix;
-    $line =~ s/(flash:) \S+/$1 SCRUBBED/gix;
+    $line =~ s/(flash.?:) \S+/$1 SCRUBBED/gix;
     $line =~ s/$main::cert_line/SCRUBBED/gix;
     $line =~ s/\s+sn\s+\S+/ sn SCRUBBED/gix;
     return $line;
@@ -970,7 +1029,7 @@ sub add_pointer_links_to_line {
                 =~ m/$pointers_ref->{"$pointerType"}{"$rule_number"}/xg )
             {
                 #Save what we captured
-                #                     my $unique_id = $+{unique_id};
+                #my $unique_id = $+{unique_id};
                 my $points_to = $+{points_to};
 
                 #abort if $points_to isn't defined
@@ -986,6 +1045,10 @@ sub add_pointer_links_to_line {
                 #Save what we found for debugging
                 $found_pointers_ref->{"$line"}
                     = "Points_to: $points_to | pointerType: $pointerType | RuleNumber: $rule_number";
+
+                #Save this for helping us determine which pointees have pointers referring to them
+                $found_pointers_ref->{ "$pointerType" . '_' . "$points_to" }
+                    = "$line";
 
                 #Points_to can be a list!
                 #See pointers->prefix_list->2 for an example
@@ -1032,10 +1095,11 @@ sub add_pointer_links_to_line {
 
 sub add_pointee_links_to_line {
     my ( $line, $pointees_ref, $found_pointees_ref,
-        $pointee_seen_in_file_ref )
+        $pointee_seen_in_file_ref, $found_pointers_ref )
         = validate_pos(
         @_,
         { type => SCALAR },
+        { type => HASHREF },
         { type => HASHREF },
         { type => HASHREF },
         { type => HASHREF },
@@ -1073,21 +1137,26 @@ sub add_pointee_links_to_line {
                     #                             =~ s/ (\s+) $pointed_at ( \s+ | $ ) /$1$anchor_text$2/ixg;
 
                     #Add a span for what's actually pointed at
-                    #See "output_as_html" to adjust styling via cs
+                    #See "output_as_html" to adjust styling via CSS
                     $line
                         =~ s/ (\s+) $pointed_at ( \s+ | $ ) /$1<span class="pointed_at">$pointed_at<\/span>$2/ixg;
+
+                    my $class   = "pointee";
+                    my $span_id = $pointeeType . '_' . $pointed_at;
 
                     #Add a span for links to refer to
                     #See "output_as_html" to adjust styling via css
                     $line
                         = '<br>'
                         . '<span id="'
-                        . $pointeeType . '_'
-                        . $pointed_at . '" '
-                        . 'class="pointee"' . '>'
+                        . $span_id . '" '
+                        . 'class="'
+                        . $class . '">'
                         . $line
                         . '</span>';
 
+                    #Don't loop anymore since each line can only be one pointee
+                    return $line;
                 }
             }
         }

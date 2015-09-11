@@ -146,6 +146,8 @@ sub main {
         my @array_of_lines = <$filehandle>
             or die $!;    # Reads all lines into array
 
+        close $filehandle;
+
         #Progress indicator
         say $filename;
 
@@ -158,8 +160,6 @@ sub main {
 
         #Add the new hash of hashes to our overall hash
         $overall_hash_ref = merge( $found_pointees_ref, $overall_hash_ref );
-
-        close $filehandle;
 
     }
 

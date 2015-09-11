@@ -48,7 +48,7 @@
     )
     /ixsm,
     },
-'policy_map' => {
+    'policy_map' => {
     1 => qr/ (?<unique_id> 
                                 ^ \s* 
                                 policy-map \s+ 
@@ -73,7 +73,7 @@
                     \s* $
                     /ixsm,
     },
-'route_map' => {
+    'route_map' => {
     1 => qr/ (?<unique_id> 
                                 ^ \s*
                                 route-map \s+ 
@@ -99,12 +99,12 @@
                                 (?: permit | deny) \s+
                     /ixsm,
     },
-'prefix_list' => {
+    'prefix_list' => {
     1 =>
         qr/(?<unique_id> ^ \s* ip \s+ prefix-list \s+ (?<pointed_at> $valid_cisco_name) )/ixsm,
 
     },
-'community_list' => {
+    'community_list' => {
     1 =>
         qr/(?<unique_id> ^ \s* ip \s+ community-list \s+ (?:standard|extended) \s+ (?<pointed_at> $valid_cisco_name) )/ixsm,
     2 => qr/(?<unique_id> ^ \s*
@@ -113,7 +113,7 @@
                         (?:standard|extended) \s+
                         (?<pointed_at> $valid_cisco_name) )/ixsm,
     },
-'as_path_access_list' => {
+    'as_path_access_list' => {
     1 => qr/(?<unique_id> ^ \s*
                         ip \s+
                         as-path \s+ 
@@ -121,7 +121,7 @@
                         (?<pointed_at> $valid_cisco_name) )/ixsm,
 
     },
-'interface' => {
+    'interface' => {
 
     #NXOS,
     #Put this longer match first so we can match on just the #
@@ -144,14 +144,14 @@
     #                             $
     #             )/ixsm,
     },
-'track' => {
+    'track' => {
     1 => qr/(?<unique_id>^ \s*
                             track \s+
                         (?<pointed_at> $valid_cisco_name )
             )/ixsm,
 
     },
-'vrf' => {
+    'vrf' => {
     1 => qr/(?<unique_id>
                         ^ \s*
                         ip \s+
@@ -180,7 +180,7 @@
                     /ixsm,
 
     },
-'key_chain' => {
+    'key_chain' => {
     1 => qr/(?<unique_id>
                         ^ \s*
                         key \s+ 
@@ -191,7 +191,7 @@
                     /ixsm,
 
     },
-'ip_sla' => {
+    'ip_sla' => {
     1 => qr/(?<unique_id>
                         ^ \s*
                         ip \s+
@@ -202,7 +202,7 @@
                     $
                     /ixsm,
     },
-'class' => {
+    'class' => {
     1 => qr/(?<unique_id>
                         ^ \s*
                         class-map \s+
@@ -233,7 +233,7 @@
                     (?<pointed_at> $valid_cisco_name) )
                     /ixsm,
     },
-'aaa_group' => {
+    'aaa_group' => {
     1 => qr/(?<unique_id>
                         ^ \s*
                         aaa \s+
@@ -245,7 +245,7 @@
             (\s+|$)
             /ixsm,
     },
-'routing_process' => {
+    'routing_process' => {
     1 => qr/(?<unique_id>
                         ^ \s*
                         router \s+
@@ -254,7 +254,7 @@
             (\s+|$)
             /ixsm,
     },
-'object_group' => {
+    'object_group' => {
     1 => qr/(?<unique_id>
                         ^ \s*
                         object-group \s+
@@ -264,7 +264,7 @@
             (\s+|$)
             /ixsm,
     },
-'snmp_view' => {
+    'snmp_view' => {
     1 => qr/(?<unique_id>
                         ^ \s*
                         snmp-server \s+
@@ -274,7 +274,7 @@
             (\s+|$)
             /ixsm,
     },
-'template_peer_policy' => {
+    'template_peer_policy' => {
     1 => qr/(?<unique_id>
                         ^ \s*
                         template \s+
@@ -284,7 +284,7 @@
             (\s+|$)
             /ixsm,
     },
-'template_peer_session' => {
+    'template_peer_session' => {
     1 => qr/(?<unique_id>
                         ^ \s*
                         template \s+
@@ -294,8 +294,9 @@
             (\s+|$)
             /ixsm,
     },
-'parameter_map' => {
-        #ASA or ACE?
+    'parameter_map' => {
+
+    #ASA or ACE?
     1 => qr/(?<unique_id>
                         ^ \s*
                         parameter-map \s+
@@ -306,7 +307,7 @@
             (\s+|$)
             /ixsm,
     },
-'crypto_pki' => {
+    'crypto_pki' => {
     1 => qr/(?<unique_id>
                         ^ \s*
                         crypto \s+
@@ -318,7 +319,7 @@
             (\s+|$)
             /ixsm,
     },
-'dhcp_pool' => {
+    'dhcp_pool' => {
     1 => qr/(?<unique_id>
                         ^ \s*
                         ip \s+
@@ -329,7 +330,7 @@
             (\s+|$)
             /ixsm,
     },
-'ip_inspect' => {
+    'ip_inspect' => {
     1 => qr/(?<unique_id>
                         ^ \s*
                         ip \s+
@@ -341,7 +342,7 @@
             (\s+|$)
             /ixsm,
     },
-'pix_nameif' => {
+    'pix_nameif' => {
     1 => qr/(?<unique_id>
                         ^ \s*
                         nameif \s+
@@ -350,7 +351,7 @@
             $
             /ixsm,
     },
-'ace_context' => {
+    'ace_context' => {
     1 => qr/(?<unique_id>
                         ^ \s*
                         context \s+
@@ -359,7 +360,7 @@
             $
             /ixsm,
     },
-'ace_resource_class' => {
+    'ace_resource_class' => {
     1 => qr/(?<unique_id>
                         ^ \s*
                         resource-class \s+
@@ -368,7 +369,7 @@
             $
             /ixsm,
     },
-'nxos_zoneset' => {
+    'nxos_zoneset' => {
     1 => qr/(?<unique_id>
                         ^ \s*
                         zoneset \s+
@@ -377,7 +378,7 @@
             )
             /ixsm,
     },
-'nxos_zoneset_member' => {
+    'nxos_zoneset_member' => {
     1 => qr/(?<unique_id>
                         ^ \s*
                         zone \s+
@@ -386,7 +387,7 @@
             )
             /ixsm,
     },
-'nxos_role' => {
+    'nxos_role' => {
     1 => qr/(?<unique_id>
                         ^ \s*
                         role \s+
@@ -395,7 +396,7 @@
             )
             /ixsm,
     },
-'ipsec_profile' => {
+    'ipsec_profile' => {
     1 => qr/(?<unique_id>
                         ^ \s*
                         crypto \s+
@@ -405,7 +406,7 @@
             )
             /ixsm,
     },
-'ipsec_transform_set' => {
+    'ipsec_transform_set' => {
     1 => qr/(?<unique_id>
                         ^ \s*
                         crypto \s+
@@ -415,7 +416,7 @@
             )
             /ixsm,
     },
-'crypto_map' => {
+    'crypto_map' => {
     1 => qr/(?<unique_id>
                         ^ \s*
                         crypto \s+
@@ -425,7 +426,7 @@
             )
             /ixsm,
     },
-'aaa_list' => {
+    'aaa_list' => {
     1 => qr/(?<unique_id>
                         ^ \s*
                         aaa \s+
@@ -454,7 +455,7 @@
         )
         /ixsm,
     },
-'voice_translation_profile' => {
+    'voice_translation_profile' => {
     1 => qr/(?<unique_id>
                         ^ \s*
                         voice \s+
@@ -464,7 +465,7 @@
             /ixsm,
 
     },
-'voice_translation_rule' => {
+    'voice_translation_rule' => {
     1 => qr/(?<unique_id>
                         ^ \s*
                         voice \s+
@@ -474,7 +475,8 @@
             /ixsm,
 
     },
-'voice_class_sip_profiles' => {
+    'voice_class_sip_profiles' => {
+
     #BUG TODO: Get ID's with spaces working right and consolidate these classes
     1 => qr/(?<unique_id>
                         ^ \s*
@@ -486,7 +488,8 @@
             /ixsm,
 
     },
-'voice_class_codec' => {
+    'voice_class_codec' => {
+
     #BUG TODO: Get ID's with spaces working right and consolidate these classes
     1 => qr/(?<unique_id>
                         ^ \s*
@@ -498,7 +501,8 @@
             /ixsm,
 
     },
-'trunk_group' => {
+    'trunk_group' => {
+
     #BUG TODO: Get ID's with spaces working right and consolidate these classes
     1 => qr/(?<unique_id>
                         ^ \s*
@@ -509,7 +513,8 @@
             /ixsm,
 
     },
-'dspfarm_profile' => {
+    'dspfarm_profile' => {
+
     #BUG TODO: Get ID's with spaces working right and consolidate these classes
     1 => qr/(?<unique_id>
                         ^ \s*
@@ -520,7 +525,8 @@
             /ixsm,
 
     },
-'sccp_ccm' => {
+    'sccp_ccm' => {
+
     #BUG TODO: Get ID's with spaces working right and consolidate these classes
     1 => qr/(?<unique_id>
                         ^ \s*
