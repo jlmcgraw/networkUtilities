@@ -74,6 +74,15 @@ if (!@ARGV) {
     say "$0 <files to rename>";
     }
 
+    #Expand wildcards on command line since windows doesn't do it for us
+if ( $Config{archname} =~ m/win/ix ) {
+
+    #Expand wildcards on command line
+    say "Expanding wildcards for Windows";
+    @ARGV_unmodified = @ARGV;
+    @ARGV = map {glob} @ARGV;
+}
+
 my $hostname_regex = qr/^
                         \s* 
                         (?: hostname | switchname ) 
