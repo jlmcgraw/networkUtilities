@@ -35,24 +35,7 @@ use FindBin '$Bin';
 use vars qw/ %opt /;
 use File::Copy;
 use Config;
-
-# # The sort routine for Data::Dumper
-# $Data::Dumper::Sortkeys = sub {
-#
-#     #Get all the keys for this hash
-#     my $keys = join '', keys %{ $_[0] };
-#
-#     #Are they only numbers?
-#     if ( $keys =~ /^ [[:alnum:]]+ $/x ) {
-#
-#         #Sort keys numerically
-#         return [ sort { $a <=> $b or $a cmp $b } keys %{ $_[0] } ];
-#     }
-#     else {
-#         #Keys are not all numeric so sort by alphabetically
-#         return [ sort { lc $a cmp lc $b } keys %{ $_[0] } ];
-#     }
-# };
+use File::Basename;
 
 #Use a local lib directory so users don't need to install modules
 use lib "$FindBin::Bin/local/lib/perl5";
@@ -62,9 +45,6 @@ use Modern::Perl '2014';
 use Params::Validate qw(:all);
 use Regexp::Common;
 
-# use NetAddr::IP;
-# use Net::Ping;
-# use Hash::Merge qw(merge);
 
 #Smart_Comments=1 perl my_script.pl to show smart comments
 use Smart::Comments -ENV;
@@ -80,11 +60,12 @@ my @ARGV_unmodified;
 
 #Expand wildcards on command line since windows doesn't do it for us
 if ( $Config{archname} =~ m/win/ix ) {
-
+    use File::Glob ':bsd_glob';
+    
     #Expand wildcards on command line
     say "Expanding wildcards for Windows";
     @ARGV_unmodified = @ARGV;
-    @ARGV = map {glob} @ARGV;
+    @ARGV = map {bsd_glob "$_"} @ARGV;
 }
 
 my $hostname_regex = qr/^
@@ -100,7 +81,10 @@ my $hostname_regex = qr/^
 foreach my $file (@ARGV) {
 
     my $file_text;
-
+    
+    #Pull out the various filename components of the input file from the command line
+    my ( $filename, $dir, $ext ) = fileparse( $file, qr/\.[^.]*/x );
+    
     {
         local $/;
         open my $fh, '<', $file or die "can't open $file: $!";
@@ -108,12 +92,6 @@ foreach my $file (@ARGV) {
 
     }
 
-    #     my ($name) = $file_text =~ /^ \s*
-    #                             (?:hostname|switchname) \s+
-    #                             ["]?
-    #                             (\S+)
-    #                             ["]?
-    #                             /ix;
     #Try to find a hostname
     my ($name) = $file_text =~ m/$hostname_regex/ixsm;
 
@@ -134,5 +112,5 @@ foreach my $file (@ARGV) {
     #What are we doing
     say "$file -> $name";
     #Do it
-    move( $file, $name ) or die(qq{failed to move $file -> $name});
+    move( $file, $dir . $name ) or die(qq{failed to move $file -> $dir$name});
 }
