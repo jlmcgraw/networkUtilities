@@ -67,7 +67,6 @@ use Regexp::Common;
 
 #Smart_Comments=1 perl my_script.pl to show smart comments
 use Smart::Comments -ENV;
-use YAPE::Regex::Explain;
 
 #Everything in this directory
 # my @files = <@ARGV>;
