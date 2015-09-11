@@ -45,15 +45,14 @@ use Modern::Perl '2014';
 use Params::Validate qw(:all);
 use Regexp::Common;
 
-
 #Smart_Comments=1 perl my_script.pl to show smart comments
 use Smart::Comments -ENV;
 
 #Everything in this directory
 # my @files = <@ARGV>;
-if (!@ARGV) {
+if ( !@ARGV ) {
     say "$0 <files to rename>";
-    }
+}
 
 #Save original ARGV
 my @ARGV_unmodified;
@@ -61,11 +60,11 @@ my @ARGV_unmodified;
 #Expand wildcards on command line since windows doesn't do it for us
 if ( $Config{archname} =~ m/win/ix ) {
     use File::Glob ':bsd_glob';
-    
+
     #Expand wildcards on command line
     say "Expanding wildcards for Windows";
     @ARGV_unmodified = @ARGV;
-    @ARGV = map {bsd_glob "$_"} @ARGV;
+    @ARGV = map { bsd_glob "$_" } @ARGV;
 }
 
 my $hostname_regex = qr/^
@@ -81,15 +80,15 @@ my $hostname_regex = qr/^
 foreach my $file (@ARGV) {
 
     my $file_text;
-    
+
     #Pull out the various filename components of the input file from the command line
     my ( $filename, $dir, $ext ) = fileparse( $file, qr/\.[^.]*/x );
-    
+
     {
         local $/;
         open my $fh, '<', $file or die "can't open $file: $!";
         $file_text = <$fh>;
-
+        close $fh;
     }
 
     #Try to find a hostname
@@ -100,9 +99,10 @@ foreach my $file (@ARGV) {
     }
 
     #What did it match
-    #     say "Matched: $name";
+    #say "Matched: $name";
+
     #Make a sanitized version of the current file's name
-    my $sanitized_name = $file;
+    my $sanitized_name = $filename . $ext;
     $sanitized_name =~ s/[ \W ]/_/ixg;
 
     #If we didn't match anything use the sanitized version
@@ -110,7 +110,8 @@ foreach my $file (@ARGV) {
     $name .= '.cfg';
 
     #What are we doing
-    say "$file -> $name";
+    say "$file -> $dir$name";
+
     #Do it
-    move( $file, $dir . $name ) or die(qq{failed to move $file -> $dir$name});
+    #move( $file, $dir . $name ) or die(qq{failed to move $file -> $dir$name});
 }
