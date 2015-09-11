@@ -34,6 +34,7 @@ use autodie;
 use FindBin '$Bin';
 use vars qw/ %opt /;
 use File::Copy;
+use Config;
 
 # # The sort routine for Data::Dumper
 # $Data::Dumper::Sortkeys = sub {
@@ -74,7 +75,10 @@ if (!@ARGV) {
     say "$0 <files to rename>";
     }
 
-    #Expand wildcards on command line since windows doesn't do it for us
+#Save original ARGV
+my @ARGV_unmodified;
+
+#Expand wildcards on command line since windows doesn't do it for us
 if ( $Config{archname} =~ m/win/ix ) {
 
     #Expand wildcards on command line
