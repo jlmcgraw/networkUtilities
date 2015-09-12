@@ -23,6 +23,10 @@
             .pointee {
                 font-weight: bold;
                 }
+            .unused_pointee {
+                color: white;
+                background-color:orange
+                }
             .pointed_at {
                 font-style: italic;
                 }
@@ -106,10 +110,10 @@ aaa group server radius dummy
 !
 aaa authentication username-prompt Login:
 aaa authentication login default group <a href="#aaa_group_tac_admin">tac_admin</a> local
-<br><span id="aaa_list_eap_methods" class="pointee">aaa authentication login <span class="pointed_at">eap_methods</span> group rad_eap</span>
-<br><span id="aaa_list_mac_methods" class="pointee">aaa authentication login <span class="pointed_at">mac_methods</span> local</span>
+<br><span id="aaa_list_eap_methods" class="unused_pointee">aaa authentication login <span class="pointed_at">eap_methods</span> group rad_eap</span>
+<br><span id="aaa_list_mac_methods" class="unused_pointee">aaa authentication login <span class="pointed_at">mac_methods</span> local</span>
 aaa authorization exec default group <a href="#aaa_group_tac_admin">tac_admin</a> local
-<br><span id="aaa_list_acct_methods" class="pointee">aaa accounting network <span class="pointed_at">acct_methods</span> start-stop group rad_acct</span>
+<br><span id="aaa_list_acct_methods" class="unused_pointee">aaa accounting network <span class="pointed_at">acct_methods</span> start-stop group rad_acct</span>
 !
 !
 !
@@ -147,7 +151,7 @@ bridge irb
 !
 !
 !
-<br><span id="interface_Dot11Radio0" class="pointee">interface <span class="pointed_at">Dot11Radio0</span></span>
+<br><span id="interface_Dot11Radio0" class="">interface <span class="pointed_at">Dot11Radio0</span></span>
 <span class="deny">no ip address</span>
 shutdown
 !
@@ -165,7 +169,7 @@ bridge-group 1 block-unknown-source
 <span class="deny">no bridge-group 1 source-learning</span>
 <span class="deny">no bridge-group 1 unicast-flooding</span>
 !
-<br><span id="interface_Dot11Radio1" class="pointee">interface <span class="pointed_at">Dot11Radio1</span></span>
+<br><span id="interface_Dot11Radio1" class="">interface <span class="pointed_at">Dot11Radio1</span></span>
 <span class="deny">no ip address</span>
 shutdown
 antenna gain 0
@@ -179,7 +183,7 @@ bridge-group 1 block-unknown-source
 <span class="deny">no bridge-group 1 source-learning</span>
 <span class="deny">no bridge-group 1 unicast-flooding</span>
 !
-<br><span id="interface_GigabitEthernet0" class="pointee">interface <span class="pointed_at">GigabitEthernet0</span></span>
+<br><span id="interface_GigabitEthernet0" class="">interface <span class="pointed_at">GigabitEthernet0</span></span>
 <span class="deny">no ip address</span>
 duplex auto
 speed auto
@@ -188,7 +192,7 @@ bridge-group 1
 bridge-group 1 spanning-disabled
 <span class="deny">no bridge-group 1 source-learning</span>
 !
-<br><span id="interface_BVI1" class="pointee">interface <span class="pointed_at">BVI1</span></span>
+<br><span id="interface_BVI1" class="">interface <span class="pointed_at">BVI1</span></span>
 ip address dhcp client-id GigabitEthernet0
 !
 ip forward-protocol nd
@@ -201,7 +205,7 @@ ip route 0.0.0.0 0.0.0.0 xx.xx.xx.x
 !
 logging trap notifications
 logging xx.xx.xx.x
-<br><span id="acl_10" class="pointee">access-list <span class="pointed_at">10</span> <span class="permit">permit xx.xx.xx.x</span></span>
+<br><span id="acl_10" class="unused_pointee">access-list <span class="pointed_at">10</span> <span class="permit">permit xx.xx.xx.x</span></span>
 access-list 10 <span class="permit">permit xx.xx.xx.x</span>
 access-list 10 <span class="permit">permit xx.xx.xx.x</span>
 access-list 10 <span class="permit">permit xx.xx.xx.x</span>
@@ -210,7 +214,7 @@ access-list 10 <span class="permit">permit xx.xx.xx.x</span>
 <br><span id="acl_20" class="pointee">access-list <span class="pointed_at">20</span> <span class="permit">permit xx.xx.xx.x</span></span>
 access-list 20 <span class="permit">permit xx.xx.xx.x</span>
 <br><span id="acl_111" class="pointee">access-list <span class="pointed_at">111</span> <span class="permit">permit tcp any any neq telnet</span></span>
-<br><span id="snmp_view_iso" class="pointee">snmp-server view <span class="pointed_at">iso</span> iso <span class="permit">included</span></span>
+<br><span id="snmp_view_iso" class="unused_pointee">snmp-server view <span class="pointed_at">iso</span> iso <span class="permit">included</span></span>
 snmp-server community SCRUBBED RW <a href="#acl_20">20</a>
 snmp-server location xxxxxxxxxx
 snmp-server contact xxxxxxxxxxx
@@ -251,6 +255,6 @@ end
 <a href="#acl_10">Acl</a>
 <a href="#interface_Dot11Radio0">Interface</a>
 <a href="#snmp_view_iso">Snmp_view</a>
-</div>
+<h4>Key</h4><span class="unused_pointee" style="text-align: right">Unused Pointee</span> <span class="deny">Deny/no</span><span class="permit">Permit/included</span><span class="pointee">Pointee</span><span class="remark">Remark/Description</span></div>
     </body>
 </html>

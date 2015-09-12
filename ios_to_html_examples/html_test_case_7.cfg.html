@@ -23,6 +23,10 @@
             .pointee {
                 font-weight: bold;
                 }
+            .unused_pointee {
+                color: white;
+                background-color:orange
+                }
             .pointed_at {
                 font-style: italic;
                 }
@@ -80,33 +84,33 @@ enable password SCRUBBED
 passwd ******************** encrypted
 names
 !
-<br><span id="interface_Vlan1" class="pointee">interface <span class="pointed_at">Vlan1</span></span>
+<br><span id="interface_Vlan1" class="">interface <span class="pointed_at">Vlan1</span></span>
 <br><span id="pix_nameif_inside" class="pointee"> nameif <span class="pointed_at">inside</span></span>
  security-level 100
  ip address 192.168.2.1 255.255.255.0
 <span class="remark_subtle"> ! 1 PEER on 192.168.2.0/24: <a href="html_test_case_4.cfg.html#interface_Dot11Radio0.20">html_test_case_4</a></span>
 !
-<br><span id="interface_Vlan2" class="pointee">interface <span class="pointed_at">Vlan2</span></span>
+<br><span id="interface_Vlan2" class="">interface <span class="pointed_at">Vlan2</span></span>
 <br><span id="pix_nameif_outside" class="pointee"> nameif <span class="pointed_at">outside</span></span>
  security-level 0
  ip address 192.168.1.9 255.255.255.252
 !
-<br><span id="interface_Ethernet0/0" class="pointee">interface <span class="pointed_at">Ethernet0/0</span></span>
+<br><span id="interface_Ethernet0/0" class="">interface <span class="pointed_at">Ethernet0/0</span></span>
  switchport access vlan 2
 !
-<br><span id="interface_Ethernet0/1" class="pointee">interface <span class="pointed_at">Ethernet0/1</span></span>
+<br><span id="interface_Ethernet0/1" class="">interface <span class="pointed_at">Ethernet0/1</span></span>
 !
-<br><span id="interface_Ethernet0/2" class="pointee">interface <span class="pointed_at">Ethernet0/2</span></span>
+<br><span id="interface_Ethernet0/2" class="">interface <span class="pointed_at">Ethernet0/2</span></span>
 !
-<br><span id="interface_Ethernet0/3" class="pointee">interface <span class="pointed_at">Ethernet0/3</span></span>
+<br><span id="interface_Ethernet0/3" class="">interface <span class="pointed_at">Ethernet0/3</span></span>
 !
-<br><span id="interface_Ethernet0/4" class="pointee">interface <span class="pointed_at">Ethernet0/4</span></span>
+<br><span id="interface_Ethernet0/4" class="">interface <span class="pointed_at">Ethernet0/4</span></span>
 !
-<br><span id="interface_Ethernet0/5" class="pointee">interface <span class="pointed_at">Ethernet0/5</span></span>
+<br><span id="interface_Ethernet0/5" class="">interface <span class="pointed_at">Ethernet0/5</span></span>
 !
-<br><span id="interface_Ethernet0/6" class="pointee">interface <span class="pointed_at">Ethernet0/6</span></span>
+<br><span id="interface_Ethernet0/6" class="">interface <span class="pointed_at">Ethernet0/6</span></span>
 !
-<br><span id="interface_Ethernet0/7" class="pointee">interface <span class="pointed_at">Ethernet0/7</span></span>
+<br><span id="interface_Ethernet0/7" class="">interface <span class="pointed_at">Ethernet0/7</span></span>
 !
 ftp mode passive
 clock timezone EST -5
@@ -177,6 +181,6 @@ Cryptochecksum:abunchofnumbersgohere
     <h4>Beginning of Sections</h4>
 <a href="#interface_Vlan1">Interface</a>
 <a href="#pix_nameif_inside">Pix_nameif</a>
-</div>
+<h4>Key</h4><span class="unused_pointee" style="text-align: right">Unused Pointee</span> <span class="deny">Deny/no</span><span class="permit">Permit/included</span><span class="pointee">Pointee</span><span class="remark">Remark/Description</span></div>
     </body>
 </html>

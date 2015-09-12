@@ -23,6 +23,10 @@
             .pointee {
                 font-weight: bold;
                 }
+            .unused_pointee {
+                color: white;
+                background-color:orange
+                }
             .pointed_at {
                 font-style: italic;
                 }
@@ -266,13 +270,13 @@ ip ssh version 2
  standby 77 track <a href="#track_1">1</a> decrement 10
  service-policy output <a href="#policy_map_SHAPE">SHAPE</a>
 !
-<br><span id="routing_process_eigrp 100" class="pointee">router eigrp 100</span>
+<br><span id="routing_process_eigrp 100" class="">router eigrp 100</span>
  network 10.2.1.1 0.0.0.0
  redistribute bgp 65000 route-map <a href="#route_map_MATCH_DEFAULT">MATCH_DEFAULT</a>
  passive-interface default
  <span class="deny">no passive-interface <a href="#interface_GigabitEthernet0/0">GigabitEthernet0/0</a></span>
 !
-<br><span id="routing_process_bgp 65000" class="pointee">router bgp 65000</span>
+<br><span id="routing_process_bgp 65000" class="">router bgp 65000</span>
 <br><span id="template_peer_policy_MPLSVPN" class="pointee"> template peer-policy <span class="pointed_at">MPLSVPN</span></span>
   route-map <a href="#route_map_ChoosePreferredVPNv4Routes">ChoosePreferredVPNv4Routes</a> in
   send-community both
@@ -381,6 +385,6 @@ end
 <a href="#template_peer_policy_MPLSVPN">Template_peer_policy</a>
 <a href="#template_peer_session_MPLSVPN">Template_peer_session</a>
 <a href="#track_1">Track</a>
-</div>
+<h4>Key</h4><span class="unused_pointee" style="text-align: right">Unused Pointee</span> <span class="deny">Deny/no</span><span class="permit">Permit/included</span><span class="pointee">Pointee</span><span class="remark">Remark/Description</span></div>
     </body>
 </html>

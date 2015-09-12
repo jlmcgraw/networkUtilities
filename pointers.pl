@@ -474,6 +474,12 @@
         urlf-glob \s+
         (?<points_to> (?: $list_of_pointees_ref->{"parameter_map"}) )
         /ixsm,
+    2 => qr/^ \s*
+        match \s+
+        protocol \s+
+        (?: ymsgr | msnmsgr | aol ) \s+
+        (?<points_to> (?: $list_of_pointees_ref->{"parameter_map"}  ))
+        /ixsm,
     },
     'crypto_pki' => {
     1 => qr/^ \s*
@@ -623,7 +629,7 @@
             (?<points_to> (?: $list_of_pointees_ref->{"trunk_group"}) )
             /ixsm,
     2 => qr/ ^ \s*
-            trunkgroup \s+ 
+            trunkgroup \s+
             (?<points_to> (?: $list_of_pointees_ref->{"trunk_group"}) )
             /ixsm,
     },
@@ -639,5 +645,12 @@
             associate \s+ 
             ccm \s+ 
             (?<points_to> (?: $list_of_pointees_ref->{"dspfarm_profile"}) )
+            /ixsm,
+    },
+    'ip_port_map' => {
+    1 => qr/ ^ \s*
+            match \s+
+            protocol \s+
+            (?<points_to> (?: $list_of_pointees_ref->{"ip_port_map"}) )
             /ixsm,
     },

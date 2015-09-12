@@ -294,8 +294,8 @@
             (\s+|$)
             /ixsm,
     },
+    
     'parameter_map' => {
-
     #ASA or ACE?
     1 => qr/(?<unique_id>
                         ^ \s*
@@ -534,6 +534,18 @@
                         ccm \s+
                         .*?
                         identifier \s+
+                        (?<pointed_at> $valid_cisco_name)
+            )
+            /ixsm,
+
+    },
+    'ip_port_map' => {
+
+    #BUG TODO: Get ID's with spaces working right and consolidate these classes
+    1 => qr/(?<unique_id>
+                        ^ \s*
+                        ip \s+
+                        port-map \s+
                         (?<pointed_at> $valid_cisco_name)
             )
             /ixsm,

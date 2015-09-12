@@ -23,6 +23,10 @@
             .pointee {
                 font-weight: bold;
                 }
+            .unused_pointee {
+                color: white;
+                background-color:orange
+                }
             .pointed_at {
                 font-style: italic;
                 }
@@ -110,7 +114,7 @@ crypto pki trustpoint <a href="#crypto_pki_TP-self-signed-3499699271">TP-self-si
 ip source-route
 ip dhcp <span class="deny">excluded-address 10.10.10.1 10.10.10.74</span>
 !
-<br><span id="dhcp_pool_ccp-pool" class="pointee">ip dhcp pool <span class="pointed_at">ccp-pool</span></span>
+<br><span id="dhcp_pool_ccp-pool" class="unused_pointee">ip dhcp pool <span class="pointed_at">ccp-pool</span></span>
    import all
    network 10.10.10.0 255.255.255.0
    default-router 10.10.10.1
@@ -122,12 +126,12 @@ ip cef
 ip domain name <REMOVED>
 ip name-server
 ip name-server
-ip port-map user-protocol--2 port udp 53322
-ip port-map user-protocol--3 port udp 80
-ip port-map user-protocol--1 port tcp 53322
+<br><span id="ip_port_map_user-protocol--2" class="pointee">ip port-map <span class="pointed_at">user-protocol--2</span> port udp 53322</span>
+<br><span id="ip_port_map_user-protocol--3" class="pointee">ip port-map <span class="pointed_at">user-protocol--3</span> port udp 80</span>
+<br><span id="ip_port_map_user-protocol--1" class="pointee">ip port-map <span class="pointed_at">user-protocol--1</span> port tcp 53322</span>
 !
 !
-<br><span id="parameter_map_ccp-regex-nonascii" class="pointee">parameter-map type regex <span class="pointed_at">ccp-regex-nonascii</span></span>
+<br><span id="parameter_map_ccp-regex-nonascii" class="unused_pointee">parameter-map type regex <span class="pointed_at">ccp-regex-nonascii</span></span>
  pattern [^\x00-\x80]
 
 <br><span id="parameter_map_msn-servers" class="pointee">parameter-map type protocol-info <span class="pointed_at">msn-servers</span></span>
@@ -182,51 +186,51 @@ archive
  match protocol http
 <br><span id="class_sdm-nat-user-protocol--2-4" class="pointee">class-map type inspect match-all <span class="pointed_at">sdm-nat-user-protocol--2-4</span></span>
  match access-group <a href="#acl_114">114</a>
- match protocol user-protocol--2
+ match protocol <a href="#ip_port_map_user-protocol--2">user-protocol--2</a>
 <br><span id="class_sdm-nat-user-protocol--2-5" class="pointee">class-map type inspect match-all <span class="pointed_at">sdm-nat-user-protocol--2-5</span></span>
  match access-group <a href="#acl_116">116</a>
- match protocol user-protocol--2
+ match protocol <a href="#ip_port_map_user-protocol--2">user-protocol--2</a>
 <br><span id="class_sdm-nat-http-5" class="pointee">class-map type inspect match-all <span class="pointed_at">sdm-nat-http-5</span></span>
  match access-group <a href="#acl_117">117</a>
  match protocol http
 <br><span id="class_sdm-nat-user-protocol--1-5" class="pointee">class-map type inspect match-all <span class="pointed_at">sdm-nat-user-protocol--1-5</span></span>
  match access-group <a href="#acl_115">115</a>
- match protocol user-protocol--1
+ match protocol <a href="#ip_port_map_user-protocol--1">user-protocol--1</a>
 <br><span id="class_sdm-nat-user-protocol--1-4" class="pointee">class-map type inspect match-all <span class="pointed_at">sdm-nat-user-protocol--1-4</span></span>
  match access-group <a href="#acl_113">113</a>
- match protocol user-protocol--1
+ match protocol <a href="#ip_port_map_user-protocol--1">user-protocol--1</a>
 <br><span id="class_sdm-nat-user-protocol--3-1" class="pointee">class-map type inspect match-all <span class="pointed_at">sdm-nat-user-protocol--3-1</span></span>
  match access-group <a href="#acl_107">107</a>
- match protocol user-protocol--3
+ match protocol <a href="#ip_port_map_user-protocol--3">user-protocol--3</a>
 <br><span id="class_sdm-nat-user-protocol--1-3" class="pointee">class-map type inspect match-all <span class="pointed_at">sdm-nat-user-protocol--1-3</span></span>
  match access-group <a href="#acl_108">108</a>
- match protocol user-protocol--1
+ match protocol <a href="#ip_port_map_user-protocol--1">user-protocol--1</a>
 <br><span id="class_ccp-app-imap" class="pointee">class-map type inspect imap match-any <span class="pointed_at">ccp-app-imap</span></span>
  match  invalid-command
 <br><span id="class_sdm-nat-user-protocol--2-1" class="pointee">class-map type inspect match-all <span class="pointed_at">sdm-nat-user-protocol--2-1</span></span>
  match access-group <a href="#acl_103">103</a>
- match protocol user-protocol--2
+ match protocol <a href="#ip_port_map_user-protocol--2">user-protocol--2</a>
 <br><span id="class_sdm-nat-http-1" class="pointee">class-map type inspect match-all <span class="pointed_at">sdm-nat-http-1</span></span>
  match access-group <a href="#acl_102">102</a>
  match protocol http
 <br><span id="class_sdm-nat-user-protocol--1-2" class="pointee">class-map type inspect match-all <span class="pointed_at">sdm-nat-user-protocol--1-2</span></span>
  match access-group <a href="#acl_104">104</a>
- match protocol user-protocol--1
+ match protocol <a href="#ip_port_map_user-protocol--1">user-protocol--1</a>
 <br><span id="class_sdm-nat-user-protocol--1-1" class="pointee">class-map type inspect match-all <span class="pointed_at">sdm-nat-user-protocol--1-1</span></span>
  match access-group <a href="#acl_101">101</a>
- match protocol user-protocol--1
+ match protocol <a href="#ip_port_map_user-protocol--1">user-protocol--1</a>
 <br><span id="class_sdm-nat-user-protocol--2-2" class="pointee">class-map type inspect match-all <span class="pointed_at">sdm-nat-user-protocol--2-2</span></span>
  match access-group <a href="#acl_106">106</a>
- match protocol user-protocol--2
+ match protocol <a href="#ip_port_map_user-protocol--2">user-protocol--2</a>
 <br><span id="class_sdm-nat-http-2" class="pointee">class-map type inspect match-all <span class="pointed_at">sdm-nat-http-2</span></span>
  match access-group <a href="#acl_105">105</a>
  match protocol http
 <br><span id="class_sdm-nat-user-protocol--3-2" class="pointee">class-map type inspect match-all <span class="pointed_at">sdm-nat-user-protocol--3-2</span></span>
  match access-group <a href="#acl_111">111</a>
- match protocol user-protocol--3
+ match protocol <a href="#ip_port_map_user-protocol--3">user-protocol--3</a>
 <br><span id="class_sdm-nat-user-protocol--2-3" class="pointee">class-map type inspect match-all <span class="pointed_at">sdm-nat-user-protocol--2-3</span></span>
  match access-group <a href="#acl_110">110</a>
- match protocol user-protocol--2
+ match protocol <a href="#ip_port_map_user-protocol--2">user-protocol--2</a>
 <br><span id="class_sdm-nat-http-3" class="pointee">class-map type inspect match-all <span class="pointed_at">sdm-nat-http-3</span></span>
  match access-group <a href="#acl_109">109</a>
  match protocol http
@@ -265,9 +269,9 @@ archive
  match protocol tcp
  match protocol udp
 <br><span id="class_ccp-cls-protocol-im" class="pointee">class-map type inspect match-any <span class="pointed_at">ccp-cls-protocol-im</span></span>
- match protocol ymsgr yahoo-servers
- match protocol msnmsgr msn-servers
- match protocol aol aol-servers
+ match protocol ymsgr <a href="#parameter_map_yahoo-servers">yahoo-servers</a>
+ match protocol msnmsgr <a href="#parameter_map_msn-servers">msn-servers</a>
+ match protocol aol <a href="#parameter_map_aol-servers">aol-servers</a>
 <br><span id="class_ccp-app-aol-otherservices" class="pointee">class-map type inspect aol match-any <span class="pointed_at">ccp-app-aol-otherservices</span></span>
  match  service any
 <br><span id="class_ccp-protocol-pop3" class="pointee">class-map type inspect match-all <span class="pointed_at">ccp-protocol-pop3</span></span>
@@ -337,11 +341,11 @@ archive
  match  request port-misuse tunneling
 !
 !
-<br><span id="policy_map_ccp-permit-icmpreply" class="pointee">policy-map type inspect <span class="pointed_at">ccp-permit-icmpreply</span></span>
+<br><span id="policy_map_ccp-permit-icmpreply" class="unused_pointee">policy-map type inspect <span class="pointed_at">ccp-permit-icmpreply</span></span>
  class type inspect <a href="#class_ccp-icmp-access">ccp-icmp-access</a>
  class class-default
   pass
-<br><span id="policy_map_sdm-pol-NATOutsideToInside-1" class="pointee">policy-map type inspect <span class="pointed_at">sdm-pol-NATOutsideToInside-1</span></span>
+<br><span id="policy_map_sdm-pol-NATOutsideToInside-1" class="unused_pointee">policy-map type inspect <span class="pointed_at">sdm-pol-NATOutsideToInside-1</span></span>
  class type inspect <a href="#class_sdm-nat-user-protocol--1-1">sdm-nat-user-protocol--1-1</a>
   inspect
  class type inspect <a href="#class_sdm-nat-http-1">sdm-nat-http-1</a>
@@ -413,7 +417,7 @@ policy-map type inspect imap ccp-action-imap
 policy-map type inspect pop3 ccp-action-pop3
  class type inspect pop3 <a href="#class_ccp-app-pop3">ccp-app-pop3</a>
   log
-<br><span id="policy_map_ccp-inspect" class="pointee">policy-map type inspect <span class="pointed_at">ccp-inspect</span></span>
+<br><span id="policy_map_ccp-inspect" class="unused_pointee">policy-map type inspect <span class="pointed_at">ccp-inspect</span></span>
  class type inspect <a href="#class_ccp-invalid-src">ccp-invalid-src</a>
   drop log
  class type inspect <a href="#class_ccp-protocol-http">ccp-protocol-http</a>
@@ -434,7 +438,7 @@ policy-map type inspect pop3 ccp-action-pop3
   inspect
  class class-default
   pass
-<br><span id="policy_map_ccp-permit" class="pointee">policy-map type inspect <span class="pointed_at">ccp-permit</span></span>
+<br><span id="policy_map_ccp-permit" class="unused_pointee">policy-map type inspect <span class="pointed_at">ccp-permit</span></span>
  class class-default
   drop
 !
@@ -451,13 +455,13 @@ zone-pair security ccp-zp-out-self source out-zone destination self
 !
 !
 !
-<br><span id="interface_FastEthernet0" class="pointee">interface <span class="pointed_at">FastEthernet0</span></span>
+<br><span id="interface_FastEthernet0" class="">interface <span class="pointed_at">FastEthernet0</span></span>
 !
-<br><span id="interface_FastEthernet1" class="pointee">interface <span class="pointed_at">FastEthernet1</span></span>
+<br><span id="interface_FastEthernet1" class="">interface <span class="pointed_at">FastEthernet1</span></span>
 !
-<br><span id="interface_FastEthernet2" class="pointee">interface <span class="pointed_at">FastEthernet2</span></span>
+<br><span id="interface_FastEthernet2" class="">interface <span class="pointed_at">FastEthernet2</span></span>
 !
-<br><span id="interface_FastEthernet3" class="pointee">interface <span class="pointed_at">FastEthernet3</span></span>
+<br><span id="interface_FastEthernet3" class="">interface <span class="pointed_at">FastEthernet3</span></span>
 !
 <br><span id="interface_FastEthernet4" class="pointee">interface <span class="pointed_at">FastEthernet4</span></span>
  <span class="remark">description <REMOVED></span>
@@ -468,15 +472,15 @@ zone-pair security ccp-zp-out-self source out-zone destination self
  duplex auto
  speed auto
 !
-<br><span id="interface_wlan-ap0" class="pointee">interface <span class="pointed_at">wlan-ap0</span></span>
+<br><span id="interface_wlan-ap0" class="">interface <span class="pointed_at">wlan-ap0</span></span>
  <span class="remark">description Service module interface to manage the embedded AP</span>
  ip unnumbered Vlan1
  arp timeout 0
 !
-<br><span id="interface_Wlan-GigabitEthernet0" class="pointee">interface <span class="pointed_at">Wlan-GigabitEthernet0</span></span>
+<br><span id="interface_Wlan-GigabitEthernet0" class="">interface <span class="pointed_at">Wlan-GigabitEthernet0</span></span>
  <span class="remark">description <REMOVED></span>
 !
-<br><span id="interface_Vlan1" class="pointee">interface <span class="pointed_at">Vlan1</span></span>
+<br><span id="interface_Vlan1" class="">interface <span class="pointed_at">Vlan1</span></span>
  <span class="remark">description <REMOVED></span>
  ip address 10.10.10.1 255.255.255.0
  ip nat inside
@@ -500,7 +504,7 @@ ip nat inside source static udp 10.10.10.40 53322 interface <a href="#interface_
 ip nat inside source static tcp 10.10.10.60 80 interface <a href="#interface_FastEthernet4">FastEthernet4</a> 80
 ip nat inside source static tcp <REMOVED> 80 10.10.10.60 80 extendable
 !
-<br><span id="acl_web" class="pointee">ip access-list extended <span class="pointed_at">web</span></span>
+<br><span id="acl_web" class="unused_pointee">ip access-list extended <span class="pointed_at">web</span></span>
  <span class="remark">remark webservr</span>
  <span class="remark">remark CCP_ACL Category=2</span>
  <span class="permit">permit ip any host 10.10.10.60</span>
@@ -593,8 +597,9 @@ end
 <a href="#crypto_pki_TP-self-signed-3499699271">Crypto_pki</a>
 <a href="#dhcp_pool_ccp-pool">Dhcp_pool</a>
 <a href="#interface_FastEthernet0">Interface</a>
+<a href="#ip_port_map_user-protocol--2">Ip_port_map</a>
 <a href="#parameter_map_ccp-regex-nonascii">Parameter_map</a>
 <a href="#policy_map_ccp-permit-icmpreply">Policy_map</a>
-</div>
+<h4>Key</h4><span class="unused_pointee" style="text-align: right">Unused Pointee</span> <span class="deny">Deny/no</span><span class="permit">Permit/included</span><span class="pointee">Pointee</span><span class="remark">Remark/Description</span></div>
     </body>
 </html>

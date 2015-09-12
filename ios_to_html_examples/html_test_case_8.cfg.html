@@ -23,6 +23,10 @@
             .pointee {
                 font-weight: bold;
                 }
+            .unused_pointee {
+                color: white;
+                background-color:orange
+                }
             .pointed_at {
                 font-style: italic;
                 }
@@ -79,28 +83,28 @@ enable password SCRUBBED
 passwd somepasswordalsoencrypted encrypted
 names
 !
-<br><span id="interface_Ethernet0/0" class="pointee">interface <span class="pointed_at">Ethernet0/0</span></span>
+<br><span id="interface_Ethernet0/0" class="">interface <span class="pointed_at">Ethernet0/0</span></span>
 <br><span id="pix_nameif_outside" class="pointee">nameif <span class="pointed_at">outside</span></span>
 security-level 0
 ip address 1.1.1.254 255.255.255.0
 !
-<br><span id="interface_Ethernet0/1" class="pointee">interface <span class="pointed_at">Ethernet0/1</span></span>
+<br><span id="interface_Ethernet0/1" class="">interface <span class="pointed_at">Ethernet0/1</span></span>
 <br><span id="pix_nameif_inside" class="pointee">nameif <span class="pointed_at">inside</span></span>
 security-level 100
 ip address 10.1.26.111 255.255.255.0
 !
-<br><span id="interface_Ethernet0/2" class="pointee">interface <span class="pointed_at">Ethernet0/2</span></span>
+<br><span id="interface_Ethernet0/2" class="">interface <span class="pointed_at">Ethernet0/2</span></span>
 <br><span id="pix_nameif_VMWARE" class="pointee">nameif <span class="pointed_at">VMWARE</span></span>
 security-level 75
 ip address 10.1.110.100 255.255.255.0
 !
-<br><span id="interface_Ethernet0/3" class="pointee">interface <span class="pointed_at">Ethernet0/3</span></span>
+<br><span id="interface_Ethernet0/3" class="">interface <span class="pointed_at">Ethernet0/3</span></span>
 shutdown
 <span class="deny">no nameif</span>
 <span class="deny">no security-level</span>
 <span class="deny">no ip address</span>
 !
-<br><span id="interface_Management0/0" class="pointee">interface <span class="pointed_at">Management0/0</span></span>
+<br><span id="interface_Management0/0" class="">interface <span class="pointed_at">Management0/0</span></span>
 shutdown
 <span class="deny">no nameif</span>
 <span class="deny">no security-level</span>
@@ -119,7 +123,7 @@ network-object host 10.0.0.52
 access-list VMWARE_IN extended <span class="permit">permit udp host 10.1.110.3 object-group <a href="#object_group_ESXi-HOSTS">ESXi-HOSTS</a> eq 902</span>
 access-list VMWARE_IN extended <span class="permit">permit tcp host 10.1.110.3 object-group <a href="#object_group_ESXi-HOSTS">ESXi-HOSTS</a> eq 902</span>
 access-list VMWARE_IN extended <span class="permit">permit tcp host 10.1.110.3 object-group <a href="#object_group_ESXi-HOSTS">ESXi-HOSTS</a> eq https</span>
-<br><span id="acl_OUTSIDE_IN" class="pointee">access-list <span class="pointed_at">OUTSIDE_IN</span> extended <span class="permit">permit tcp any 10.1.110.0 255.255.255.0 eq https</span></span>
+<br><span id="acl_OUTSIDE_IN" class="unused_pointee">access-list <span class="pointed_at">OUTSIDE_IN</span> extended <span class="permit">permit tcp any 10.1.110.0 255.255.255.0 eq https</span></span>
 access-list OUTSIDE_IN extended <span class="deny">deny ip any any log</span>
 pager lines 24
 logging enable
@@ -167,7 +171,7 @@ policy-map type inspect dns preset_dns_map
 parameters
 message-length maximum client auto
 message-length maximum 512
-<br><span id="policy_map_global_policy" class="pointee">policy-map <span class="pointed_at">global_policy</span></span>
+<br><span id="policy_map_global_policy" class="unused_pointee">policy-map <span class="pointed_at">global_policy</span></span>
 class inspection_default
 inspect dns preset_dns_map
 inspect ftp
@@ -211,6 +215,6 @@ Cryptochecksum:527c19dc36bafc1da5c12066d871bd0b
 <a href="#object_group_ESXi-HOSTS">Object_group</a>
 <a href="#pix_nameif_outside">Pix_nameif</a>
 <a href="#policy_map_global_policy">Policy_map</a>
-</div>
+<h4>Key</h4><span class="unused_pointee" style="text-align: right">Unused Pointee</span> <span class="deny">Deny/no</span><span class="permit">Permit/included</span><span class="pointee">Pointee</span><span class="remark">Remark/Description</span></div>
     </body>
 </html>

@@ -23,6 +23,10 @@
             .pointee {
                 font-weight: bold;
                 }
+            .unused_pointee {
+                color: white;
+                background-color:orange
+                }
             .pointed_at {
                 font-style: italic;
                 }
@@ -126,14 +130,14 @@ wpa-psk ascii 7 <REMOVED>
 ip dhcp <span class="deny">excluded-address 192.168.1.1 192.168.1.100</span>
 ip dhcp <span class="deny">excluded-address 192.168.2.1 192.168.2.100</span>
 !
-<br><span id="dhcp_pool_Internal-net" class="pointee">ip dhcp pool <span class="pointed_at">Internal-net</span></span>
+<br><span id="dhcp_pool_Internal-net" class="unused_pointee">ip dhcp pool <span class="pointed_at">Internal-net</span></span>
 import all
 network 192.168.1.0 255.255.255.0
 default-router 192.168.1.1
 domain-name <REMOVED>
 lease 4
 !
-<br><span id="dhcp_pool_VLAN20" class="pointee">ip dhcp pool <span class="pointed_at">VLAN20</span></span>
+<br><span id="dhcp_pool_VLAN20" class="unused_pointee">ip dhcp pool <span class="pointed_at">VLAN20</span></span>
 import all
 network 192.168.2.0 255.255.255.0
 default-router 192.168.2.1
@@ -159,16 +163,16 @@ hidekeys
 bridge irb
 !
 !
-<br><span id="interface_FastEthernet0" class="pointee">interface <span class="pointed_at">FastEthernet0</span></span>
+<br><span id="interface_FastEthernet0" class="">interface <span class="pointed_at">FastEthernet0</span></span>
 spanning-tree portfast
 !
-<br><span id="interface_FastEthernet1" class="pointee">interface <span class="pointed_at">FastEthernet1</span></span>
+<br><span id="interface_FastEthernet1" class="">interface <span class="pointed_at">FastEthernet1</span></span>
 spanning-tree portfast
 !
-<br><span id="interface_FastEthernet2" class="pointee">interface <span class="pointed_at">FastEthernet2</span></span>
+<br><span id="interface_FastEthernet2" class="">interface <span class="pointed_at">FastEthernet2</span></span>
 spanning-tree portfast
 !
-<br><span id="interface_FastEthernet3" class="pointee">interface <span class="pointed_at">FastEthernet3</span></span>
+<br><span id="interface_FastEthernet3" class="">interface <span class="pointed_at">FastEthernet3</span></span>
 spanning-tree portfast
 !
 <br><span id="interface_FastEthernet4" class="pointee">interface <span class="pointed_at">FastEthernet4</span></span>
@@ -182,7 +186,7 @@ duplex auto
 speed auto
 <span class="deny">no cdp enable</span>
 !
-<br><span id="interface_Dot11Radio0" class="pointee">interface <span class="pointed_at">Dot11Radio0</span></span>
+<br><span id="interface_Dot11Radio0" class="">interface <span class="pointed_at">Dot11Radio0</span></span>
 <span class="deny">no ip address</span>
 <span class="deny">no dot11 extension aironet</span>
 !
@@ -200,7 +204,7 @@ channel 2437
 station-role root
 <span class="deny">no cdp enable</span>
 !
-<br><span id="interface_Dot11Radio0.1" class="pointee">interface <span class="pointed_at">Dot11Radio0.1</span></span>
+<br><span id="interface_Dot11Radio0.1" class="">interface <span class="pointed_at">Dot11Radio0.1</span></span>
 encapsulation dot1Q 1 native
 bridge-group 1
 bridge-group 1 subscriber-loop-control
@@ -209,7 +213,7 @@ bridge-group 1 block-unknown-source
 <span class="deny">no bridge-group 1 source-learning</span>
 <span class="deny">no bridge-group 1 unicast-flooding</span>
 !
-<br><span id="interface_Dot11Radio0.20" class="pointee">interface <span class="pointed_at">Dot11Radio0.20</span></span>
+<br><span id="interface_Dot11Radio0.20" class="">interface <span class="pointed_at">Dot11Radio0.20</span></span>
 description Guest wireless LAN - routed WLAN
 encapsulation dot1Q 20
 ip address 192.168.2.1 255.255.255.0
@@ -218,7 +222,7 @@ ip inspect <a href="#ip_inspect_MYFW">MYFW</a> out
 ip nat inside
 ip virtual-reassembly
 !
-<br><span id="interface_Vlan1" class="pointee">interface <span class="pointed_at">Vlan1</span></span>
+<br><span id="interface_Vlan1" class="">interface <span class="pointed_at">Vlan1</span></span>
 description Internal Network
 <span class="deny">no ip address</span>
 ip nat inside
@@ -226,7 +230,7 @@ ip virtual-reassembly
 bridge-group 1
 bridge-group 1 spanning-disabled
 !
-<br><span id="interface_BVI1" class="pointee">interface <span class="pointed_at">BVI1</span></span>
+<br><span id="interface_BVI1" class="">interface <span class="pointed_at">BVI1</span></span>
 description Bridge to Internal Network
 ip address 192.168.1.1 255.255.255.0
 ip nat inside
@@ -272,6 +276,6 @@ end
 <a href="#dhcp_pool_Internal-net">Dhcp_pool</a>
 <a href="#interface_FastEthernet0">Interface</a>
 <a href="#ip_inspect_MYFW">Ip_inspect</a>
-</div>
+<h4>Key</h4><span class="unused_pointee" style="text-align: right">Unused Pointee</span> <span class="deny">Deny/no</span><span class="permit">Permit/included</span><span class="pointee">Pointee</span><span class="remark">Remark/Description</span></div>
     </body>
 </html>

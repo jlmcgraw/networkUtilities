@@ -476,7 +476,7 @@ sub config_to_html {
 
         #Remove trailing whitespace
         $line =~ s/\s+$//gx;
-
+        
         #Scrub passwords etc. if user requested
         $line = scrub($line) if $should_scrub;
 
@@ -654,10 +654,9 @@ END_MENU
         $menu_text .= "<a href=\"#$specific\">$type</a>" . "\n";
     } @first_occurence_of_pointees;
     $menu_text .= '<h4>Key</h4>';
-    $menu_text
-        .= '<span class="unused_pointee" style="text-align: right">Unused Pointee</span> ';
-    $menu_text .= '<span class="deny">Deny/no</span>';
-    $menu_text .= '<span class="permit">Permit/included</span>';
+    $menu_text .= '<span class="unused_pointee">Unused Pointee</span> ';
+    $menu_text .= '<span class="deny">Deny/No</span>';
+    $menu_text .= '<span class="permit">Permit/Included</span>';
     $menu_text .= '<span class="pointee">Pointee</span>';
     $menu_text .= '<span class="remark">Remark/Description</span>';
 
@@ -755,7 +754,12 @@ sub output_as_html {
             div.floating-menu a:hover {
                 color: white;
                 }
-                
+            div.floating-menu .unused_pointee, div.floating-menu .pointee,  
+            div.floating-menu .remark,  div.floating-menu .deny,  
+                div.floating-menu .permit {
+                text-align: right;
+                display:block;
+                }
         </style>
     </head>
     <body>
@@ -1044,7 +1048,7 @@ sub add_pointer_links_to_line {
                 }
 
                 #Save what we found for debugging
-                $found_pointers_ref->{"$line"}
+                $found_pointers_ref->{"$line|$pointerType|$rule_number|$points_to"}
                     = "Points_to: $points_to | pointerType: $pointerType | RuleNumber: $rule_number";
 
                 #Save this for helping us determine which pointees have pointers referring to them
