@@ -1,4 +1,3 @@
-
 requires 'Modern::Perl';
 requires 'Regexp::Common';
 requires 'NetAddr::IP';
@@ -10,3 +9,6 @@ requires 'Smart::Comments';
 requires 'IO::Interactive';
 requires 'Net::SNMP';
 requires 'Sys::CpuAffinity';
+requires 'Regexp::Assemble';
+requires 'Net::Ping';
+requires 'Net::Ping::External';

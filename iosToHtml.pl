@@ -40,6 +40,11 @@
 #   Add a unit to numbers we make human readable?
 #
 #   Are we recompiling regexes needlessly?
+#
+#   Collapse lists of things
+#       1) items that all begin with same thing (eg "ip access-list xx"
+#       2) Items that have same indent level (eg interfaces)
+#       3) Groups of #1 or #2
 
 #BUGS
 #   wrong link location (first match) when pointed_to occurs twice in string
@@ -86,6 +91,11 @@ use Params::Validate qw(:all);
 use Smart::Comments -ENV;
 use Sys::CpuAffinity;
 
+# use Memoize;
+use Regexp::Assemble;
+
+  
+	
 our $num_cpus = Sys::CpuAffinity::getNumCpus();
 
 # say "$num_cpus processors available";
@@ -334,14 +344,21 @@ sub construct_lists_of_pointees {
 
     my %pointees_list = ();
 
+
     #Go through each type and save all of the pointees we've seen defined in this file
     foreach my $pointeeType ( sort keys %{$pointees_seen_ref} ) {
-
+        my $ra = Regexp::Assemble->new(flags=> '-x');
         my @list_of_pointees;
+        my @raw_list_of_pointees;
 
         foreach my $rule_number (
             sort keys %{ $pointees_seen_ref->{"$pointeeType"} } )
         {
+           
+
+           #Add this label to our list for Regexp::Assemble
+            push( @raw_list_of_pointees, $pointees_seen_ref->{"$pointeeType"}{"$rule_number"} );
+                    
             #Add this label to our list
             push( @list_of_pointees,
                       '(?: '
@@ -356,11 +373,19 @@ sub construct_lists_of_pointees {
         @list_of_pointees
             = sort { length $b <=> length $a } @list_of_pointees;
 
+#         #Create a minimal regex from the whole list of pointees
+#         map { $ra->add( "$_" ) } @raw_list_of_pointees;
+#         $pointees_list{$pointeeType} = $ra->re;
+        
         #Make a list of those names joined by |
         #This list is what will be used in the pointer regex (see pointers.pl)
         $pointees_list{$pointeeType} = join( ' | ', @list_of_pointees );
-    }
 
+        
+
+#          say $ra->re;s
+    }
+   
     return \%pointees_list;
 }
 
@@ -467,7 +492,16 @@ sub config_to_html {
 
     #If we didn't find a name set a default
     $hostname //= 'no name';
-
+    
+#     memoize('reformat_numbers');
+#     memoize('add_pointer_links_to_line');
+#     memoize('add_pointee_links_to_line');
+#     memoize('process_external_pointers');
+#     memoize('find_subnet_peers');
+#     memoize('extra_formatting');
+    
+    
+    
     #Process each line, one at a time, of this file
     foreach my $line (@array_of_lines) {
 

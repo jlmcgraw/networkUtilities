@@ -69,7 +69,12 @@
             div.floating-menu a:hover {
                 color: white;
                 }
-                
+            div.floating-menu .unused_pointee, div.floating-menu .pointee,  
+            div.floating-menu .remark,  div.floating-menu .deny,  
+                div.floating-menu .permit {
+                text-align: right;
+                display:block;
+                }
         </style>
     </head>
     <body>
@@ -206,13 +211,13 @@ ip route 0.0.0.0 0.0.0.0 xx.xx.xx.x
 logging trap notifications
 logging xx.xx.xx.x
 <br><span id="acl_10" class="unused_pointee">access-list <span class="pointed_at">10</span> <span class="permit">permit xx.xx.xx.x</span></span>
-access-list 10 <span class="permit">permit xx.xx.xx.x</span>
-access-list 10 <span class="permit">permit xx.xx.xx.x</span>
-access-list 10 <span class="permit">permit xx.xx.xx.x</span>
-access-list 10 <span class="permit">permit xx.xx.xx.x</span>
-access-list 10 <span class="permit">permit xx.xx.xx.x</span>
+<br><span id="acl_10" class="unused_pointee">access-list <span class="pointed_at">10</span> <span class="permit">permit xx.xx.xx.x</span></span>
+<br><span id="acl_10" class="unused_pointee">access-list <span class="pointed_at">10</span> <span class="permit">permit xx.xx.xx.x</span></span>
+<br><span id="acl_10" class="unused_pointee">access-list <span class="pointed_at">10</span> <span class="permit">permit xx.xx.xx.x</span></span>
+<br><span id="acl_10" class="unused_pointee">access-list <span class="pointed_at">10</span> <span class="permit">permit xx.xx.xx.x</span></span>
+<br><span id="acl_10" class="unused_pointee">access-list <span class="pointed_at">10</span> <span class="permit">permit xx.xx.xx.x</span></span>
 <br><span id="acl_20" class="pointee">access-list <span class="pointed_at">20</span> <span class="permit">permit xx.xx.xx.x</span></span>
-access-list 20 <span class="permit">permit xx.xx.xx.x</span>
+<br><span id="acl_20" class="pointee">access-list <span class="pointed_at">20</span> <span class="permit">permit xx.xx.xx.x</span></span>
 <br><span id="acl_111" class="pointee">access-list <span class="pointed_at">111</span> <span class="permit">permit tcp any any neq telnet</span></span>
 <br><span id="snmp_view_iso" class="unused_pointee">snmp-server view <span class="pointed_at">iso</span> iso <span class="permit">included</span></span>
 snmp-server community SCRUBBED RW <a href="#acl_20">20</a>
@@ -255,6 +260,6 @@ end
 <a href="#acl_10">Acl</a>
 <a href="#interface_Dot11Radio0">Interface</a>
 <a href="#snmp_view_iso">Snmp_view</a>
-<h4>Key</h4><span class="unused_pointee" style="text-align: right">Unused Pointee</span> <span class="deny">Deny/no</span><span class="permit">Permit/included</span><span class="pointee">Pointee</span><span class="remark">Remark/Description</span></div>
+<h4>Key</h4><span class="unused_pointee">Unused Pointee</span> <span class="deny">Deny/No</span><span class="permit">Permit/Included</span><span class="pointee">Pointee</span><span class="remark">Remark/Description</span></div>
     </body>
 </html>

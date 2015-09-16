@@ -85,9 +85,12 @@ use Hash::Merge qw(merge);
 
 #Smart_Comments=1 perl my_script.pl to show smart comments
 use Smart::Comments -ENV;
+use Sys::CpuAffinity;
 
 #Use this to not print warnings
 #no if $] >= 5.018, warnings => "experimental";
+
+our $num_cpus = Sys::CpuAffinity::getNumCpus();
 
 #Define the valid command line options
 my $opt_string = 'dp:t:';
@@ -106,7 +109,7 @@ unless ( getopts( "$opt_string", \%opt ) ) {
 }
 
 #Default method of testing remote connectivity
-my $ping_method = 'tcp';
+my $ping_method = 'external';
 
 #Set ping method depending on OS
 #Expand wildcards on command line since windows doesn't do it for us
@@ -119,8 +122,8 @@ if ( $Config{archname} =~ m/win/ix ) {
     #     print "$Config{osname}\n";
     #     print "$Config{archname}\n";
 
-    #You can ping without root on windows
-    $ping_method = 'icmp';
+    #(Not true on later versions so commenting out) You can ping without root on windows
+    #$ping_method = 'icmp';
 }
 
 #What method does the user want to ping via?
@@ -197,7 +200,7 @@ sub main {
     # BUG TODO Adjust this dynamically based on number of CPUs
     my $thread_limit = 4;
 
-    #Create $thread_limit worker threads calling "annotate_file"
+    #Create $main::num_cpus worker threads calling "annotate_file"
     my @thr = map {
         threads->create(
             sub {
@@ -206,7 +209,7 @@ sub main {
                 }
             }
         );
-    } 1 .. $thread_limit;
+    } 1 .. $main::num_cpus;
 
     # terminate all of the threads in @thr
     $_->join() for @thr;
