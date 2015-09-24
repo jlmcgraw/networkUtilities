@@ -1045,6 +1045,9 @@ sub scrub {
     $line =~ s/(flash.?:) \S+/$1 SCRUBBED/gix;
     $line =~ s/$main::cert_line/SCRUBBED/gix;
     $line =~ s/\s+sn\s+\S+/ sn SCRUBBED/gix;
+    $line =~ s/(crypto \s+ isakmp \s+ key) \s+ \S+/$1 SCRUBBED/gix;
+    
+
     return $line;
 }
 
