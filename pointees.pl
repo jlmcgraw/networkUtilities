@@ -249,7 +249,14 @@
     1 => qr/(?<unique_id>
                         ^ \s*
                         router \s+
-                        (?<pointed_at> (?:ospf | eigrp | bgp | isis | rip) \s+ $valid_cisco_name)
+                        (?<pointed_at> (?:ospf | eigrp | bgp  ) \s+ $valid_cisco_name)
+            )
+            (\s+|$)
+            /ixsm,
+    2 => qr/(?<unique_id>
+                        ^ \s*
+                        router \s+
+                        (?<pointed_at> (?: isis | rip) )
             )
             (\s+|$)
             /ixsm,
