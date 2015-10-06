@@ -551,3 +551,28 @@
             /ixsm,
 
     },
+    'crypto_keyring' => {
+
+    #BUG TODO: Get ID's with spaces working right and consolidate these classes
+    1 => qr/(?<unique_id>
+                        ^ \s*
+                        crypto \s+
+                        keyring \s+
+                        (?<pointed_at> $valid_cisco_name)
+            )
+            /ixsm,
+
+    },
+    'isakmp_profile' => {
+
+    #BUG TODO: Get ID's with spaces working right and consolidate these classes
+    1 => qr/(?<unique_id>
+                        ^ \s*
+                        crypto \s+
+                        isakmp \s+
+                        profile \s+
+                        (?<pointed_at> $valid_cisco_name)
+            )
+            /ixsm,
+
+    },

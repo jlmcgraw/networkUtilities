@@ -297,12 +297,11 @@
     #             /ixsm,
     },
     'track' => {
-    1 => qr/^ \s*
-                    (?: standby | vrrp ) \s+
-                    \d+ \s+
-                    track \s+
-                    (?<points_to> $list_of_pointees_ref->{"track"} )
+    1 => qr/    \s+ 
+                track \s+
+                (?<points_to> $list_of_pointees_ref->{"track"} )
         /isxm,
+    
     },
     'vrf' => {
     1 => qr/^ \s*
@@ -366,6 +365,10 @@
         schedule \s+
         (?<points_to> (?: $list_of_pointees_ref->{"ip_sla"}) )
         /ixsm,
+#     2 => qr/ ip \s+
+#         sla \s+
+#         (?<points_to> (?: $list_of_pointees_ref->{"ip_sla"}) )
+#         /ixsm,
     },
     'class' => {
 
@@ -652,5 +655,18 @@
             match \s+
             protocol \s+
             (?<points_to> (?: $list_of_pointees_ref->{"ip_port_map"}) )
+            /ixsm,
+    },
+    'crypto_keyring' => {
+    1 => qr/ ^ \s*
+            keyring \s+
+            (?<points_to> (?: $list_of_pointees_ref->{"crypto_keyring"}) )
+            /ixsm,
+    },
+        'isakmp_profile' => {
+    1 => qr/ ^ \s*
+            set \s+
+            isakmp-profile \s+
+            (?<points_to> (?: $list_of_pointees_ref->{"isakmp_profile"}) )
             /ixsm,
     },

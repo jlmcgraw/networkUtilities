@@ -134,7 +134,7 @@ sub main {
     my $overall_hash_ref;
 
     #Where will we store the host_info_hash
-    my $host_info_storefile = 'host_info_hash.stored';
+    my $host_info_storefile = "$Bin" . 'host_info_hash.stored';
 
     #Loop through every file provided on command line
     foreach my $filename (@ARGV) {
@@ -176,7 +176,7 @@ sub main {
     # %overall_hash
 
     #Dump the hash to a human-readable file
-    dump_to_file( 'host_info_hash.txt', $overall_hash_ref );
+    dump_to_file( "$Bin" . 'host_info_hash.txt', $overall_hash_ref );
 
     return (0);
 
