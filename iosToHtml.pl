@@ -2,10 +2,10 @@
 # Copyright (C) 2015  Jesse McGraw (jlmcgraw@gmail.com)
 #
 # Convert a Cisco confuration file (IOS, NXOS, PIX/ASA, ACE) to an HTML
-# representation that creates
-# links between commands that use lists and those lists, hopefully making it easier
-# to follow their logic (eg QoS, routing policies, voice setups etc etc)
-
+# representation that creates links between commands that use lists and those 
+# lists, hopefully making it easier to follow their logic (eg QoS, routing 
+# policies, voice setups etc etc)
+#
 #-------------------------------------------------------------------------------
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -32,7 +32,7 @@
 #       Add per-match callbacks
 #       eg: channel-group 20 -> Etherchannel20
 #
-#   Hightlight missing pointees in red?
+#   Highlight missing pointees in red?
 #
 #   Yes, I'm reading through the file twice.  I haven't reached the point
 #       of really trying to optimize anything
@@ -47,7 +47,7 @@
 #       3) Groups of #1 or #2
 
 #BUGS
-#   wrong link location (first match) when pointed_to occurs twice in string
+#   wrong link location (finds first match) when pointed_to occurs twice in string
 #       eg: standby 1 track 1 decrement 10
 #       Would be fixed by having identifiers with spaces in them
 #       eg "track 1" instead of "1"
@@ -74,32 +74,26 @@ use Config;
 
 use Data::Dumper;
 
-# # #Look into using this so users don't need to install modules
+#Look into using this so users don't need to install modules
 use lib "$FindBin::Bin/local/lib/perl5";
 
-#Additional modules
+#Non-core additional modules
 use Modern::Perl '2014';
 use Regexp::Common;
 use NetAddr::IP;
 use Number::Bytes::Human qw(format_bytes);
 use Number::Format qw(:subs :vars);
 use Params::Validate qw(:all);
-
-#Smart_Comments=0 perl my_script.pl
-# to run without smart comments, and
-#Smart_Comments=1 perl my_script.pl
 use Smart::Comments -ENV;
 use Sys::CpuAffinity;
-
 # use Memoize;
 use Regexp::Assemble;
+use Hash::Merge qw(merge);
 
-  
-	
+#Get the current number of CPUs
 our $num_cpus = Sys::CpuAffinity::getNumCpus();
+say "$num_cpus processors available";
 
-# say "$num_cpus processors available";
-#
 # The sort routine for Data::Dumper
 $Data::Dumper::Sortkeys = sub {
 
@@ -222,28 +216,87 @@ sub main {
         #Let's recreate this every time
         #         #This hash must be pre-created by create_host_info_hashes.pl
         #         if ( !-e $Bin . 'host_info_hash.stored' ) {
-        say "Creating host_info_hash";
+        say "Gather info for external linking";
 
-        #Pass the unglobbed command line under Windows so command line isn't too long
-        my $status;
+#         #Pass the unglobbed command line under Windows so command line isn't too long
+#         my $status;
+# 
+#         if ( $Config{archname} =~ m/win/ix ) {
+#             $status = system( $Bin
+#                     . "create_host_info_hashes.pl @ARGV_unmodified" );
+#         }
+#         else {
+#             $status = system( $Bin . 'create_host_info_hashes.pl',
+#                 map {"$_"} @ARGV );
+#         }
+# 
+#         if ( ( $status >>= 8 ) != 0 ) {
+#             die "Failed to run " . $Bin . "create_host_info_hashes.pl $!";
+#         }
+# 
+#         #         }
+#         say "Loading host_info_hash";
+#         $host_info_ref = retrieve( "$Bin" . 'host_info_hash.stored' )
+#             or die "Unable to open host_info_hash";
+        #load regexes for the lists that are referred to ("pointees")
+            my %pointees = do $Bin . 'external_pointees.pl';
 
-        if ( $Config{archname} =~ m/win/ix ) {
-            $status = system( $Bin
-                    . "create_host_info_hashes.pl @ARGV_unmodified" );
-        }
-        else {
-            $status = system( $Bin . 'create_host_info_hashes.pl',
-                map {"$_"} @ARGV );
-        }
+            #For collecting overall info
+            my $overall_hash_ref;
 
-        if ( ( $status >>= 8 ) != 0 ) {
-            die "Failed to run " . $Bin . "create_host_info_hashes.pl $!";
-        }
+            
 
-        #         }
-        say "Loading host_info_hash";
-        $host_info_ref = retrieve( "$Bin" . 'host_info_hash.stored' )
-            or die "Unable to open host_info_hash";
+            #Loop through every file provided on command line
+            foreach my $filename (@ARGV) {
+
+                #reset these for each file
+                my %foundPointees = ();
+                my %pointeeSeen   = ();
+
+                #Open the input and output files
+                open my $filehandle, '<', $filename or die $!;
+
+                #Read in the whole file
+                my @array_of_lines = <$filehandle>
+                    or die $!;    # Reads all lines into array
+
+                close $filehandle;
+
+                #Progress indicator
+                say $filename;
+
+                #Find all pointees in this file
+                my $found_pointees_ref
+                    = external_linking_find_pointees ( \@array_of_lines, \%pointees, $filename );
+
+                #Calculate subnets etc for this host's IP addresses
+                calculate_subnets( $found_pointees_ref, $filename );
+
+                #Merge this new hash of hashes into our overall hash
+                $overall_hash_ref = merge( $found_pointees_ref, $overall_hash_ref );
+
+            }
+
+#             #Where will we store the host_info_hash
+#             my $host_info_storefile = "$Bin" . 'host_info_hash.stored';
+            
+#             #Save the hash back to disk
+#             store( $overall_hash_ref, $host_info_storefile )
+#                 || die "can't store to $host_info_storefile\n";
+
+            #To read it in:
+            #$host_info_hash_ref = retrieve($host_info_storefile);
+            # %overall_hash
+
+#             #Dump the hash to a human-readable file
+#             dump_to_file( "$Bin" . 'host_info_hash.txt', $overall_hash_ref );
+
+            #A reference to the hash of host information
+            $host_info_ref = $overall_hash_ref;
+#             print Dumper $host_info_ref;
+#             exit;
+#             return (0);
+
     }
 
     # A new empty queue
@@ -270,7 +323,7 @@ sub main {
 
     # Maximum number of worker threads
     # BUG TODO Adjust this dynamically based on number of CPUs
-    my $thread_limit = 3;
+    # my $thread_limit = 3;
 
     if ($dont_use_threads) {
         say "Not using threads";
@@ -281,7 +334,7 @@ sub main {
         }
     }
     else {
-        #Create $thread_limit worker threads calling "config_to_html"
+        #Create $main::num_cpus worker threads calling "config_to_html"
         say "Using $main::num_cpus threads";
         my @thr = map {
             threads->create(
@@ -331,6 +384,8 @@ sub usage {
     say "";
     say "       -s Do a simple scrub of sensitive info";
     say "";
+	say "To run with smart comments enabled:";
+	say "	Smart_Comments=1 perl $0";
     exit 1;
 }
 
@@ -1204,4 +1259,118 @@ sub add_pointee_links_to_line {
         }
     }
     return $line;
+}
+
+sub external_linking_find_pointees {
+
+    #Construct a hash of the types of pointees we've seen in this file
+    my ( $array_of_lines_ref, $pointee_regex_ref, $filename ) = validate_pos(
+        @_,
+        { type => ARRAYREF },
+        { type => HASHREF },
+        { type => SCALAR },
+    );
+
+    my %foundPointees = ();
+
+    #Keep track of the last interface name we saw
+    my $current_interface = "unknown";
+
+    foreach my $line (@$array_of_lines_ref) {
+        chomp $line;
+
+        #Remove linefeeds
+        $line =~ s/\R//gx;
+
+        #Update the last seen interface name if we see a new one
+        $line
+            =~ /^ \s* interface \s+ (?<current_interface> .*?) (?: \s | $) /ixsm;
+        $current_interface = $+{current_interface} if $+{current_interface};
+
+        #         $current_interface //= "unknown";
+
+        #Match it against our hash of pointees regexes
+        foreach my $pointeeType ( sort keys %{$pointee_regex_ref} ) {
+            foreach my $pointeeKey2 (
+                keys %{ $pointee_regex_ref->{"$pointeeType"} } )
+            {
+                if ( $line
+                    =~ $pointee_regex_ref->{"$pointeeType"}{"$pointeeKey2"} )
+                {
+                    my $unique_id  = $+{unique_id};
+                    my $pointed_at = $+{pointed_at};
+
+                    #Add the current interface name for ip_addresses
+                    if ( $pointeeType eq 'ip_address' ) {
+                        $foundPointees{$filename}{$pointeeType}{$unique_id}
+                            = "$pointed_at,$current_interface";
+                    }
+                    else {
+                        $foundPointees{$filename}{$pointeeType}{$unique_id}
+                            = "$pointed_at";
+                    }
+
+                }
+            }
+        }
+    }
+    return \%foundPointees;
+}
+
+sub calculate_subnets {
+
+    #Do subnet calculations on each IP address we found
+    #Add these as new hashes to use in external lookups in iosToHtml
+
+    my ( $pointees_seen_ref, $filename )
+        = validate_pos( @_, { type => HASHREF }, { type => SCALAR }, );
+
+    #For every IP address we found
+    foreach my $ip_address_key (
+        sort keys %{ $pointees_seen_ref->{$filename}{'ip_address'} } )
+    {
+
+        #Split out IP address and interface components
+        my ( $ip_and_netmask, $interface )
+            = split( ',',
+            $pointees_seen_ref->{$filename}{'ip_address'}{$ip_address_key} );
+
+        #HACK In RIOS, there's a space between IP address and CIDR
+        #Remove that without hopefully causing other issues
+        $ip_and_netmask =~ s|\s/|/|;
+
+        #Try to create a new NetAddr::IP object from this key
+        my $subnet = NetAddr::IP->new($ip_and_netmask);
+
+        #If it worked...
+        if ($subnet) {
+
+            my $ip_addr        = $subnet->addr;
+            my $network        = $subnet->network;
+            my $mask           = $subnet->mask;
+            my $masklen        = $subnet->masklen;
+            my $ip_addr_bigint = $subnet->bigint();
+            my $isRfc1918      = $subnet->is_rfc1918();
+            my $range          = $subnet->range();
+
+            #All info by filename
+            $pointees_seen_ref->{$filename}{"subnet"}{$network} = 1;
+
+            #All info by IP address pointing to file name
+            $pointees_seen_ref->{'ip_address'}{$ip_addr}
+                = "$filename,$interface";
+
+            #All info by subnet pointing to file name
+            $pointees_seen_ref->{'subnet'}{$network}{$filename} = $interface;
+
+            #Smart comment
+            # ### $pointees_seen_ref
+
+        }
+        else {
+            say "Couldn't create subnet for $ip_and_netmask";
+        }
+    }
+
+    return 1;
 }

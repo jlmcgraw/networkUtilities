@@ -418,10 +418,10 @@
 
     },
     'routing_process' => {
-    1 => qr/^ \s*
-            router \s+
-            (?<points_to> (?: $list_of_pointees_ref->{"routing_process"}) )
-            /ixsm,
+#     1 => qr/^ \s*
+#             router \s+
+#             (?<points_to> (?: $list_of_pointees_ref->{"routing_process"}) )
+#             /ixsm,
     2 => qr/^ \s*
             ip \s+
             router \s+
