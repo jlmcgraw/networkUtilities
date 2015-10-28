@@ -84,6 +84,7 @@ foreach my $file (@ARGV) {
     #Pull out the various filename components of the input file from the command line
     my ( $filename, $dir, $ext ) = fileparse( $file, qr/\.[^.]*/x );
 
+    #Read in the whole file
     {
         local $/;
         open my $fh, '<', $file or die "can't open $file: $!";
@@ -92,22 +93,37 @@ foreach my $file (@ARGV) {
     }
 
     #Try to find a hostname
-    my ($name) = $file_text =~ m/$hostname_regex/ixsm;
+    my ($hostname_in_file) = $file_text =~ m/$hostname_regex/ixsm;
 
-    if ($name) {
-        $name = lc $name;
+    #Did we find a hostname?
+    if ($hostname_in_file) {
+
+        #Lowercase it
+        $hostname_in_file = lc $hostname_in_file;
+
+        #Sanitize it
+        $hostname_in_file =~ s/[ \W ]/_/ixg;
+
+        #Add on cfg extension
+        $hostname_in_file .= '.cfg';
+
+    }
+    else {
+        #Make a sanitized version of the current file's name
+        #Replace non-word characters with underscore
+        $filename =~ s/[ \W ]/_/ixg;
+#         $ext =~ s/[ \W ]/_/ixg;
+        
+        my $sanitized_name = $filename . $ext;
+        #Set new name to sanitized version of existing file name
+
+        $hostname_in_file //= lc $sanitized_name;
     }
 
+    my $name = $hostname_in_file;
+
     #What did it match
-    #say "Matched: $name";
-
-    #Make a sanitized version of the current file's name
-    my $sanitized_name = $filename . $ext;
-    $sanitized_name =~ s/[ \W ]/_/ixg;
-
-    #If we didn't match anything use the sanitized version
-    $name //= lc $sanitized_name;
-    $name .= '.cfg';
+    #say "Matched: $hostname_in_file";
 
     #What are we doing
     say "$file -> $dir$name";
