@@ -112,9 +112,11 @@ foreach my $file (@ARGV) {
         #Make a sanitized version of the current file's name
         #Replace non-word characters with underscore
         $filename =~ s/[ \W ]/_/ixg;
-#         $ext =~ s/[ \W ]/_/ixg;
-        
+
+        #         $ext =~ s/[ \W ]/_/ixg;
+
         my $sanitized_name = $filename . $ext;
+
         #Set new name to sanitized version of existing file name
 
         $hostname_in_file //= lc $sanitized_name;

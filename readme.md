@@ -12,14 +12,15 @@
 ##iosToHtml.pl
 	Convert an IOS/NXOS/ACE/ASA config file into very basic HTML, creating links 
 	between commands referencing lists and that list (e.g. access lists, 
-	route maps, prefix lists, service-policies etc etc).  
+	route maps, prefix lists, service-policies etc etc).
+	
+	Will also link between files for various things (route next hop, interface
+	subnets etc) for all files in the set you're analyzing
 
-	Very useful for trying to follow complex configurations
-
-	It's best to start with all of your configuration files in one directory
+	Very useful for trying to follow the flow of complex configurations
 
 	e.g.:
-		./iosToHtml.pl -e -h ./sample_configs/*.cfg
+		./iosToHtml.pl -e -h -f -s ./sample_configs/*.cfg
 
 ##annotate_hosts_and_networks_in_file.pl
 	Parse a text file (router config, ACL etc etc) containing host and/or 
@@ -27,8 +28,8 @@
 	mentioned in it.  Create simple HTML output with in-line color coded 
 	anotations for everything found (status, host count etc)
 
-	Can use a list of known BGP networks (see bgp_asn_path_via_snmp.pl) to test
-	whether a network is specifically known 
+	Can also use a list of known BGP networks (see bgp_asn_path_via_snmp.pl to create it) 
+	to test whether a network is specifically known 
 
 ##create_host_info_hashes.pl
 	Create a hash used by iosToHtml.pl to allow linking between configurations

@@ -2,8 +2,8 @@
 # Copyright (C) 2015  Jesse McGraw (jlmcgraw@gmail.com)
 #
 # Convert a Cisco confuration file (IOS, NXOS, PIX/ASA, ACE) to an HTML
-# representation that creates links between commands that use lists and those 
-# lists, hopefully making it easier to follow their logic (eg QoS, routing 
+# representation that creates links between commands that use lists and those
+# lists, hopefully making it easier to follow their logic (eg QoS, routing
 # policies, voice setups etc etc)
 #
 #-------------------------------------------------------------------------------
@@ -71,7 +71,6 @@ use Getopt::Std;
 use FindBin '$Bin';
 use vars qw/ %opt /;
 use Config;
-
 use Data::Dumper;
 
 #Look into using this so users don't need to install modules
@@ -86,13 +85,10 @@ use Number::Format qw(:subs :vars);
 use Params::Validate qw(:all);
 use Smart::Comments -ENV;
 use Sys::CpuAffinity;
+
 # use Memoize;
 use Regexp::Assemble;
 use Hash::Merge qw(merge);
-
-#Get the current number of CPUs
-our $num_cpus = Sys::CpuAffinity::getNumCpus();
-say "$num_cpus processors available";
 
 # The sort routine for Data::Dumper
 $Data::Dumper::Sortkeys = sub {
@@ -212,91 +208,7 @@ sub main {
 
     #Try to retrieve host_info_hash if user wants to try linking between files
     if ($should_link_externally) {
-
-        #Let's recreate this every time
-        #         #This hash must be pre-created by create_host_info_hashes.pl
-        #         if ( !-e $Bin . 'host_info_hash.stored' ) {
-        say "Gather info for external linking";
-
-#         #Pass the unglobbed command line under Windows so command line isn't too long
-#         my $status;
-# 
-#         if ( $Config{archname} =~ m/win/ix ) {
-#             $status = system( $Bin
-#                     . "create_host_info_hashes.pl @ARGV_unmodified" );
-#         }
-#         else {
-#             $status = system( $Bin . 'create_host_info_hashes.pl',
-#                 map {"$_"} @ARGV );
-#         }
-# 
-#         if ( ( $status >>= 8 ) != 0 ) {
-#             die "Failed to run " . $Bin . "create_host_info_hashes.pl $!";
-#         }
-# 
-#         #         }
-#         say "Loading host_info_hash";
-#         $host_info_ref = retrieve( "$Bin" . 'host_info_hash.stored' )
-#             or die "Unable to open host_info_hash";
-        #load regexes for the lists that are referred to ("pointees")
-            my %pointees = do $Bin . 'external_pointees.pl';
-
-            #For collecting overall info
-            my $overall_hash_ref;
-
-            
-
-            #Loop through every file provided on command line
-            foreach my $filename (@ARGV) {
-
-                #reset these for each file
-                my %foundPointees = ();
-                my %pointeeSeen   = ();
-
-                #Open the input and output files
-                open my $filehandle, '<', $filename or die $!;
-
-                #Read in the whole file
-                my @array_of_lines = <$filehandle>
-                    or die $!;    # Reads all lines into array
-
-                close $filehandle;
-
-                #Progress indicator
-                say $filename;
-
-                #Find all pointees in this file
-                my $found_pointees_ref
-                    = external_linking_find_pointees ( \@array_of_lines, \%pointees, $filename );
-
-                #Calculate subnets etc for this host's IP addresses
-                calculate_subnets( $found_pointees_ref, $filename );
-
-                #Merge this new hash of hashes into our overall hash
-                $overall_hash_ref = merge( $found_pointees_ref, $overall_hash_ref );
-
-            }
-
-#             #Where will we store the host_info_hash
-#             my $host_info_storefile = "$Bin" . 'host_info_hash.stored';
-            
-#             #Save the hash back to disk
-#             store( $overall_hash_ref, $host_info_storefile )
-#                 || die "can't store to $host_info_storefile\n";
-
-            #To read it in:
-            #$host_info_hash_ref = retrieve($host_info_storefile);
-            # %overall_hash
-
-#             #Dump the hash to a human-readable file
-#             dump_to_file( "$Bin" . 'host_info_hash.txt', $overall_hash_ref );
-
-            #A reference to the hash of host information
-            $host_info_ref = $overall_hash_ref;
-#             print Dumper $host_info_ref;
-#             exit;
-#             return (0);
-
+        $host_info_ref = create_external_host_info_hash();
     }
 
     # A new empty queue
@@ -334,8 +246,13 @@ sub main {
         }
     }
     else {
+        #Get the current number of CPUs
+        my $num_cpus = Sys::CpuAffinity::getNumCpus();
+
+        #say "$num_cpus processors available";
+
         #Create $main::num_cpus worker threads calling "config_to_html"
-        say "Using $main::num_cpus threads";
+        say "Using $num_cpus threads";
         my @thr = map {
             threads->create(
                 sub {
@@ -346,7 +263,7 @@ sub main {
                     }
                 }
             );
-        } 1 .. $main::num_cpus;
+        } 1 .. $num_cpus;
 
         # terminate all of the threads in @thr
         $_->join() for @thr;
@@ -384,39 +301,66 @@ sub usage {
     say "";
     say "       -s Do a simple scrub of sensitive info";
     say "";
-	say "To run with smart comments enabled:";
-	say "	Smart_Comments=1 perl $0";
+    say "To run with smart comments enabled:";
+    say "	Smart_Comments=1 perl $0";
     exit 1;
 }
 
 sub construct_lists_of_pointees {
 
-    #Make a hash of lists, for each type of pointee, of what we've seen defined to use
-    #as part of the respective pointer regexes
+    #Make a hash of lists, for each type of pointee, of what we've seen defined
+    #in this file so we can use them as part of the respective pointer regexes
 
     my ($pointees_seen_ref)
         = validate_pos( @_, { type => HASHREF }, );
 
     my %pointees_list = ();
 
-
-    #Go through each type and save all of the pointees we've seen defined in this file
+    #Go through each type and save all of the pointees of that type that
+    # we've seen defined in this file
     foreach my $pointeeType ( sort keys %{$pointees_seen_ref} ) {
-        my $ra = Regexp::Assemble->new(flags=> '-x');
+
+        #         my $ra = Regexp::Assemble->new( flags => '-x' );
         my @list_of_pointees;
-        my @raw_list_of_pointees;
+
+        #         my @raw_list_of_pointees;
 
         foreach my $rule_number (
             sort keys %{ $pointees_seen_ref->{"$pointeeType"} } )
         {
-           
 
-           #Add this label to our list for Regexp::Assemble
-            push( @raw_list_of_pointees, $pointees_seen_ref->{"$pointeeType"}{"$rule_number"} );
-                    
+            #             #Add this label to our list for Regexp::Assemble
+            #             push( @raw_list_of_pointees,
+            #                 $pointees_seen_ref->{"$pointeeType"}{"$rule_number"} );
+
+            #             #Add this label to our list
+            #             #This version doesn't handle whitespace in pointees
+            #             push( @list_of_pointees,
+            #                       '(?: '
+            #                     . $pointees_seen_ref->{"$pointeeType"}{"$rule_number"}
+            #                     . ')' );
+
+            
+            #             %HoF = (    # Compose a hash of functions
+#                 exit => sub {exit},
+#                 help => \&show_help,
+#                 watch => sub { $watch = 1 },
+#                 mail => sub { mail_msg($msg) },
+#                 edit => sub { $edited++; editmsg($msg); },
+#                 delete => \&confirm_kill,
+#             );
+# 
+#             if ( $HoF{ lc $cmd } ) 
+#                 { $HoF{ lc $cmd }->(); }    # Call function
+#             else 
+#                 { warn "Unknown command: `$cmd'; Try `help' next time\n" }
+
+            #Testing pointees with spaces in them
+            #BUG TODO REMOVE If issues with finding pointees and uncomment above method
+            #Please notice the use of ?-x to disable ignoring whitespace
             #Add this label to our list
             push( @list_of_pointees,
-                      '(?: '
+                      '(?-x:'
                     . $pointees_seen_ref->{"$pointeeType"}{"$rule_number"}
                     . ')' );
 
@@ -428,19 +372,20 @@ sub construct_lists_of_pointees {
         @list_of_pointees
             = sort { length $b <=> length $a } @list_of_pointees;
 
-#         #Create a minimal regex from the whole list of pointees
-#         map { $ra->add( "$_" ) } @raw_list_of_pointees;
-#         $pointees_list{$pointeeType} = $ra->re;
-        
         #Make a list of those names joined by |
         #This list is what will be used in the pointer regex (see pointers.pl)
         $pointees_list{$pointeeType} = join( ' | ', @list_of_pointees );
 
-        
+        #         @raw_list_of_pointees
+        #         = sort { length $b <=> length $a } @raw_list_of_pointees;
+        #
+        #         #Create a minimal regex from the whole list of pointees
+        #         map { $ra->add( "$_" ) } @raw_list_of_pointees;
+        #         $pointees_list{$pointeeType} = $ra->re;
 
-#          say $ra->re;s
+        #         say $ra->re;
     }
-   
+
     return \%pointees_list;
 }
 
@@ -519,12 +464,15 @@ sub config_to_html {
 
     #Find all pointees (things that are pointed TO) in this particular file
     my $found_pointees_ref = find_pointees( \@array_of_lines, $pointees_ref );
+    ### <file>[<line>]
     ### found_pointees_ref
 
-    #Construct "OR" lists (eg a|b|c|d) of the found pointees of each type for using in the POINTER regexes
-    #to make them more explicit for this particular file
+    #Construct "OR" lists (eg a|b|c|d) of the found pointees of each type for
+    # using in the POINTER regexes to make them more explicit for this
+    # particular file
     our $list_of_pointees_ref
         = construct_lists_of_pointees($found_pointees_ref);
+    ### <file>[<line>]
     ### $list_of_pointees_ref
 
     #Load regexes for commands that refer to other lists of some sort
@@ -535,6 +483,7 @@ sub config_to_html {
     #Delete pointers that have no possible pointees, hopefully speeding things
     #up
     delete_pointers_with_no_pointees( \%pointers, $list_of_pointees_ref );
+    ### <file>[<line>]
     ### %pointers
 
     # Get the thread id. Allows each thread to be identified.
@@ -547,16 +496,14 @@ sub config_to_html {
 
     #If we didn't find a name set a default
     $hostname //= 'no name';
-    
-#     memoize('reformat_numbers');
-#     memoize('add_pointer_links_to_line');
-#     memoize('add_pointee_links_to_line');
-#     memoize('process_external_pointers');
-#     memoize('find_subnet_peers');
-#     memoize('extra_formatting');
-    
-    
-    
+
+    #     memoize('reformat_numbers');
+    #     memoize('add_pointer_links_to_line');
+    #     memoize('add_pointee_links_to_line');
+    #     memoize('process_external_pointers');
+    #     memoize('find_subnet_peers');
+    #     memoize('extra_formatting');
+
     #Process each line, one at a time, of this file
     foreach my $line (@array_of_lines) {
 
@@ -565,7 +512,7 @@ sub config_to_html {
 
         #Remove trailing whitespace
         $line =~ s/\s+$//gx;
-        
+
         #Scrub passwords etc. if user requested
         $line = scrub($line) if $should_scrub;
 
@@ -617,6 +564,7 @@ sub config_to_html {
     output_as_html( $filename, \@html_formatted_text,
         $hostname, $floating_menu_text, $config_as_html_ref );
 
+    ### <file>[<line>]
     ### %foundPointers
     ### %pointee_seen_in_file
     return;
@@ -1101,7 +1049,6 @@ sub scrub {
     $line =~ s/$main::cert_line/SCRUBBED/gix;
     $line =~ s/\s+sn\s+\S+/ sn SCRUBBED/gix;
     $line =~ s/(crypto \s+ isakmp \s+ key) \s+ \S+/$1 SCRUBBED/gix;
-    
 
     return $line;
 }
@@ -1140,34 +1087,33 @@ sub add_pointer_links_to_line {
                 }
 
                 #Save what we found for debugging
-                $found_pointers_ref->{"$line|$pointerType|$rule_number|$points_to"}
+                $found_pointers_ref->{
+                    "$line|$pointerType|$rule_number|$points_to"}
                     = "Points_to: $points_to | pointerType: $pointerType | RuleNumber: $rule_number";
 
                 #Save this for helping us determine which pointees have pointers referring to them
                 $found_pointers_ref->{ "$pointerType" . '_' . "$points_to" }
                     = "$line";
 
-                #Points_to can be a list!
-                #See pointers->prefix_list->2 for an example
-                #Split it up and create a link for each element
+                my @fields;
 
-                #                     #Trying a hack here to work with identifiers that have spaces in them
-                #                     #Remove ?-x from pointers->interface->#11
-                #                     #Set pointees->interface->#2 back to $valid_cisco_name
-                #                     my @fields;
-                #
-                #                     if ($pointerType =~ /interface/ix) {
-                #                         push @fields, $points_to;
-                #                     }
-                #                     else {
-                #                         @fields = split( '\s+', $points_to );
-                #                     }
+                #Does this specific rule support space separated lists?
+                if ( $rule_number =~ /_list/ix ) {
 
-                my @fields = split( '\s+', $points_to );
+                    #Split it up by whitespace
+                    @fields = split( '\s+', $points_to );
 
+                }
+                else {
+                    #Else treat the whole thing as one pointer
+                    push @fields, $points_to;
+
+                }
+
+                #Now for each pointer we found...
                 foreach my $label (@fields) {
 
-                    #Construct the text of the link
+                    #Construct the text of a link
                     my $linkText
                         = '<a href="#'
                         . $pointerType . '_'
@@ -1176,12 +1122,12 @@ sub add_pointer_links_to_line {
 
                     #Insert the link back into the line
                     #Link point needs to be surrounded by whitespace or end of line
-                    $line =~ s/(\s+) $label (\s+|$)/$1$linkText$2/gx;
+                    #                     $line =~ s/(\s+) $label (\s+|$)/$1$linkText$2/gx;
 
-                    #                         #Notice the (?-x:$label)
-                    #                         #That's disabling ignoring spaces just for the $label part
-                    #                         #Handles identifiers with spaces in them
-                    #                         $line =~ s/(\s+) (?-x:$label) (\s+|$)/$1$linkText$2/gx;
+                    #Notice the (?-x:$label)
+                    #That's disabling ignoring spaces just for the $label part
+                    #Handles identifiers with spaces in them
+                    $line =~ s/(\s+) (?-x:$label) (\s+|$)/$1$linkText$2/gx;
                 }
 
             }
@@ -1364,6 +1310,7 @@ sub calculate_subnets {
             $pointees_seen_ref->{'subnet'}{$network}{$filename} = $interface;
 
             #Smart comment
+            # ### <file>[<line>]
             # ### $pointees_seen_ref
 
         }
@@ -1373,4 +1320,93 @@ sub calculate_subnets {
     }
 
     return 1;
+}
+
+sub create_external_host_info_hash {
+
+    #Let's recreate this every time
+    #         #This hash must be pre-created by create_host_info_hashes.pl
+    #         if ( !-e $Bin . 'host_info_hash.stored' ) {
+    say "Gather info for external linking";
+
+    #         #Pass the unglobbed command line under Windows so command line isn't too long
+    #         my $status;
+    #
+    #         if ( $Config{archname} =~ m/win/ix ) {
+    #             $status = system( $Bin
+    #                     . "create_host_info_hashes.pl @ARGV_unmodified" );
+    #         }
+    #         else {
+    #             $status = system( $Bin . 'create_host_info_hashes.pl',
+    #                 map {"$_"} @ARGV );
+    #         }
+    #
+    #         if ( ( $status >>= 8 ) != 0 ) {
+    #             die "Failed to run " . $Bin . "create_host_info_hashes.pl $!";
+    #         }
+    #
+    #         #         }
+    #         say "Loading host_info_hash";
+    #         $host_info_ref = retrieve( "$Bin" . 'host_info_hash.stored' )
+    #             or die "Unable to open host_info_hash";
+    #load regexes for the lists that are referred to ("pointees")
+    my %pointees = do $Bin . 'external_pointees.pl';
+
+    #For collecting overall info
+    my $overall_hash_ref;
+
+    #Loop through every file provided on command line
+    foreach my $filename (@ARGV) {
+
+        #reset these for each file
+        my %foundPointees = ();
+        my %pointeeSeen   = ();
+
+        #Open the input and output files
+        open my $filehandle, '<', $filename or die $!;
+
+        #Read in the whole file
+        my @array_of_lines = <$filehandle>
+            or die $!;    # Reads all lines into array
+
+        close $filehandle;
+
+        #Progress indicator
+        say $filename;
+
+        #Find all pointees in this file
+        my $found_pointees_ref
+            = external_linking_find_pointees( \@array_of_lines, \%pointees,
+            $filename );
+
+        #Calculate subnets etc for this host's IP addresses
+        calculate_subnets( $found_pointees_ref, $filename );
+
+        #Merge this new hash of hashes into our overall hash
+        $overall_hash_ref = merge( $found_pointees_ref, $overall_hash_ref );
+
+    }
+
+    #             #Where will we store the host_info_hash
+    #             my $host_info_storefile = "$Bin" . 'host_info_hash.stored';
+
+    #             #Save the hash back to disk
+    #             store( $overall_hash_ref, $host_info_storefile )
+    #                 || die "can't store to $host_info_storefile\n";
+
+    #To read it in:
+    #$host_info_hash_ref = retrieve($host_info_storefile);
+    # %overall_hash
+
+    #             #Dump the hash to a human-readable file
+    #             dump_to_file( "$Bin" . 'host_info_hash.txt', $overall_hash_ref );
+
+    #A reference to the hash of host information
+    #         $host_info_ref = $overall_hash_ref;
+    return $overall_hash_ref;
+
+    #             print Dumper $host_info_ref;
+    #             exit;
+    #             return (0);
+
 }

@@ -78,4 +78,16 @@
             (\d+) \s+
             (\d+) \s+
             (\d+)
+            /ixsm, 12 => qr/^ \s*
+            timeout \s+
+            (\d+)
+            \s*  $
+            /ixsm,
+
+    13 => qr/^ \s*
+            set \s+
+            timeout \s+
+            inactivity \s+
+            (\d+)
+            \s*  $
             /ixsm,

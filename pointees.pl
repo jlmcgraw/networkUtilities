@@ -20,7 +20,7 @@
                                 )
                     )
                     /ixsm,
-    2 => qr/(?<unique_id> 
+    2 => qr/(?<unique_id>
                                 ^ \s*
                                 access-list \s+
                                 (?<pointed_at>
@@ -49,50 +49,61 @@
     /ixsm,
     },
     'policy_map' => {
-    1 => qr/ (?<unique_id> 
-                                ^ \s* 
-                                policy-map \s+ 
-                                (?<pointed_at> 
-                                    (?: $valid_cisco_name) 
-                                ) 
+    1 => qr/ (?<unique_id>
+                                ^ \s*
+                                policy-map \s+
+                                (?<pointed_at>
+                                    (?: $valid_cisco_name)
+                                )
                     )
                     \s* $
                     /ixsm,
 
     #NXOS & ASA
-    2 => qr/ (?<unique_id> 
-                                ^ \s* 
+    2 => qr/ (?<unique_id>
+                                ^ \s*
                                 policy-map \s+
                                 type \s+
-                                (?: queuing | qos | inspect | control-plane | management | network-qos) \s+
-                                (?: first-match \s+)? 
-                                (?<pointed_at> 
-                                    (?: $valid_cisco_name) 
-                                ) 
+                                (?: queuing | qos | inspect | control-plane | management | network-qos | loadbalance) \s+
+                                (?: (?: http|generic) \s+)?
+                                (?: first-match \s+)?
+                                (?<pointed_at>
+                                    (?: $valid_cisco_name)
+                                )
+                    )
+                    \s* $
+                    /ixsm,
+    3 => qr/ (?<unique_id>
+                                ^ \s*
+                                policy-map \s+
+                                multi-match \s+
+                                (?<pointed_at>
+                                    (?: $valid_cisco_name)
+                                )
                     )
                     \s* $
                     /ixsm,
     },
     'route_map' => {
-    1 => qr/ (?<unique_id> 
+    1 => qr/ (?<unique_id>
                                 ^ \s*
-                                route-map \s+ 
-                                (?<pointed_at> 
-                                    (?: $valid_cisco_name) 
+                                route-map \s+
+                                (?<pointed_at>
+                                    (?: $valid_cisco_name)
                                 )
                                 (?: deny | permit) \s+
                                 \d+
-                                \s* 
+                                \s*
                                 $
                     )
                     /ixsm,
 
     #NXOS
-    2 => qr/ (?<unique_id> 
+    2 => qr/ (?<unique_id>
                                 ^ \s*
                                 route-map \s+
-                                (?<pointed_at> 
-                                    (?: $valid_cisco_name) 
+                                (?<pointed_at>
+                                    (?: $valid_cisco_name)
                                 )
                                 )
                                 \s+
@@ -108,16 +119,16 @@
     1 =>
         qr/(?<unique_id> ^ \s* ip \s+ community-list \s+ (?:standard|extended) \s+ (?<pointed_at> $valid_cisco_name) )/ixsm,
     2 => qr/(?<unique_id> ^ \s*
-                        ip \s+ 
-                        extcommunity-list \s+ 
+                        ip \s+
+                        extcommunity-list \s+
                         (?:standard|extended) \s+
                         (?<pointed_at> $valid_cisco_name) )/ixsm,
     },
     'as_path_access_list' => {
     1 => qr/(?<unique_id> ^ \s*
                         ip \s+
-                        as-path \s+ 
-                        access-list \s 
+                        as-path \s+
+                        access-list \s
                         (?<pointed_at> $valid_cisco_name) )/ixsm,
 
     },
@@ -131,7 +142,7 @@
                         (?<pointed_at> $valid_cisco_name)
         )/ixsm,
 
-    2 => qr/(?<unique_id> ^ \s* 
+    2 => qr/(?<unique_id> ^ \s*
                             interface \s+
                             (?<pointed_at> $valid_cisco_name)
             )/ixsm,
@@ -146,8 +157,7 @@
     },
     'track' => {
     1 => qr/(?<unique_id>^ \s*
-                            track \s+
-                        (?<pointed_at> $valid_cisco_name )
+                        (?<pointed_at> track \s+ $valid_cisco_name )
             )/ixsm,
 
     },
@@ -183,7 +193,7 @@
     'key_chain' => {
     1 => qr/(?<unique_id>
                         ^ \s*
-                        key \s+ 
+                        key \s+
                         chain \s+
                         (?<pointed_at> $valid_cisco_name)
                     )
@@ -213,7 +223,7 @@
                     /ixsm,
 
     #NXOS
-    2 => qr/(?<unique_id> 
+    2 => qr/(?<unique_id>
                     ^ \s*
                     class-map \s+
                     type \s+
@@ -223,13 +233,22 @@
                     /ixsm,
 
     #ASA
-    4 => qr/(?<unique_id> 
+    4 => qr/(?<unique_id>
                     ^ \s*
                     class-map \s+
                     type \s+
                     (?: inspect | urlfilter ) \s+
                     (?: $valid_cisco_name \s+)?
                     (?: match-any | match-all) \s+
+                    (?<pointed_at> $valid_cisco_name) )
+                    /ixsm,
+    5 => qr/(?<unique_id>
+                    ^ \s*
+                    class-map \s+
+                    type \s+
+                    (?: http ) \s+
+                    (?: loadbalance ) \s+
+                    (?: (?: match-any | match-all) \s+)?
                     (?<pointed_at> $valid_cisco_name) )
                     /ixsm,
     },
@@ -301,13 +320,14 @@
             (\s+|$)
             /ixsm,
     },
-    
+
     'parameter_map' => {
+
     #ASA or ACE?
     1 => qr/(?<unique_id>
                         ^ \s*
                         parameter-map \s+
-                        type \s+ 
+                        type \s+
                         (?: (urlfpolicy \s+ local) | ( urlfpolicy \s+ trend) | urlf-glob  | protocol-info | regex) \s+
                         (?<pointed_at> $valid_cisco_name)
             )
@@ -374,6 +394,141 @@
                         (?<pointed_at> $valid_cisco_name )
             )
             $
+            /ixsm,
+    },
+    'ace_probe' => {
+    1 => qr/(?<unique_id>
+                        ^ \s*
+                        probe \s+
+                        (?:dns|ftp|pop|tcp|http|icmp|imap|https|rtsp|smtp|snmp|udp|vm) \s+
+                        (?<pointed_at> $valid_cisco_name )
+            )
+            $
+            /ixsm,
+    },
+    'ace_rserver' => {
+    1 => qr/(?<unique_id>
+                        ^ \s*
+                        rserver \s+
+                        (?:host|redirect) \s+
+                        (?<pointed_at> $valid_cisco_name )
+            )
+            $
+            /ixsm,
+    },
+    'ace_serverfarm' => {
+    1 => qr/(?<unique_id>
+                        ^ \s*
+                        serverfarm \s+
+                        (?: (?:host|redirect) \s+)?
+                        (?<pointed_at> $valid_cisco_name )
+            )
+            $
+            /ixsm,
+    },
+    'ace_crypto_chaingroup' => {
+    1 => qr/(?<unique_id>
+                        ^ \s*
+                        crypto \s+
+                        chaingroup \s+
+                        (?<pointed_at> $valid_cisco_name )
+            )
+            $
+            /ixsm,
+    },
+    'ace_ssl_proxy' => {
+    1 => qr/(?<unique_id>
+                        ^ \s*
+                        ssl-proxy \s+
+                        (?:service) \s+
+                        (?<pointed_at> $valid_cisco_name )
+            )
+            $
+            /ixsm,
+    },
+    'ace_parameter_map' => {
+    1 => qr/(?<unique_id>
+                        ^ \s*
+                        parameter-map \s+
+                        type \s+
+                        (?:ssl|http|connection|generic) \s+
+                        (?<pointed_at> $valid_cisco_name )
+            )
+            $
+            /ixsm,
+    },
+    'ace_sticky' => {
+    1 => qr/(?<unique_id>
+                        ^ \s*
+                        sticky \s+
+                        http-cookie \s+
+                        (?:$valid_cisco_name) \s+
+                        (?<pointed_at> $valid_cisco_name )
+            )
+            $
+            /ixsm,
+    2 => qr/(?<unique_id>
+                        ^ \s*
+                        sticky \s+
+                        ip-netmask \s+
+                        \d+ \. \d+ \. \d+ \. \d+ \s+
+                        address \s+
+                        source \s+
+                        (?<pointed_at> $valid_cisco_name )
+            )
+            $
+            /ixsm,
+    3 => qr/(?<unique_id>
+                        ^ \s*
+                        sticky \s+
+                        layer4-payload \s+
+                        (?<pointed_at> $valid_cisco_name )
+            )
+            $
+            /ixsm,
+
+    },
+
+    #   'ace_access_list' => {
+    #     1 => qr/(?<unique_id>
+    #                         ^ \s*
+    #                         access-list \s+
+    #                         (?<pointed_at> $valid_cisco_name ) \s+
+    #                         )
+    #                         line \s+
+    #                         \d+
+    #             /ixsm,
+    #   },
+    'ace_ft_peer' => {
+    1 => qr/(?<unique_id>
+                        ^ \s*
+                        ft \s+
+                        peer \s+
+                        (?<pointed_at> $valid_cisco_name )
+                        )
+                        $
+            /ixsm,
+    },
+
+    #     'ace_ft_group' => {
+    #     1 => qr/(?<unique_id>
+    #                         ^ \s*
+    #                         ft \s+
+    #                         group \s+
+    #                         (?<pointed_at> $valid_cisco_name )
+    #                         )
+    #                         $
+    #             /ixsm,
+    #   },
+    'ace_action_list' => {
+    1 => qr/(?<unique_id>
+                        ^ \s*
+                        action-list \s+
+                        type \s+
+                        (?:modify|optimization) \s+
+                        http \s+
+                        (?<pointed_at> $valid_cisco_name )
+                        )
             /ixsm,
     },
     'nxos_zoneset' => {

@@ -46,4 +46,10 @@
                 default-gateway \s+
                 (?<external_ipv4> $RE{net}{IPv4})
                 /ixsm,
+        7 => qr/^ \s*
+                peer \s+
+                ip \s+
+                address \s+
+                (?<external_ipv4> $RE{net}{IPv4})
+                /ixsm,
         },
