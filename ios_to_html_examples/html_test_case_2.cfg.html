@@ -96,7 +96,7 @@ ip ftp source-interface <a href="#interface_Loopback0">Loopback0</a>
 ip tftp source-interface <a href="#interface_Loopback0">Loopback0</a>
 ip ssh version 2
 !
-<br><span id="track_1" class="pointee">track <span class="pointed_at">1</span> ip route 0.0.0.0 0.0.0.0 reachability</span>
+<br><span id="track_track 1" class="pointee">track 1 ip route 0.0.0.0 0.0.0.0 reachability</span>
 !
 <br><span id="policy_map_NMC_MARKING" class="pointee">policy-map <span class="pointed_at">NMC_MARKING</span></span>
  class NMC_RP_TRAFFIC_DSCP48
@@ -272,16 +272,16 @@ ip ssh version 2
  duplex full
  speed 100
  <span class="deny">no cdp enable</span>
- standby 77 track <a href="#track_1">1</a> decrement 10
+ standby 77 <a href="#track_track 1">track 1</a> decrement 10
  service-policy output <a href="#policy_map_SHAPE">SHAPE</a>
 !
 <br><span id="routing_process_eigrp 100" class="">router eigrp 100</span>
  network 10.2.1.2 0.0.0.0
- redistribute bgp 65000 route-map <a href="#route_map_MATCH_DEFAULT">MATCH_DEFAULT</a>
+ redistribute <a href="#routing_process_bgp 65000">bgp 65000</a> route-map <a href="#route_map_MATCH_DEFAULT">MATCH_DEFAULT</a>
  passive-interface default
  <span class="deny">no passive-interface <a href="#interface_GigabitEthernet0/0">GigabitEthernet0/0</a></span>
 !
-<br><span id="routing_process_bgp 65000" class="">router bgp 65000</span>
+<br><span id="routing_process_bgp 65000" class="pointee">router bgp 65000</span>
 <br><span id="template_peer_policy_MPLSVPN" class="pointee"> template peer-policy <span class="pointed_at">MPLSVPN</span></span>
   route-map <a href="#route_map_ChoosePreferredVPNv4Routes">ChoosePreferredVPNv4Routes</a> in
   send-community both
@@ -388,7 +388,7 @@ end
 <a href="#snmp_view_ping">Snmp_view</a>
 <a href="#template_peer_policy_MPLSVPN">Template_peer_policy</a>
 <a href="#template_peer_session_MPLSVPN">Template_peer_session</a>
-<a href="#track_1">Track</a>
+<a href="#track_track 1">Track</a>
 <h4>Key</h4><span class="unused_pointee">Unused Pointee</span> <span class="deny">Deny/No</span><span class="permit">Permit/Included</span><span class="pointee">Pointee</span><span class="remark">Remark/Description</span></div>
     </body>
 </html>
