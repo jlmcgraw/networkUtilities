@@ -9,9 +9,6 @@
 	Look at setup.sh for how to add wireshark user, globally install 
 	dependencies etc.
 
-	Examples
-            http://htmlpreview.github.com/?https://github.com/jlmcgraw/networkUtilities/blob/master/ios_to_html_examples/html_test_case_1.cfg.html
-            
 ##iosToHtml.pl
 	Convert an IOS/NXOS/ACE/ASA config file into very basic HTML, creating links 
 	between commands referencing lists and that list (e.g. access lists, 
@@ -24,6 +21,12 @@
 
 	e.g.:
 		./iosToHtml.pl -e -h -f -s ./sample_configs/*.cfg
+		
+	Items highlighted in orange are unused in this config
+	
+	[Example 1](http://htmlpreview.github.com/?https://github.com/jlmcgraw/networkUtilities/blob/master/ios_to_html_examp;es/html_test_case_1.cfg.html)
+	
+	[Example 2](http://htmlpreview.github.com/?https://github.com/jlmcgraw/networkUtilities/blob/master/ios_to_html_examp;es/html_test_case_10.cfg.html)
 
 ##annotate_hosts_and_networks_in_file.pl
 	Parse a text file (router config, ACL etc etc) containing host and/or 
