@@ -24,9 +24,9 @@
 		
 	Items highlighted in orange are unused in this config
 	
-	[Example 1](http://htmlpreview.github.com/?https://github.com/jlmcgraw/networkUtilities/blob/master/ios_to_html_examp;es/html_test_case_1.cfg.html)
+[Example 1](http://htmlpreview.github.com/?https://github.com/jlmcgraw/networkUtilities/blob/master/ios_to_html_examp;es/html_test_case_1.cfg.html)
 	
-	[Example 2](http://htmlpreview.github.com/?https://github.com/jlmcgraw/networkUtilities/blob/master/ios_to_html_examp;es/html_test_case_10.cfg.html)
+[Example 2](http://htmlpreview.github.com/?https://github.com/jlmcgraw/networkUtilities/blob/master/ios_to_html_examp;es/html_test_case_10.cfg.html)
 
 ##annotate_hosts_and_networks_in_file.pl
 	Parse a text file (router config, ACL etc etc) containing host and/or 
