@@ -98,6 +98,48 @@ ip ssh version 2
 !
 <br><span id="track_track 1" class="pointee">track 1 ip route 0.0.0.0 0.0.0.0 reachability</span>
 !
+<br><span id="class_COS2V_APP" class="pointee">class-map match-any <span class="pointed_at">COS2V_APP</span></span>
+ match access-group name <a href="#acl_COS2V">COS2V</a>
+<br><span id="class_COS2V_SAA" class="pointee">class-map match-any <span class="pointed_at">COS2V_SAA</span></span>
+ match access-group name <a href="#acl_COS2V_SAA">COS2V_SAA</a>
+<br><span id="class_COS2V" class="pointee">class-map match-any <span class="pointed_at">COS2V</span></span>
+ match access-group name <a href="#acl_COS2V_SAA">COS2V_SAA</a>
+ match access-group name <a href="#acl_COS2V">COS2V</a>
+<br><span id="class_COS_NMC" class="pointee">class-map match-any <span class="pointed_at">COS_NMC</span></span>
+ match access-group name <a href="#acl_NMC_QUEUE">NMC_QUEUE</a>
+<br><span id="class_NMC_MARKING" class="unused_pointee">class-map match-any <span class="pointed_at">NMC_MARKING</span></span>
+ match access-group name <a href="#acl_NMC_QUEUE">NMC_QUEUE</a>
+<br><span id="class_COS3_SAA" class="pointee">class-map match-any <span class="pointed_at">COS3_SAA</span></span>
+ match access-group name <a href="#acl_COS3_SAA">COS3_SAA</a>
+<br><span id="class_COS2_SAA" class="pointee">class-map match-any <span class="pointed_at">COS2_SAA</span></span>
+ match access-group name <a href="#acl_COS2_SAA">COS2_SAA</a>
+<br><span id="class_COS1_SAA" class="pointee">class-map match-any <span class="pointed_at">COS1_SAA</span></span>
+ match access-group name <a href="#acl_COS1_SAA">COS1_SAA</a>
+<br><span id="class_COS5" class="pointee">class-map match-any <span class="pointed_at">COS5</span></span>
+ match access-group name <a href="#acl_COS5">COS5</a>
+<br><span id="class_COS4" class="pointee">class-map match-any <span class="pointed_at">COS4</span></span>
+ match any
+<br><span id="class_COS3" class="pointee">class-map match-any <span class="pointed_at">COS3</span></span>
+ match access-group name <a href="#acl_COS3_SAA">COS3_SAA</a>
+ match access-group name <a href="#acl_COS3">COS3</a>
+<br><span id="class_COS2" class="pointee">class-map match-any <span class="pointed_at">COS2</span></span>
+ match access-group name <a href="#acl_COS2_SAA">COS2_SAA</a>
+ match access-group name <a href="#acl_COS2">COS2</a>
+<br><span id="class_COS1" class="pointee">class-map match-any <span class="pointed_at">COS1</span></span>
+ match access-group name <a href="#acl_COS1_SAA">COS1_SAA</a>
+ match access-group name <a href="#acl_COS1">COS1</a>
+<br><span id="class_COS1_APP" class="pointee">class-map match-any <span class="pointed_at">COS1_APP</span></span>
+ match access-group name <a href="#acl_COS1">COS1</a>
+<br><span id="class_COS3_APP" class="pointee">class-map match-any <span class="pointed_at">COS3_APP</span></span>
+ match access-group name <a href="#acl_COS3">COS3</a>
+<br><span id="class_COS2_APP" class="pointee">class-map match-any <span class="pointed_at">COS2_APP</span></span>
+ match access-group name <a href="#acl_COS2">COS2</a>
+<br><span id="class_COS5_APP" class="pointee">class-map match-any <span class="pointed_at">COS5_APP</span></span>
+ match access-group name <a href="#acl_COS5">COS5</a>
+<br><span id="class_COS4_APP" class="pointee">class-map match-any <span class="pointed_at">COS4_APP</span></span>
+ match any
+!
+
 <br><span id="policy_map_NMC_MARKING" class="pointee">policy-map <span class="pointed_at">NMC_MARKING</span></span>
  class NMC_RP_TRAFFIC_DSCP48
   police cir 16,000 bc 8,000 be 8,000
@@ -116,43 +158,43 @@ ip ssh version 2
    conform-action set-dscp-transmit cs7
    exceed-action set-dscp-transmit cs7
 <br><span id="policy_map_COS1_400k_MARKING" class="pointee">policy-map <span class="pointed_at">COS1_400k_MARKING</span></span>
- class COS1_SAA
+ class <a href="#class_COS1_SAA">COS1_SAA</a>
   police cir 16,000 bc 8,000 be 8,000
    conform-action transmit
    exceed-action transmit
- class COS1_APP
+ class <a href="#class_COS1_APP">COS1_APP</a>
   police cir 400,000 bc 50,000 be 50,000
    conform-action set-dscp-transmit ef
    exceed-action drop
 <br><span id="policy_map_COS2V_160k_MARKING" class="pointee">policy-map <span class="pointed_at">COS2V_160k_MARKING</span></span>
- class COS2V_SAA
+ class <a href="#class_COS2V_SAA">COS2V_SAA</a>
   police cir 16,000 bc 8,000 be 8,000
    conform-action transmit
    exceed-action transmit
- class COS2V_APP
+ class <a href="#class_COS2V_APP">COS2V_APP</a>
   police cir 160,000 bc 20,000 be 20,000
    conform-action set-dscp-transmit af41
    exceed-action drop
 <br><span id="policy_map_COS2_1280k_MARKING" class="pointee">policy-map <span class="pointed_at">COS2_1280k_MARKING</span></span>
- class COS2_SAA
+ class <a href="#class_COS2_SAA">COS2_SAA</a>
   police cir 16,000 bc 8,000 be 8,000
    conform-action transmit
    exceed-action transmit
- class COS2_APP
+ class <a href="#class_COS2_APP">COS2_APP</a>
   police cir 1,280,000 bc 160,000 be 160,000
    conform-action set-dscp-transmit af31
    exceed-action set-dscp-transmit af32
 <br><span id="policy_map_COS3_800k_MARKING" class="pointee">policy-map <span class="pointed_at">COS3_800k_MARKING</span></span>
- class COS3_SAA
+ class <a href="#class_COS3_SAA">COS3_SAA</a>
   police cir 16,000 bc 8,000 be 8,000
    conform-action transmit
    exceed-action transmit
- class COS3_APP
+ class <a href="#class_COS3_APP">COS3_APP</a>
   police cir 800,000 bc 100,000 be 100,000
    conform-action set-dscp-transmit af21
    exceed-action set-dscp-transmit af22
 <br><span id="policy_map_COS5_320k_MARKING" class="pointee">policy-map <span class="pointed_at">COS5_320k_MARKING</span></span>
- class COS5_APP
+ class <a href="#class_COS5_APP">COS5_APP</a>
   police cir 320,000 bc 40,000 be 40,000
    conform-action set-dscp-transmit af11
    exceed-action set-dscp-transmit af12
@@ -161,7 +203,7 @@ ip ssh version 2
    conform-action transmit
    exceed-action transmit
 <br><span id="policy_map_COS4_640k_MARKING" class="pointee">policy-map <span class="pointed_at">COS4_640k_MARKING</span></span>
- class COS4_APP
+ class <a href="#class_COS4_APP">COS4_APP</a>
   police cir 640,000 bc 80,000 be 80,000
    conform-action set-dscp-transmit default
    exceed-action set-dscp-transmit default
@@ -172,7 +214,7 @@ ip ssh version 2
 
 <br><span id="policy_map_QUEUE" class="pointee">policy-map <span class="pointed_at">QUEUE</span></span>
  <span class="remark">description Nothing</span>
- class COS_NMC
+ class <a href="#class_COS_NMC">COS_NMC</a>
   bandwidth remaining percent 1 account user-defined 24
   random-detect dscp-based
   random-detect exponential-weighting-constant 1
@@ -187,15 +229,15 @@ ip ssh version 2
   random-detect dscp 56 300 350 10
   queue-limit 8192 packets
    service-policy <a href="#policy_map_NMC_MARKING">NMC_MARKING</a>
- class COS1
+ class <a href="#class_COS1">COS1</a>
   priority
   queue-limit 2048 packets
    service-policy <a href="#policy_map_COS1_400k_MARKING">COS1_400k_MARKING</a>
- class COS2V
+ class <a href="#class_COS2V">COS2V</a>
   bandwidth remaining percent 5 account user-defined 24
   queue-limit 90 packets
    service-policy <a href="#policy_map_COS2V_160k_MARKING">COS2V_160k_MARKING</a>
- class COS2
+ class <a href="#class_COS2">COS2</a>
   bandwidth remaining percent 40 account user-defined 24
   random-detect dscp-based
   random-detect exponential-weighting-constant 1
@@ -209,7 +251,7 @@ ip ssh version 2
   random-detect dscp 31 380 580 10
   queue-limit 8192 packets
    service-policy <a href="#policy_map_COS2_1280k_MARKING">COS2_1280k_MARKING</a>
- class COS3
+ class <a href="#class_COS3">COS3</a>
   bandwidth remaining percent 25 account user-defined 24
   random-detect dscp-based
   random-detect exponential-weighting-constant 1
@@ -223,7 +265,7 @@ ip ssh version 2
   random-detect dscp 23 240 360 10
   queue-limit 8192 packets
    service-policy <a href="#policy_map_COS3_800k_MARKING">COS3_800k_MARKING</a>
- class COS5
+ class <a href="#class_COS5">COS5</a>
   bandwidth remaining percent 10 account user-defined 24
   random-detect dscp-based
   random-detect exponential-weighting-constant 1
@@ -237,7 +279,7 @@ ip ssh version 2
   random-detect dscp 15 100 140 10
   queue-limit 8192 packets
    service-policy <a href="#policy_map_COS5_320k_MARKING">COS5_320k_MARKING</a>
- class COS4
+ class <a href="#class_COS4">COS4</a>
   bandwidth remaining percent 18 account user-defined 24
   random-detect dscp-based
   random-detect exponential-weighting-constant 1
@@ -318,6 +360,41 @@ ip ssh version 2
 route-map ChoosePreferredVPNv4Routes <span class="permit">permit 20</span>
 <br><span id="prefix_list_DEFAULT" class="pointee">ip prefix-list <span class="pointed_at">DEFAULT</span> seq 10 <span class="permit">permit 0.0.0.0/0</span></span>
 
+<br><span id="acl_COS1" class="pointee">ip access-list extended <span class="pointed_at">COS1</span></span>
+ <span class="remark">remark <span class="permit">Permit Voice payload & signaling</span></span>
+ <span class="permit">permit ip any any dscp ef</span>
+<br><span id="acl_COS1_SAA" class="pointee">ip access-list extended <span class="pointed_at">COS1_SAA</span></span>
+ <span class="remark">remark ***COS1 IPV4 SAA***</span>
+ <span class="deny">deny   ip any any fragments</span>
+ <span class="remark">remark ***HOST IPV4 SAA***</span>
+ <span class="permit">permit udp any host 10.1.1.1 range 40100 40200 dscp ef</span>
+<br><span id="acl_COS2" class="pointee">ip access-list extended <span class="pointed_at">COS2</span></span>
+ <span class="permit">permit ip any host 10.1.1.1</span>
+<br><span id="acl_COS2V" class="pointee">ip access-list extended <span class="pointed_at">COS2V</span></span>
+ <span class="permit">permit ip any host 10.1.1.1</span>
+<br><span id="acl_COS2V_SAA" class="pointee">ip access-list extended <span class="pointed_at">COS2V_SAA</span></span>
+ <span class="remark">remark ***COS2V IPV4 SAA</span>
+ <span class="deny">deny   ip any any fragments</span>
+ <span class="permit">permit udp host 10.1.1.1 eq 1967 any dscp af41</span>
+<br><span id="acl_COS2_SAA" class="pointee">ip access-list extended <span class="pointed_at">COS2_SAA</span></span>
+ <span class="remark">remark ***COS2 IPV4 SAA</span>
+ <span class="deny">deny   ip any any fragments</span>
+ <span class="remark">remark ***HOST IPV4 SAA***</span>
+ <span class="permit">permit udp host 10.1.1.1 eq 1967 any dscp af31</span>
+<br><span id="acl_COS3" class="pointee">ip access-list extended <span class="pointed_at">COS3</span></span>
+ <span class="permit">permit ip any host 10.1.1.1</span>
+<br><span id="acl_COS3_SAA" class="pointee">ip access-list extended <span class="pointed_at">COS3_SAA</span></span>
+ <span class="remark">remark ***COS3 IPV4 SAA***</span>
+ <span class="deny">deny   ip any any fragments</span>
+ <span class="permit">permit udp host 10.255.229.233 eq 1967 any dscp af21</span>
+<br><span id="acl_COS5" class="pointee">ip access-list extended <span class="pointed_at">COS5</span></span>
+ <span class="permit">permit ip any host 10.1.1.1</span>
+
+<br><span id="acl_NMC_QUEUE" class="pointee">ip access-list extended <span class="pointed_at">NMC_QUEUE</span></span>
+ <span class="remark">remark ***SINGLE ACL FOR ALL IPV4 NMC TRAFFIC QUEUE***</span>
+ <span class="remark">remark IPv4 WAN ROUTING PACKETS</span>
+ <span class="deny">deny   ip any any fragments</span>
+
 <br><span id="acl_12" class="pointee">access-list <span class="pointed_at">12</span> <span class="permit">permit 10.0.0.1</span></span>
 access-list 12 <span class="permit">permit 10.0.0.2</span>
 access-list 12 <span class="permit">permit 10.0.0.3</span>
@@ -379,7 +456,8 @@ end
     <h3>router1 (html_test_case_1.cfg)</h3>
     <a href="#">Top</a>
     <h4>Beginning of Sections</h4>
-<a href="#acl_12">Acl</a>
+<a href="#acl_COS1">Acl</a>
+<a href="#class_COS2V_APP">Class</a>
 <a href="#community_list_PreferredRT">Community_list</a>
 <a href="#interface_Loopback0">Interface</a>
 <a href="#policy_map_NMC_MARKING">Policy_map</a>
