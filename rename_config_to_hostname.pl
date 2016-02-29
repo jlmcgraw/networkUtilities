@@ -64,7 +64,7 @@ if ( $Config{archname} =~ m/win/ix ) {
     #Expand wildcards on command line
     say "Expanding wildcards for Windows";
     @ARGV_unmodified = @ARGV;
-    @ARGV            = bsd_glob "@ARGV";
+    @ARGV            = map { bsd_glob $_ } @ARGV;
 }
 
 my $hostname_regex = qr/^
