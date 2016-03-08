@@ -143,7 +143,7 @@ if ( $Config{archname} =~ m/win/ix ) {
     #Expand wildcards on command line
     say "Expanding wildcards for Windows";
     @ARGV_unmodified = @ARGV;
-    @ARGV            = map { bsd_glob $_ } @ARGV;
+    @ARGV = map { bsd_glob $_ } @ARGV;
 }
 
 #Call main routine
@@ -340,20 +340,19 @@ sub construct_lists_of_pointees {
             #                     . $pointees_seen_ref->{"$pointeeType"}{"$rule_number"}
             #                     . ')' );
 
-            
             #             %HoF = (    # Compose a hash of functions
-#                 exit => sub {exit},
-#                 help => \&show_help,
-#                 watch => sub { $watch = 1 },
-#                 mail => sub { mail_msg($msg) },
-#                 edit => sub { $edited++; editmsg($msg); },
-#                 delete => \&confirm_kill,
-#             );
-# 
-#             if ( $HoF{ lc $cmd } ) 
-#                 { $HoF{ lc $cmd }->(); }    # Call function
-#             else 
-#                 { warn "Unknown command: `$cmd'; Try `help' next time\n" }
+            #                 exit => sub {exit},
+            #                 help => \&show_help,
+            #                 watch => sub { $watch = 1 },
+            #                 mail => sub { mail_msg($msg) },
+            #                 edit => sub { $edited++; editmsg($msg); },
+            #                 delete => \&confirm_kill,
+            #             );
+            #
+            #             if ( $HoF{ lc $cmd } )
+            #                 { $HoF{ lc $cmd }->(); }    # Call function
+            #             else
+            #                 { warn "Unknown command: `$cmd'; Try `help' next time\n" }
 
             #Testing pointees with spaces in them
             #BUG TODO REMOVE If issues with finding pointees and uncomment above method
@@ -555,10 +554,9 @@ sub config_to_html {
         \@html_formatted_text );
 
     #Construct the floating menu unique to this file
-    my $floating_menu_text = construct_floating_menu(
-        $filename, \@html_formatted_text,
-        $hostname, \%pointee_seen_in_file
-    );
+    my $floating_menu_text
+        = construct_floating_menu( $filename, \@html_formatted_text,
+        $hostname, \%pointee_seen_in_file, $config_as_html_ref );
 
     #Output as a web page
     output_as_html( $filename, \@html_formatted_text,
@@ -593,27 +591,13 @@ sub find_pointees_with_nothing_pointing_to_them {
     #Copy the array of html-ized test to a scalar
     my $config_as_html = join "\n", @$html_formatted_text_ref;
 
-    my %pointers;
-    my %pointees;
-
-    #     %pointers
-    #         = map { "$1", 1 } map {/<a href="#(.*?)">/} @$html_formatted_text_ref;
-    #     %pointees = map { /id="(.*?)"/, 1 } @$html_formatted_text_ref;
-
+    #Find the names of all the pointers and create a hash from it
     my @array_of_pointers = $config_as_html =~ /<a href="#(.*?)">/g;
-    %pointers = map { $_, 1 } @array_of_pointers;
+    my %pointers = map { $_, 1 } @array_of_pointers;
 
+    #Find the names of all the pointees and create a hash from it
     my @array_of_pointees = $config_as_html =~ /id="(.*?)" class="pointee">/g;
-    %pointees = map { $_, 1 } @array_of_pointees;
-
-    #          say "Pointers";
-    #         print Dumper \@array_of_pointers;
-    #          say "Pointees";
-    #         print Dumper \@array_of_pointees;
-    #             say "Pointers";
-    #         print Dumper \%pointers;
-    #         say "Pointees";
-    #         print Dumper \%pointees;
+    my %pointees = map { $_, 1 } @array_of_pointees;
 
     #Delete every POINTEE that has a POINTER
     foreach my $pointer ( keys %pointers ) {
@@ -623,13 +607,16 @@ sub find_pointees_with_nothing_pointing_to_them {
     }
 
     #At this point, pointees contains only things that haven't been pointed at
-    #         say "Pointees";
-    #         print Dumper \%pointees;
+    #So change their CSS class
     foreach my $unused_pointee ( keys %pointees ) {
         my $class = 'unused_pointee';
+
+        #Ignore interfaces and routing processes since they don't get referred to quite often
         if ( $unused_pointee =~ /interface_|routing_/ix ) {
             $class = '';
         }
+
+        #Update this unused pointee's CSS class
         $config_as_html
             =~ s/id="$unused_pointee" class="pointee">/id="$unused_pointee" class="$class">/g;
     }
@@ -641,13 +628,15 @@ sub construct_floating_menu {
 
     #Construct a menu from the pointees we've seen in this file
 
-    my ( $filename, $html_formatted_text_ref, $hostname, $pointees_ref )
+    my ( $filename, $html_formatted_text_ref, $hostname, $pointees_ref,
+        $config_as_html_ref )
         = validate_pos(
         @_,
         { type => SCALAR },
         { type => ARRAYREF },
         { type => SCALAR },
         { type => HASHREF },
+        { type => SCALARREF },
         );
 
     #Construct a menu from the pointees we've seen in this file
@@ -656,7 +645,7 @@ sub construct_floating_menu {
     #First occurrence of each type of pointee
     my @first_occurence_of_pointees;
 
-    #Copy the array of html-ized test to a scalar
+    #Copy the array of html-ized text to a scalar
     my $config_as_html = join "", @$html_formatted_text_ref;
 
     #for each pointee we found in this config
@@ -670,12 +659,13 @@ sub construct_floating_menu {
         push @first_occurence_of_pointees, "$pointee_type|$+{type}";
     }
 
-    #First portion of the HTML
+    #First portion of the menu's HTML
     my $menu_text = << "END_MENU";
 <div class="floating-menu">
     <h3>$hostname ($file_basename)</h3>
     <a href="#">Top</a>
-    <h4>Beginning of Sections</h4>
+    <br>
+    <h4><u>Beginnings of Sections</u></h4>
 END_MENU
 
     #Create a link for each type of pointee
@@ -690,12 +680,44 @@ END_MENU
         #         $menu_text .= "<div><a href=\"#$specific\" style=\"text-align: right\">$type</a>" . "</div>\n";
         $menu_text .= "<a href=\"#$specific\">$type</a>" . "\n";
     } @first_occurence_of_pointees;
-    $menu_text .= '<h4>Key</h4>';
-    $menu_text .= '<span class="unused_pointee">Unused Pointee</span> ';
-    $menu_text .= '<span class="deny">Deny/No</span>';
-    $menu_text .= '<span class="permit">Permit/Included</span>';
-    $menu_text .= '<span class="pointee">Pointee</span>';
-    $menu_text .= '<span class="remark">Remark/Description</span>';
+
+    $menu_text .= '<br>' . "\n";
+    $menu_text .= '<h4><u>Key</u></h4>' . "\n";
+    $menu_text .= '<span class="unused_pointee">Unused Pointee</span>' . "\n";
+    $menu_text .= '<span class="pointee">Used Pointee</span>' . "\n";
+    $menu_text .= '<span class="deny">Deny/No</span>' . "\n";
+    $menu_text .= '<span class="permit">Permit/Included</span>' . "\n";
+    $menu_text .= '<span class="remark">Remark/Description</span>' . "\n";
+
+    #Regex for unused pointees
+    my $unused_pointee_regex = qr/
+                                <span 
+                                \s+ 
+                                id="(?<id> .*? )"
+                                \s+
+                                class="unused_pointee"
+                                /ix;
+
+    #Construct a list of unused pointees
+    my (@list_of_unused_pointees)
+        = $$config_as_html_ref =~ /$unused_pointee_regex/igx;
+
+    #If there actually are any unused pointees then add links to the floating menu
+    if (@list_of_unused_pointees) {
+        $menu_text .= '<br>';
+        $menu_text .= '<h4><u>Unused Pointees</u></h4>' . "\n";
+
+        ### ------------------------------------------------------------------------------------------------------
+        ### $config_as_html_ref
+        ### @list_of_unused_pointees;
+        ### ------------------------------------------------------------------------------------------------------
+
+        #Add links to each unused pointee to the floating menu
+        map {
+            $menu_text .= "<a href=\"#$_\">$_</a>" . "\n";
+
+        } @list_of_unused_pointees;
+    }
 
     #Close of the DIV in the html
     $menu_text .= '</div>';
