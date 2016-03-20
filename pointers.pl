@@ -246,10 +246,11 @@
     1 =>
         qr/^ \s* neighbor \s+ $RE{net}{IPv4} \s+ filter-list \s+ (?<points_to> $list_of_pointees_ref->{"as_path_access_list"}) \s+ (?:in|out)$/ixsm,
 
-    2 => qr/^ \s*
+    '2_list' => qr/^ \s*
             match \s+
             as-path \s+
-            (?<points_to> $list_of_pointees_ref->{"as_path_access_list"})
+            (?<points_to> (?: $list_of_pointees_ref->{"as_path_access_list"} | \s )+ )                #This can be a list of things
+                                                                                         #separated by whitespace
             \s* $/ixsm,
 
     },
