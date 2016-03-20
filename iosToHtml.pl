@@ -112,7 +112,7 @@ $Data::Dumper::Sortkeys = sub {
 # no if $] >= 5.018, warnings => "experimental";
 
 #Define the valid command line options
-my $opt_string = 'ehfns';
+my $opt_string = 'ehfnsr';
 my $arg_num    = scalar @ARGV;
 
 #We need at least one argument
@@ -129,8 +129,9 @@ unless ( getopts( "$opt_string", \%opt ) ) {
 
 #Set variables from command line options
 my ( $should_link_externally, $should_reformat_numbers,
-    $should_do_extra_formatting, $dont_use_threads, $should_scrub )
-    = ( $opt{e}, $opt{h}, $opt{f}, $opt{n}, $opt{s} );
+    $should_do_extra_formatting, $dont_use_threads, $should_scrub,
+    $should_remove_redundancy )
+    = ( $opt{e}, $opt{h}, $opt{f}, $opt{n}, $opt{s}, $opt{r} );
 
 #Hold a copy of the original ARGV so we can pass it instead of globbed version
 #to create_host_info_hashes
@@ -186,6 +187,9 @@ sub main {
 
     #load regexes for the items that are pointed at ("pointees")
     my %pointees = do $Bin . 'pointees.pl';
+
+    #load regexes for redundancies we want to remove
+    my %redundancies = do $Bin . 'redundancies.pl';
 
     #     #Testing pre-compiling of regexes
     #     my %compiled_pointees;
@@ -259,7 +263,8 @@ sub main {
                     while ( defined( my $filename = $q->dequeue_nb() ) ) {
                         config_to_html( $filename, \%pointees,
                             \%humanReadable,
-                            $host_info_ref, \%external_pointers );
+                            $host_info_ref, \%external_pointers,
+                            \%redundancies );
                     }
                 }
             );
@@ -300,6 +305,8 @@ sub usage {
     say "       -n Don't use threads (for debugging/profiling)";
     say "";
     say "       -s Do a simple scrub of sensitive info";
+    say "";
+    say "       -r Remove some redundancy between lines";
     say "";
     say "To run with smart comments enabled:";
     say "	Smart_Comments=1 perl $0";
@@ -428,10 +435,11 @@ sub find_pointees {
 
 sub config_to_html {
     my ( $filename, $pointees_ref, $human_readable_ref, $host_info_ref,
-        $external_pointers_ref )
+        $external_pointers_ref, $redundancies_ref )
         = validate_pos(
         @_,
         { type => SCALAR },
+        { type => HASHREF },
         { type => HASHREF },
         { type => HASHREF },
         { type => HASHREF },
@@ -443,6 +451,17 @@ sub config_to_html {
                           (?: ^ \s+ ip \s+ address \s+ (?<ip_and_mask> $RE{net}{IPv4} \s* \/ \d+) )
                         /ixsm;
 
+    my $network_regex
+        = qr/(?: ^ \s+ 
+                network \s+ 
+                (?<network> 
+                    $RE{net}{IPv4} ) \s+
+                mask \s+
+                (?<mask> 
+                    $RE{net}{IPv4} )
+            ) 
+            /ixsm;
+                        
     #reset these for each file
     my %foundPointers = ();
 
@@ -512,6 +531,8 @@ sub config_to_html {
         #Remove trailing whitespace
         $line =~ s/\s+$//gx;
 
+    
+
         #Scrub passwords etc. if user requested
         $line = scrub($line) if $should_scrub;
 
@@ -523,6 +544,10 @@ sub config_to_html {
         $line
             = add_pointer_links_to_line( $line, \%pointers, \%foundPointers );
 
+        #Remove some redundancy if user requested
+        $line = remove_redundancy( $line, $redundancies_ref )
+            if $should_remove_redundancy;
+            
         #Add pointee links
         $line = add_pointee_links_to_line( $line, $pointees_ref,
             $found_pointees_ref, \%pointee_seen_in_file, \%foundPointers );
@@ -541,6 +566,12 @@ sub config_to_html {
                 $external_pointers_ref, $host_info_ref, $subnet_regex_ref );
         }
 
+        #Find the interfaces on this device that are relevant to a routing
+        # process
+        $line
+            = find_routing_interfaces( $line, $filename,
+            $external_pointers_ref, $host_info_ref, $network_regex );
+                
         #Some experimental formatting (colored permits/denies, comments are italic etc)
         $line = extra_formatting($line) if $should_do_extra_formatting;
 
@@ -704,17 +735,17 @@ END_MENU
 
     #If there actually are any unused pointees then add links to the floating menu
     if (@list_of_unused_pointees) {
+
+        #Sort the list alphabetically
+        sort @list_of_unused_pointees;
+
         $menu_text .= '<br>';
         $menu_text .= '<h4><u>Unused Pointees</u></h4>' . "\n";
 
-        ### ------------------------------------------------------------------------------------------------------
-        ### $config_as_html_ref
-        ### @list_of_unused_pointees;
-        ### ------------------------------------------------------------------------------------------------------
-
         #Add links to each unused pointee to the floating menu
         map {
-            $menu_text .= "<a href=\"#$_\">$_</a>" . "\n";
+            my $pointee_id = $_;
+            $menu_text .= "<a href=\"#$pointee_id\">$pointee_id</a>" . "\n";
 
         } @list_of_unused_pointees;
     }
@@ -815,7 +846,7 @@ sub output_as_html {
                 }
             div.floating-menu .unused_pointee, div.floating-menu .pointee,  
             div.floating-menu .remark,  div.floating-menu .deny,  
-                div.floating-menu .permit {
+            div.floating-menu .permit {
                 text-align: right;
                 display:block;
                 }
@@ -1031,24 +1062,140 @@ sub find_subnet_peers {
     return $line;
 }
 
+sub find_routing_interfaces {
+
+    my ( $line, $our_filename, $external_pointers_ref, $host_info_ref,
+        $network_regex )
+        = validate_pos(
+        @_,
+        { type => SCALAR },
+        { type => SCALAR },
+        { type => HASHREF },
+        { type => HASHREF },
+        { type => SCALARREF },
+        );
+
+    #List devices on the same subnet when we know of them
+    if ( $line =~ m/$network_regex/ixms ) {
+
+        my $network = $+{network};
+        my $mask = $+{mask};
+
+        #Save the current amount of indentation of this line
+        #to make stuff we might insert line up right (eg PEERS)
+        my ($current_indent_level) = $line =~ m/^(\s*)/ixsm;
+
+        
+
+        #HACK In RIOS, there's a space between IP address and CIDR
+        #Remove that without hopefully causing other issues
+#         $ip_and_netmask =~ s|\s/|/|;
+
+        #Try to create a new NetAddr::IP object from this key
+        my $subnet = NetAddr::IP->new("$network $mask");
+
+        #If it worked...
+        if ($subnet) {
+
+            #                             my $ip_addr        = $subnet->addr;
+            my $network = $subnet->network;
+
+            #                             my $mask           = $subnet->mask;
+            my $masklen = $subnet->masklen;
+
+            #                             my $ip_addr_bigint = $subnet->bigint();
+            #                             my $isRfc1918      = $subnet->is_rfc1918();
+            #                             my $range          = $subnet->range();
+
+            #Do we know about this subnet via create_host_info_hashes?
+            if ( exists $host_info_ref->{'subnet'}{$network} ) {
+
+                my @peer_array;
+
+                #TODO BUG Make this sort
+                #                             while ( my ( $peer_file, $peer_interface )
+                #                                 = each
+                #                                 %{ $host_info_ref->{'subnet'}{$network} } )
+                foreach my $peer_file (
+                    sort
+                    keys %{ $host_info_ref->{'subnet'}{$network} }
+                    )
+                {
+
+                    my $peer_interface
+                        = $host_info_ref->{'subnet'}{$network}{$peer_file};
+
+#                     #Don't list ourself as a peer
+#                     if ( $our_filename =~ quotemeta $peer_file ) {
+#                         next;
+#                     }
+
+                    #Pull out the various filename components of the file
+                    my ( $peer_filename, $dir, $ext )
+                        = fileparse( $peer_file, qr/\.[^.]*/x );
+
+                    #Construct the text of the link
+                    my $linkText
+                        = '<a href="'
+                        . $peer_filename
+                        . $ext . '.html' . '#'
+                        . "interface_$peer_interface"
+                        . "\">$peer_filename-$peer_interface</a>";
+
+                    #And save that link
+                    push @peer_array, $linkText;
+                }
+
+                #Join them all together
+                my $peer_list  = join( ' | ', @peer_array );
+                my $peer_count = @peer_array;
+                my $peer_form  = $peer_count > 1 ? "interfaces" : "interface";
+
+                #And add them below the IP address line if there
+                #are any peers
+                if ($peer_list) {
+                    $line
+                        .= "\n"
+                        . '<span class="remark_subtle">'
+                        . "$current_indent_level! $peer_count $peer_form on $network: $peer_list"
+                        . "\n"
+                        . '</span>';
+                }
+            }
+        }
+
+    }
+
+    return $line;
+}
+
 sub extra_formatting {
     my ($line) = validate_pos( @_, { type => SCALAR }, );
 
-    #Style permit lines
+    #Style PERMIT lines
     $line
         =~ s/ (\s+) (permit|included) (  .*? $  ) /$1<span class="permit">$2$3<\/span>/ixg;
 
-    #Style deny lines
+    #Style DENY lines
     $line
         =~ s/ (\s+) (deny|excluded) (  .*?  $ ) /$1<span class="deny">$2$3<\/span>/ixg;
 
-    #Style no lines
+    #Style NO lines
     $line
         =~ s/^( \s* ) (no) (  .*?  $ ) /$1<span class="deny">$2$3<\/span>/ixg;
 
-    #Style remark lines
+    #Style REMARK lines
     $line
         =~ s/ (\s+) (remark|description) ( .*? $ ) /$1<span class="remark">$2$3<\/span>/ixg;
+        
+    #Style CONFORM-ACTION lines
+    $line
+        =~ s/ (\s+) (conform-action) ( .*? $ ) /$1<span class="permit">$2$3<\/span>/ixg;
+    
+    #Style EXCEED-ACTION lines
+    $line
+        =~ s/ (\s+) (exceed-action) ( .*? $ ) /$1<span class="deny">$2$3<\/span>/ixg;
+        
     return $line;
 }
 
@@ -1071,6 +1218,50 @@ sub scrub {
     $line =~ s/$main::cert_line/SCRUBBED/gix;
     $line =~ s/\s+sn\s+\S+/ sn SCRUBBED/gix;
     $line =~ s/(crypto \s+ isakmp \s+ key) \s+ \S+/$1 SCRUBBED/gix;
+
+    return $line;
+}
+
+sub remove_redundancy {
+    my ( $line, $redundancies_ref )
+        = validate_pos( @_, { type => SCALAR }, { type => HASHREF }, );
+
+    state $last_line;
+    state $match;
+
+    #For each of the things we consider potentially redundant/noisy
+    foreach my $key ( sort keys %{ $redundancies_ref } ) {
+        my $redundancy_regex = $redundancies_ref->{$key};
+
+        #Does this line match?
+        if ( $line =~ /$redundancy_regex/ ) {
+
+            #Collect what matched
+            $match = $+{match};
+
+            #Does the last line also match?
+            if ( $last_line =~ /$match/ ) {
+            
+                #Save our unmodified line
+                $last_line = $line;
+
+                #Create a replacement string of the correct length
+                #  my $replacement_text = ' ' x length $match;
+
+                #Create a replacement string of the correct length
+                ( my $replacement_text = $match ) =~ s/\S/-/g;
+                
+                #and substitute it back into the line
+                ( my $modified_line = $line ) =~ s/$match/$replacement_text/;
+
+                #Return the modified line
+                return $modified_line;
+            }
+        }
+    }
+
+    #Save the current line for the next iteration
+    $last_line = $line;
 
     return $line;
 }

@@ -306,7 +306,6 @@ ip ssh version 2
 <br><span id="interface_GigabitEthernet0/0" class="pointee">interface <span class="pointed_at">GigabitEthernet0/0</span></span>
  bandwidth 990,000
  ip address 10.255.236.17 255.255.255.252
-<span class="remark_subtle"> ! 1 PEER on 10.255.236.16/30: <a href="html_test_case_2.cfg.html#interface_GigabitEthernet0/0">html_test_case_2</a></span>
  <span class="deny">no ip redirects</span>
  <span class="deny">no ip proxy-arp</span>
  ip flow ingress
@@ -341,11 +340,11 @@ ip ssh version 2
  !
  address-family vpnv4
   neighbor 10.0.1.3 activate
-  neighbor 10.0.1.3 send-community extended
-  neighbor 10.0.1.3 inherit peer-policy <a href="#template_peer_policy_MPLSVPN">MPLSVPN</a>
+  ----------------- send-community extended
+  ----------------- inherit peer-policy <a href="#template_peer_policy_MPLSVPN">MPLSVPN</a>
   neighbor 10.0.1.4 activate
-  neighbor 10.0.1.4 send-community extended
-  neighbor 10.0.1.4 inherit peer-policy <a href="#template_peer_policy_MPLSVPN">MPLSVPN</a>
+  ----------------- send-community extended
+  ----------------- inherit peer-policy <a href="#template_peer_policy_MPLSVPN">MPLSVPN</a>
 !
 <br><span id="route_map_MATCH_DEFAULT" class="pointee">route-map <span class="pointed_at">MATCH_DEFAULT</span> <span class="permit">permit 10</span></span>
  match ip address prefix-list <a href="#prefix_list_DEFAULT">DEFAULT</a>
@@ -396,32 +395,32 @@ route-map ChoosePreferredVPNv4Routes <span class="permit">permit 20</span>
  <span class="deny">deny   ip any any fragments</span>
 
 <br><span id="acl_12" class="pointee">access-list <span class="pointed_at">12</span> <span class="permit">permit 10.0.0.1</span></span>
-access-list 12 <span class="permit">permit 10.0.0.2</span>
-access-list 12 <span class="permit">permit 10.0.0.3</span>
-access-list 12 <span class="permit">permit 10.0.0.4</span>
-access-list 12 <span class="permit">permit 10.0.0.5 0.0.255.255</span>
+-------------- <span class="permit">permit 10.0.0.2</span>
+-------------- <span class="permit">permit 10.0.0.3</span>
+-------------- <span class="permit">permit 10.0.0.4</span>
+-------------- <span class="permit">permit 10.0.0.5 0.0.255.255</span>
 <br><span id="acl_13" class="pointee">access-list <span class="pointed_at">13</span> <span class="permit">permit 10.0.0.1</span></span>
-access-list 13 <span class="remark">remark ACL 13 for SNMP access</span>
-access-list 13 <span class="permit">permit 10.0.0.2</span>
-access-list 13 <span class="permit">permit 10.0.0.3</span>
+-------------- <span class="remark">remark ACL 13 for SNMP access</span>
+-------------- <span class="permit">permit 10.0.0.2</span>
+-------------- <span class="permit">permit 10.0.0.3</span>
 <br><span id="acl_84" class="pointee">access-list <span class="pointed_at">84</span> <span class="deny">deny   any</span></span>
 <br><span id="acl_93" class="pointee">access-list <span class="pointed_at">93</span> <span class="permit">permit 10.0.0.3</span></span>
-access-list 93 <span class="permit">permit 10.0.0.5 0.0.255.255</span>
+-------------- <span class="permit">permit 10.0.0.5 0.0.255.255</span>
 
 <br><span id="snmp_view_ping" class="pointee">snmp-server view <span class="pointed_at">ping</span> ciscoPingMIB.1.1 <span class="permit">included</span></span>
-snmp-server view ping ciscoPingMIB.1.1.*.* <span class="permit">included</span>
+--------------------- ciscoPingMIB.1.1.*.* <span class="permit">included</span>
 <br><span id="snmp_view_voip" class="pointee">snmp-server view <span class="pointed_at">voip</span> system <span class="permit">included</span></span>
-snmp-server view voip rttMonCtrl <span class="permit">included</span>
-snmp-server view voip rttMonStats <span class="permit">included</span>
-snmp-server view voip rttMonHistory <span class="permit">included</span>
+--------------------- rttMonCtrl <span class="permit">included</span>
+--------------------- rttMonStats <span class="permit">included</span>
+--------------------- rttMonHistory <span class="permit">included</span>
 
-snmp-server community SCRUBBED  RW <a href="#acl_93">93</a>
-snmp-server community SCRUBBED RO 95
-snmp-server community SCRUBBED RO <a href="#acl_84">84</a>
-snmp-server community SCRUBBED view <a href="#snmp_view_voip">voip</a> RW 95
-snmp-server community SCRUBBED view <a href="#snmp_view_ping">ping</a> RW 95
-snmp-server community SCRUBBED RO 95
-snmp-server community SCRUBBED RO <a href="#acl_13">13</a>
+snmp-server community TEST  RW <a href="#acl_93">93</a>
+snmp-server community TEST2 RO 95
+snmp-server community TEST3 RO <a href="#acl_84">84</a>
+snmp-server community TEST4 view <a href="#snmp_view_voip">voip</a> RW 95
+snmp-server community TEST5 view <a href="#snmp_view_ping">ping</a> RW 95
+snmp-server community TEST6 RO 95
+snmp-server community TEST7 RO <a href="#acl_13">13</a>
 
 line con 0
  session-timeout 15
