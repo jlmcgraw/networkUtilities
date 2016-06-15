@@ -22,14 +22,12 @@
 #-------------------------------------------------------------------------------
 
 #TODO
-#   Make pointed_at/points_to with a space in them work right
-#       eg
-#         "track 1"
-#         "ospf 10"
-#         "sip-profiles 1"
+# External pointer lists
+#   eg
+#        set ip next-hop 10.1.192.1 10.1.192.9
 #
 #   How to handle cases where pointer doesn't match pointee?
-#       Add per-match callbacks
+#       Add per-match callbacks to edit pointer/pointee?
 #       eg: channel-group 20 -> Etherchannel20
 #
 #   Highlight missing pointees in red?
@@ -57,7 +55,12 @@
 #   Make this work as CGI
 #   Match a list of referenced items which correct link for each
 #        match ip address prefix-list LIST1 LIST3 LIST3
-
+#   Make pointed_at/points_to with a space in them work right
+#       eg
+#         "track 1"
+#         "ospf 10"
+#         "sip-profiles 1"
+#
 #Standard modules
 use strict;
 use warnings;
@@ -72,6 +75,8 @@ use FindBin '$Bin';
 use vars qw/ %opt /;
 use Config;
 use Data::Dumper;
+use Carp;
+use Fcntl qw/ :flock /;
 
 #Look into using this so users don't need to install modules
 use lib "$FindBin::Bin/local/lib/perl5";
@@ -112,7 +117,7 @@ $Data::Dumper::Sortkeys = sub {
 # no if $] >= 5.018, warnings => "experimental";
 
 #Define the valid command line options
-my $opt_string = 'ehfnsr';
+my $opt_string = 'ehfnsru';
 my $arg_num    = scalar @ARGV;
 
 #We need at least one argument
@@ -128,10 +133,11 @@ unless ( getopts( "$opt_string", \%opt ) ) {
 }
 
 #Set variables from command line options
-my ( $should_link_externally, $should_reformat_numbers,
-    $should_do_extra_formatting, $dont_use_threads, $should_scrub,
-    $should_remove_redundancy )
-    = ( $opt{e}, $opt{h}, $opt{f}, $opt{n}, $opt{s}, $opt{r} );
+my ($should_link_externally,     $should_reformat_numbers,
+    $should_do_extra_formatting, $dont_use_threads,
+    $should_scrub,               $should_remove_redundancy,
+    $should_write_unused_report
+) = ( $opt{e}, $opt{h}, $opt{f}, $opt{n}, $opt{s}, $opt{r}, $opt{u} );
 
 #Hold a copy of the original ARGV so we can pass it instead of globbed version
 #to create_host_info_hashes
@@ -215,6 +221,31 @@ sub main {
         $host_info_ref = create_external_host_info_hash();
     }
 
+    #Create the header of the unused pointee report
+    if ($should_write_unused_report) {
+        open my $filehandleHtml, '>', 'unused.html' or die $!;
+
+        #Print a simple html beginning to output
+        print $filehandleHtml <<"END";
+<!DOCTYPE html>
+<html>
+
+    <head>
+        <meta charset="UTF-8">
+        <title>     
+            Unused pointees report
+        </title>
+    </head>
+END
+    }
+    my $unused_report_filehandle;
+
+    #     if ($should_write_unused_report) {
+    #         my $unused_report_filename = "./unused.html";
+    #         say "Creating unused pointee html report";
+    #         open $main::unused_report_filehandle, ">", $unused_report_filename or die("Could not open file. $!");
+    #         }
+
     # A new empty queue
     my $q = Thread::Queue->new();
 
@@ -274,6 +305,11 @@ sub main {
         $_->join() for @thr;
     }
 
+    #Close the unused report if we opened it
+    if ($unused_report_filehandle) {
+        close $unused_report_filehandle;
+    }
+
     # end timer
     my $end = new Benchmark;
 
@@ -307,6 +343,8 @@ sub usage {
     say "       -s Do a simple scrub of sensitive info";
     say "";
     say "       -r Remove some redundancy between lines";
+    say "";
+    say "       -u Create an HTML list of unused pointees";
     say "";
     say "To run with smart comments enabled:";
     say "	Smart_Comments=1 perl $0";
@@ -451,8 +489,7 @@ sub config_to_html {
                           (?: ^ \s+ ip \s+ address \s+ (?<ip_and_mask> $RE{net}{IPv4} \s* \/ \d+) )
                         /ixsm;
 
-    my $network_regex
-        = qr/(?: ^ \s+ 
+    my $network_regex = qr/(?: ^ \s+ 
                 network \s+ 
                 (?<network> 
                     $RE{net}{IPv4} ) \s+
@@ -461,7 +498,7 @@ sub config_to_html {
                     $RE{net}{IPv4} )
             ) 
             /ixsm;
-                        
+
     #reset these for each file
     my %foundPointers = ();
 
@@ -531,8 +568,6 @@ sub config_to_html {
         #Remove trailing whitespace
         $line =~ s/\s+$//gx;
 
-    
-
         #Scrub passwords etc. if user requested
         $line = scrub($line) if $should_scrub;
 
@@ -547,7 +582,7 @@ sub config_to_html {
         #Remove some redundancy if user requested
         $line = remove_redundancy( $line, $redundancies_ref )
             if $should_remove_redundancy;
-            
+
         #Add pointee links
         $line = add_pointee_links_to_line( $line, $pointees_ref,
             $found_pointees_ref, \%pointee_seen_in_file, \%foundPointers );
@@ -571,7 +606,7 @@ sub config_to_html {
         $line
             = find_routing_interfaces( $line, $filename,
             $external_pointers_ref, $host_info_ref, $network_regex );
-                
+
         #Some experimental formatting (colored permits/denies, comments are italic etc)
         $line = extra_formatting($line) if $should_do_extra_formatting;
 
@@ -593,6 +628,11 @@ sub config_to_html {
     output_as_html( $filename, \@html_formatted_text,
         $hostname, $floating_menu_text, $config_as_html_ref );
 
+    #Do we want to add to the global report of unused pointees?
+    if ($should_write_unused_report) {
+        write_unused_pointee_report( $filename, $hostname,
+            $config_as_html_ref );
+    }
     ### <file>[<line>]
     ### %foundPointers
     ### %pointee_seen_in_file
@@ -737,7 +777,7 @@ END_MENU
     if (@list_of_unused_pointees) {
 
         #Sort the list alphabetically
-        sort @list_of_unused_pointees;
+        @list_of_unused_pointees = sort @list_of_unused_pointees;
 
         $menu_text .= '<br>';
         $menu_text .= '<h4><u>Unused Pointees</u></h4>' . "\n";
@@ -745,8 +785,9 @@ END_MENU
         #Add links to each unused pointee to the floating menu
         map {
             my $pointee_id = $_;
-            $menu_text .= "<a href=\"#$pointee_id\">$pointee_id</a>" . "\n";
 
+            #Append this link to the floating menu
+            $menu_text .= "<a href=\"#$pointee_id\">$pointee_id</a>" . "\n";
         } @list_of_unused_pointees;
     }
 
@@ -755,6 +796,52 @@ END_MENU
 
     #Return the constructed text
     return $menu_text;
+}
+
+sub write_unused_pointee_report {
+
+    #Create an HTML list of unused pointees in this file
+
+    my ( $filename, $hostname, $config_as_html_ref ) = validate_pos(
+        @_,
+        { type => SCALAR },
+        { type => SCALAR },
+        { type => SCALARREF },
+    );
+
+    my $file_basename = basename($filename);
+
+    #Regex for unused pointees
+    my $unused_pointee_regex = qr/
+                                <span 
+                                \s+ 
+                                id="(?<id> .*? )"
+                                \s+
+                                class="unused_pointee"
+                                /ix;
+
+    #Construct a list of unused pointees
+    my (@list_of_unused_pointees)
+        = $$config_as_html_ref =~ /$unused_pointee_regex/igx;
+
+    #If there actually are any unused pointees then add links to the report
+    if (@list_of_unused_pointees) {
+
+        #Add links to each unused pointee to the report
+        map {
+            my $pointee_id = $_;
+
+            #Construct the HTML
+            my $external_link_text
+                = "<a href=\"$filename.html#$pointee_id\">$hostname : $file_basename : $pointee_id</a><br>"
+                . "\n";
+
+            #Write to the report file, thread safe
+            append_message_to_file($external_link_text, 'unused.html');
+
+        } sort @list_of_unused_pointees;
+    }
+    return 0;
 }
 
 sub output_as_html {
@@ -1079,17 +1166,15 @@ sub find_routing_interfaces {
     if ( $line =~ m/$network_regex/ixms ) {
 
         my $network = $+{network};
-        my $mask = $+{mask};
+        my $mask    = $+{mask};
 
         #Save the current amount of indentation of this line
         #to make stuff we might insert line up right (eg PEERS)
         my ($current_indent_level) = $line =~ m/^(\s*)/ixsm;
 
-        
-
         #HACK In RIOS, there's a space between IP address and CIDR
         #Remove that without hopefully causing other issues
-#         $ip_and_netmask =~ s|\s/|/|;
+        #         $ip_and_netmask =~ s|\s/|/|;
 
         #Try to create a new NetAddr::IP object from this key
         my $subnet = NetAddr::IP->new("$network $mask");
@@ -1125,10 +1210,10 @@ sub find_routing_interfaces {
                     my $peer_interface
                         = $host_info_ref->{'subnet'}{$network}{$peer_file};
 
-#                     #Don't list ourself as a peer
-#                     if ( $our_filename =~ quotemeta $peer_file ) {
-#                         next;
-#                     }
+                    #                     #Don't list ourself as a peer
+                    #                     if ( $our_filename =~ quotemeta $peer_file ) {
+                    #                         next;
+                    #                     }
 
                     #Pull out the various filename components of the file
                     my ( $peer_filename, $dir, $ext )
@@ -1187,20 +1272,24 @@ sub extra_formatting {
     #Style REMARK lines
     $line
         =~ s/ (\s+) (remark|description) ( .*? $ ) /$1<span class="remark">$2$3<\/span>/ixg;
-        
+
     #Style CONFORM-ACTION lines
     $line
         =~ s/ (\s+) (conform-action) ( .*? $ ) /$1<span class="permit">$2$3<\/span>/ixg;
-    
+
     #Style EXCEED-ACTION lines
     $line
         =~ s/ (\s+) (exceed-action) ( .*? $ ) /$1<span class="deny">$2$3<\/span>/ixg;
-        
+
     return $line;
 }
 
 sub scrub {
     my ($line) = validate_pos( @_, { type => SCALAR }, );
+
+    #BUG TODO A quick hack to see if replacing "host x.x.x.x" with
+    # x.x.x.x 0.0.0.0 looks any better
+    #     $line =~ s/host ($main::ipv4AddressRegex)/$1 0.0.0.0/gi;
 
     $line =~ s/password .*/password SCRUBBED/gi;
     $line =~ s/secret .*/secret SCRUBBED/gi;
@@ -1230,7 +1319,7 @@ sub remove_redundancy {
     state $match;
 
     #For each of the things we consider potentially redundant/noisy
-    foreach my $key ( sort keys %{ $redundancies_ref } ) {
+    foreach my $key ( sort keys %{$redundancies_ref} ) {
         my $redundancy_regex = $redundancies_ref->{$key};
 
         #Does this line match?
@@ -1239,9 +1328,9 @@ sub remove_redundancy {
             #Collect what matched
             $match = $+{match};
 
-            #Does the last line also match?
-            if ( $last_line =~ /$match/ ) {
-            
+            #Does the last line also fully match (note the \b)?
+            if ( $last_line =~ /^\s*$match\b/ ) {
+
                 #Save our unmodified line
                 $last_line = $line;
 
@@ -1250,7 +1339,7 @@ sub remove_redundancy {
 
                 #Create a replacement string of the correct length
                 ( my $replacement_text = $match ) =~ s/\S/-/g;
-                
+
                 #and substitute it back into the line
                 ( my $modified_line = $line ) =~ s/$match/$replacement_text/;
 
@@ -1622,4 +1711,16 @@ sub create_external_host_info_hash {
     #             exit;
     #             return (0);
 
+}
+
+sub append_message_to_file {
+
+    #Append to a file, locking it to ensure thread safety
+    my ( $msg, $filename )
+        = validate_pos( @_, { type => SCALAR }, { type => SCALAR }, );
+
+    open my $fh, ">>", $filename or die "$0 [$$]: open: $!";
+    flock $fh, LOCK_EX or die "$0 [$$]: flock: $!";
+    print $fh "$msg\n" or die "$0 [$$]: write: $!";
+    close $fh or warn "$0 [$$]: close: $!";
 }

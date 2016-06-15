@@ -74,7 +74,27 @@
         (?<match>
             (?:permit|deny) \s+
             (?:ip|udp|tcp) \s+
-            (?:any|host \s+ \d+.\d+.\d+.\d+ ) \s+
-            (?:any|host \s+ \d+.\d+.\d+.\d+ ) \s+
+            (?:any | host \s+ $RE{net}{IPv4} | $RE{net}{IPv4} \s+ $RE{net}{IPv4} ) \s+
+        )
+        /ixsm,
+11 => qr/
+        ^ \s*
+        (?<match>
+            (?:ip) \s+
+            (?:route) \s+
+            (?:$RE{net}{IPv4} \s+ $RE{net}{IPv4} ) \s+
+        )
+        /ixsm,
+12 => qr/
+        ^ \s*
+        (?<match>
+            (?:standby) \s+
+            (?:\d+) \s+
+        )
+        /ixsm,
+13 => qr/
+        ^ \s*
+        (?<match>
+            (?:service) \s+
         )
         /ixsm,

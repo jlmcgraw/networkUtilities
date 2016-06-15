@@ -72,15 +72,19 @@ my $hostname_regex = qr/^
                         (?: hostname | switchname ) 
                         \s+
                         "?
-                        ( $RE{net}{domain} )
+                        ( [\w_-]+ )
                         "?
+                        \s*
                         \R
                         /ismx;
 
 foreach my $file (@ARGV) {
 
     my $file_text;
-
+    
+    #Skip any non-file
+    next unless -f $file;
+    
     #Pull out the various filename components of the input file from the command line
     my ( $filename, $dir, $ext ) = fileparse( $file, qr/\.[^.]*/x );
 
@@ -109,6 +113,7 @@ foreach my $file (@ARGV) {
 
     }
     else {
+        say "No hostname in $filename";
         #Make a sanitized version of the current file's name
         #Replace non-word characters with underscore
         $filename =~ s/[ \W ]/_/ixg;

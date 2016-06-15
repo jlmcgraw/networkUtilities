@@ -1,23 +1,21 @@
 #Some small network related scripts
 	To get started:
-		#Install Carton dependency manager
-		cpanm Carton
+		./setup.sh   
 
-		#update local libraries
-		carton install    
-
-	Look at setup.sh for how to add wireshark user, globally install 
-	dependencies etc.
+	This will install wireshark, tshark, cpanminus and carton globally and then
+	add the current user to the wireshark group and install various perl libraries
+	locally
 
 ##iosToHtml.pl
-	Convert an IOS/NXOS/ACE/ASA config file into very basic HTML, creating links 
+	Convert an IOS/NXOS/ACE/ASA config file into basic HTML, creating links 
 	between commands referencing lists and that list (e.g. access lists, 
 	route maps, prefix lists, service-policies etc etc).
 	
 	Will also link between files for various things (route next hop, interface
 	subnets etc) for all files in the set you're analyzing
 
-	Very useful for trying to follow the flow of complex configurations
+	Very useful for trying to follow the flow of complex configurations and to
+	point items that are defined but never used
 
 	e.g.:
 		./iosToHtml.pl -e -h -f -s ./sample_configs/*.cfg
