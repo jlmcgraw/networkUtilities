@@ -67,17 +67,6 @@ if ( $Config{archname} =~ m/win/ix ) {
     @ARGV            = map { bsd_glob $_ } @ARGV;
 }
 
-my $hostname_regex = qr/^
-                        \s* 
-                        (?: hostname | switchname ) 
-                        \s+
-                        "?
-                        ( [\w_-]+ )
-                        "?
-                        \s*
-                        \R
-                        /ismx;
-
 foreach my $file (@ARGV) {
 
     my $file_text;
@@ -97,6 +86,40 @@ foreach my $file (@ARGV) {
     }
 
     #Try to find a hostname
+    my $name = determine_hostname( $file_text, $file );
+    die unless $name;
+
+    #Append an extension
+    $name .= '.cfg';
+    
+    #Say what are we doing
+    say "$file -> $dir$name";
+
+    #Do it
+    move( $file, $dir . $name ) or die(qq{failed to move $file -> $dir$name});
+}
+
+
+sub determine_hostname {
+
+    my ( $file_text, $file ) =
+      validate_pos( @_, { type => SCALAR }, { type => SCALAR }, );
+
+    # STEELHEAD: hostname "STEELHEAD"
+    # IOS: hostname ROUTER
+
+    #Regex for finding the hostname in this config file
+    my $hostname_regex = qr/^
+                                \s*
+                                (?: hostname | switchname ) \s+
+                                "?
+                                ( [\w\-_]+ )
+                                "?
+                                \s*
+                                \R
+                            /ismx;
+
+    #Search the whole file for hostname
     my ($hostname_in_file) = $file_text =~ m/$hostname_regex/ixsm;
 
     #Did we find a hostname?
@@ -108,33 +131,22 @@ foreach my $file (@ARGV) {
         #Sanitize it
         $hostname_in_file =~ s/[ \W ]/_/ixg;
 
-        #Add on cfg extension
-        $hostname_in_file .= '.cfg';
-
     }
     else {
-        say "No hostname in $filename";
+        #Pull out the various filename components of the input file from the
+        # command line
+        my ( $filename, $dir, $ext ) = fileparse( $file, qr/\.[^.]*/x );
+
         #Make a sanitized version of the current file's name
         #Replace non-word characters with underscore
+        warn "#No host name found in file, using file name as device name";
         $filename =~ s/[ \W ]/_/ixg;
 
-        #         $ext =~ s/[ \W ]/_/ixg;
-
-        my $sanitized_name = $filename . $ext;
+        my $sanitized_name = $filename;
 
         #Set new name to sanitized version of existing file name
-
         $hostname_in_file //= lc $sanitized_name;
     }
 
-    my $name = $hostname_in_file;
-
-    #What did it match
-    #say "Matched: $hostname_in_file";
-
-    #What are we doing
-    say "$file -> $dir$name";
-
-    #Do it
-    move( $file, $dir . $name ) or die(qq{failed to move $file -> $dir$name});
+    return $hostname_in_file;
 }

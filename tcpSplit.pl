@@ -24,12 +24,24 @@
 #done
 # switch to decide whether to pick up only streams started during the capture or pre-existing ones
 
-use Modern::Perl '2014';
+#Standard modules
+use strict;
+use warnings;
+use autodie;
+use FindBin '$Bin';
 use Data::Dumper;
-use Params::Validate qw(:all);
 use Carp;
 use Getopt::Std;
 use vars qw/ %opt /;
+
+#Use this so users don't need to globally install modules (or execute this script via "carton exec <script>"
+use lib "$FindBin::Bin/local/lib/perl5";
+
+#Non-core additional modules
+use Modern::Perl '2014';
+
+use Params::Validate qw(:all);
+
 
 #Define the valid command line options
 my $opt_string = 's';

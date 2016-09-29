@@ -98,3 +98,32 @@
             (?:service) \s+
         )
         /ixsm,
+14 => qr/
+        ^ \s*
+        (?<match>
+            (?:mls \s+ 
+            qos \s+ 
+            srr-queue \s+ 
+            output \s+ 
+            (?:dscp|cos)-map \s+ 
+             queue) \s+
+        )
+        /ixsm,
+15 => qr/
+        ^ \s*
+        (?<match>
+            (?:spanning-tree) \s+
+        )
+        /ixsm,
+16 => qr/
+        ^ \s*
+        (?<match>
+            (?:switchport) \s+
+        )
+        /ixsm,
+17 => qr/
+        ^ \s*
+        (?<match>
+            (?: srr-queue \s+ bandwidth) \s+
+        )
+        /ixsm,         
