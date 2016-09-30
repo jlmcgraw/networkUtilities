@@ -8,10 +8,13 @@ sudo apt \
             wireshark \
             tshark \
             cpanminus \
-            carton
+            carton \
+            build-essential
             
-#Set up current user to capture network data            
+#Set up current user to capture network data
+set +e
 sudo adduser $USER wireshark
+set -e
 
 #update local perl libraries
 carton install   
